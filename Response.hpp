@@ -11,15 +11,15 @@ class statusCode
 
 	public:
 	/* 1xx: Informational 
-		It means the request has been received and the process
-		is continuing.
+		It means the request has been received and the 
+		process is continuing.
 	*/
 		int continue(){return 100;};
 		int switchingProtocols(){return 101;};
 
 	/* 2xx: Success 
-		It means the action was successfully received, understood,
-		and accepted.
+		It means the action was successfully received,
+		understood, and accepted.
 	*/
 		int ok(){return 200;};
 		int created(){return 201;};
@@ -30,8 +30,8 @@ class statusCode
 		int partialContent(){return 206;};
 
 	/* 3xx: Redirection 
-		It means further action must be taken in order to complete
-		the request.
+		It means further action must be taken in order to
+		complete the request.
 	*/
 		int multipleChoices(){return 300;};
 		int movedPermanently(){return 301;};
@@ -42,8 +42,8 @@ class statusCode
 		int temporaryRedirect(){return 307;};
 
 	/* 4xx: Client Error 
-		It means the request contains incorrect syntax or cannot
-		be fulfilled.
+		It means the request contains incorrect syntax or 
+		cannot be fulfilled.
 	*/
 		int badRequest(){return 400;};
 		int unauthorized(){return 401;};
@@ -80,14 +80,16 @@ class statusCode
 class Response
 {
 	private:
-		statusCode _statuscode;
-		std::string _statusmessage;
+		int _statuscode;
+
 	public:
-		Response(statusCode statuscode, std::string statusmessage);
+		Response(int statuscode);
 		Response(const Response& other);
 		Response& operator=(const Response& other);
 		~Response();
-	
+
+		int getStatusCode();
+		void handleRequest(Request& request);
 };
 
 #endif;
