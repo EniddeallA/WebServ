@@ -23,6 +23,11 @@ int getStatusCode()
 	return _statuscode;
 }
 
+void setStatusCode(int statuscode)
+{
+	_statuscode = statuscode;
+}
+
 void Response::handleRequest(Request& request)
 {
 

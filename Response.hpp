@@ -89,6 +89,7 @@ class Response
 		~Response();
 
 		int getStatusCode();
+		void setStatusCode(int statuscode);
 		void handleRequest(Request& request);
 };
 
