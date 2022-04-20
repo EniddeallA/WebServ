@@ -14,7 +14,7 @@ class statusCode
 		It means the request has been received and the 
 		process is continuing.
 	*/
-		int continue(){return 100;};
+		int continueCode(){return 100;};
 		int switchingProtocols(){return 101;};
 
 	/* 2xx: Success 
