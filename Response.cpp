@@ -27,7 +27,7 @@ void Response::setStatusCode(statusCode statuscode)
 	_statuscode = statuscode;
 }
 
-void Response::handleRequest(Request& request)
+void handleRequest(Request& request)
 {
-
+	
 }

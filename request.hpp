@@ -38,6 +38,16 @@ class Request{
         /** WARNING
          * getValidServer
         */
+        std::string getRequestMethod( void ) const;
+        std::string getRequestTarget( void ) const;
+        std::string getRequestQuery( void ) const;
+        std::string getHost( void ) const;
+        t_headers getHeaders( void ) const;
+        std::string getBodyName( void ) const;
+        bool    getKeepAlive( void ) const;
+        int getError( void ) const;
+        size_t getContentLength( void ) const;
+
     private:
         void parseHeaders(std::string headers);
         void parseFirstLine(std::vector<std::string> vec);

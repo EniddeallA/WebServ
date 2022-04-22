@@ -251,3 +251,48 @@ void		Request::clear( void ) {
 		std::remove(_bodyName.c_str());
 	}
 }
+
+int Request::getError( void ) const
+{
+	return _error;
+}
+
+std::string Request::getRequestMethod() const
+{
+	return _requestMethod;
+}
+
+std::string Request::getRequestTarget() const
+{
+	return _requestTarget;
+}
+
+std::string Request::getRequestQuery() const
+{
+	return _requestQuery;
+}
+
+std::string Request::getHost( void ) const
+{
+	return _host;
+}
+
+t_headers Request::getHeaders( void ) const
+{
+	return _headers;
+}
+
+std::string Request::getBodyName( void ) const
+{
+	return _bodyName;
+}
+
+bool    Request::getKeepAlive( void ) const
+{
+	return _keepAlive;
+}
+
+size_t Request::getContentLength( void ) const
+{
+	return _contentLength;
+}
