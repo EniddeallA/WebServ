@@ -1,9 +1,8 @@
-#include "response.hpp"
+#include "Response.hpp"
 
-Response::Response(int statuscode)
-{
-	_statuscode = statuscode;
-}
+Response::Response(statusCode statuscode):
+	_statuscode(statuscode)
+{}
 
 Response::Response(const Response& other)
 {
@@ -16,14 +15,14 @@ Response& Response::operator=(const Response& other)
 	return *this;
 }
 
-~Response::Response(){}
+Response::~Response(){}
 
-int getStatusCode()
+statusCode Response::getStatusCode() const
 {
 	return _statuscode;
 }
 
-void setStatusCode(int statuscode)
+void Response::setStatusCode(statusCode statuscode)
 {
 	_statuscode = statuscode;
 }
