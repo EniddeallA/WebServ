@@ -83,6 +83,8 @@ class Response
 
 		statusCode getStatusCode() const;
 		void setStatusCode(statusCode statuscode);
+		
+		void set_header(size_t status_code, std::string const &message, Request request);
 		void unallowedMethod(Request& request);
 		void badRequest(Request& request);
 };

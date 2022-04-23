@@ -60,3 +60,21 @@ void Response::badRequest(Request& request)
 	_response += "Content-Length: 0\r\n";
 	_response += "Connection: close\r\n\r\n";
 }
+
+void Response::set_header(size_t status_code, std::string const &message, Request request)
+{
+	time_t rawtime;
+	std::stringstream ss, ss_content;
+
+	ss << status_code;
+	time(&rawtime);
+	_response += "HTTP/1.1 " + ss.str() + " " + message + "\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\n";
+	_response += "Server: webserver\r\n";
+	ss_content << request.getContentLength();
+	_response += "Content-Length: " + ss_content.str() + "\r\n";
+	_response += "Content-Type: text/html\r\n";
+	_response += "Connection: close\r\n\r\n";
+}
