@@ -73,10 +73,11 @@ class Response
 {
 	private:
 		statusCode _statuscode;
+		Request	_request;
 		std::string _response;
 
 	public:
-		Response(statusCode statuscode);
+		Response(Request	request);
 		Response(const Response& other);
 		Response& operator=(const Response& other);
 		~Response();
@@ -84,9 +85,9 @@ class Response
 		statusCode getStatusCode() const;
 		void setStatusCode(statusCode statuscode);
 		
-		void set_header(size_t status_code, std::string const &message, Request request);
-		void unallowedMethod(Request& request);
-		void badRequest(Request& request);
+		void set_header(size_t status_code, std::string const &message);
+		void unallowedMethod();
+		void badRequest();
 };
 
 #endif;

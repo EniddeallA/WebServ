@@ -1,17 +1,17 @@
 #include "Response.hpp"
 
-Response::Response(statusCode statuscode):
-	_statuscode(statuscode)
+Response::Response(Request	request):
+	_request(request)
 {}
 
 Response::Response(const Response& other)
 {
-	_statuscode = other._statuscode;
+	_request = other._request;
 }
 
 Response& Response::operator=(const Response& other)
 {
-	_statuscode = other.getStatusCode();
+	_request = other._request;
 	return *this;
 }
 
@@ -33,7 +33,7 @@ void Response::setStatusCode(statusCode statuscode)
 		- GET POST DELETE
 */
 
-void Response::unallowedMethod(Request& request)
+void Response::unallowedMethod()
 {
 	time_t rawtime;
 
@@ -47,7 +47,7 @@ void Response::unallowedMethod(Request& request)
 	_response += "Connection: close\r\n\r\n";
 }
 
-void Response::badRequest(Request& request)
+void Response::badRequest()
 {
 	time_t rawtime;
 
@@ -61,10 +61,10 @@ void Response::badRequest(Request& request)
 	_response += "Connection: close\r\n\r\n";
 }
 
-void Response::set_header(size_t status_code, std::string const &message, Request request)
+void Response::set_header(size_t status_code, std::string const &message)
 {
 	time_t rawtime;
-	std::stringstream ss, ss_content;
+	std::stringstream ss, ss_content;	
 
 	ss << status_code;
 	time(&rawtime);
@@ -73,7 +73,7 @@ void Response::set_header(size_t status_code, std::string const &message, Reques
 	_response.erase(--_response.end());
 	_response += "\r\n";
 	_response += "Server: webserver\r\n";
-	ss_content << request.getContentLength();
+	ss_content << _request.getContentLength();
 	_response += "Content-Length: " + ss_content.str() + "\r\n";
 	_response += "Content-Type: text/html\r\n";
 	_response += "Connection: close\r\n\r\n";
