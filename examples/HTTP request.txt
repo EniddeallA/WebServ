@@ -1,3 +1,0 @@
-GET /hello.html HTTP/1.1
-Host: 0.0.0.0
-Accept-Language: en, vi
