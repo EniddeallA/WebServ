@@ -78,3 +78,14 @@ void Response::set_header(size_t status_code, std::string const &message)
 	_response += "Content-Type: text/html\r\n";
 	_response += "Connection: close\r\n\r\n";
 }
+
+std::string *setErrorPage(std::string const &message)
+{
+	std::string *errorPage = new std::string();
+
+	*errorPage += std::string("<html>\r\n<head>\r\n");
+	*errorPage += std::string("<title>") + message;
+	*errorPage += std::string("</title>\r\n</head>\r\n<body>\r\n<center>\r\n<h1>") + message;
+	*errorPage += std::string("</h1>\r\n</center>\r\n<hr>\r\n<center>webserver</center>\r\n</body>\r\n</html>\r\n");
+	return errorPage;
+}
