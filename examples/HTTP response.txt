@@ -1,6 +1,0 @@
-HTTP/1.1 200 OK
-Server: Hello
-Content-Length: 13
-Content-Type: text/plain
-
-Hello, world
