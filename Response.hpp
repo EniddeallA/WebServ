@@ -2,6 +2,12 @@
 # define RESPONSE_HPP
 
 #include <iostream>
+#include <sys/select.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "request.hpp"
 
 enum class statusCode
@@ -75,6 +81,8 @@ class Response
 		statusCode _statuscode;
 		Request	_request;
 		std::string _response;
+		int _fd;
+		fd_set _set;
 
 	public:
 		Response(Request	request);
@@ -85,9 +93,12 @@ class Response
 		statusCode getStatusCode() const;
 		void setStatusCode(statusCode statuscode);
 		
-		void set_header(size_t status_code, std::string const &message);
+		void setHeader(size_t status_code, std::string const &message);
 		void unallowedMethod();
 		void badRequest();
+		void internalError();
+		void httpVersionNotSupported(std::string const &version);
+		void ok(std::string const &tmp_path);
 };
 
 #endif;
