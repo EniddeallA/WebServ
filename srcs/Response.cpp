@@ -30,10 +30,11 @@ void Response::setStatusCode(statusCode statuscode)
 	_statuscode = statuscode;
 }
 
+
 /*
 	*To do:
-		- Accurate response status codes
-		- GET POST DELETE
+		- Accurate response status codes {80%}
+		- GET POST DELETE {10%}
 */
 
 void Response::unallowedMethod()
@@ -160,4 +161,17 @@ void Response::ok(std::string const &path)
 		setHeader(200, "ok");
 	_response += *tmp_resp;
 	delete tmp_resp;
+}
+
+void Response::handleRequest() {
+	if (_request.getRequestMethod() == "GET") {
+		this->handleGetRequest();
+	} else if (_request.getRequestMethod() == "POST") {
+		this->handlePostRequest();
+	} else if (_request.getRequestMethod() == "DELETE") {
+		this->handleDeleteRequest();
+	} else {
+		return ;
+	}
+	_is_request_handled = true;
 }
