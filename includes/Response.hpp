@@ -83,6 +83,7 @@ class Response
 		std::string _response;
 		int _fd;
 		fd_set _set;
+		bool _is_request_handled;
 
 	public:
 		Response(Request	request);
@@ -99,6 +100,11 @@ class Response
 		void internalError();
 		void httpVersionNotSupported(std::string const &version);
 		void ok(std::string const &tmp_path);
+
+		void handleRequest();
+		void handleGetRequest();
+		void handlePostRequest();
+		void handleDeleteRequest();
 };
 
 #endif;
