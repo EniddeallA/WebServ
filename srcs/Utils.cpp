@@ -43,3 +43,15 @@ bool isSpace(unsigned char c) {
     return (c == ' ' ||
         c == '\t' || c == '\f');
 }
+
+std::string	time_last_modification(struct stat buffer)
+{
+	tm *ltm = gmtime(&buffer.st_mtime);
+
+	std::ostringstream date;
+
+	date << wday_name[ltm->tm_wday] << ", " << ltm->tm_mday << " "
+		<< mon_name[ltm->tm_mon] << " " << (ltm->tm_year + 1900) << " " 
+		<< (ltm->tm_hour) % 24 << ":" << ltm->tm_min << ":" << ltm->tm_sec << " GMT";
+	return date.str();
+}

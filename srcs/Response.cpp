@@ -175,3 +175,37 @@ void Response::handleRequest() {
 	}
 	_is_request_handled = true;
 }
+
+void Response::handleGetRequest()
+{
+	struct stat fileStat;
+	std::string file_path = _request.getFilePath();
+	time_t rawtime;
+
+	time(&rawtime);
+	stat (file_path.c_str(), &fileStat);
+	_response += "Date" + std::string(ctime(&rawtime));
+	_response += "Server: webserver\r\n";
+	_response += "Last-Modified: " + time_last_modification(fileStat);
+	_response += "Transfer-Encoding: chunked";
+	_response += "Content-Type: " + _request.getContentType() + "\r\n"; 
+	_response +=  "Connection: keep-alive";
+	_response +=  "Accept-Ranges: bytes";
+}
+
+void Response::handlePostRequest()
+{
+	struct stat fileStat;
+	std::string file_path = _request.getFilePath();
+	time_t rawtime;
+
+	time(&rawtime);
+	stat (file_path.c_str(), &fileStat);
+	_response += "Date" + std::string(ctime(&rawtime));
+	_response += "Server: webserver\r\n";
+	_response += "Last-Modified: " + time_last_modification(fileStat);
+	_response += "Transfer-Encoding: chunked";
+	_response += "Content-Type: " + _request.getContentType() + "\r\n"; 
+	_response +=  "Connection: keep-alive";
+	_response +=  "Accept-Ranges: bytes";
+}

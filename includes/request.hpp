@@ -47,6 +47,7 @@ class Request{
         bool    getKeepAlive( void ) const;
         int getError( void ) const;
         size_t getContentLength( void ) const;
+        std::ofstream& getBodyFile( void );
 
     private:
         void parseHeaders(std::string headers);
@@ -65,7 +66,7 @@ class Request{
         t_headers _headers;
         std::ofstream               _bodyFile;
         size_t                      _bodySize, _contentLength;
-
+        
 
     private:
         std::string    _bodyToFile();
