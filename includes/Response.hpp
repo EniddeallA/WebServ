@@ -4,11 +4,9 @@
 #include <iostream>
 #include <sys/select.h>
 #include <sys/time.h>
-#include <sys/types.h>
 #include <unistd.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include "request.hpp"
+#include "Utils.hpp"
 
 enum class statusCode
 {
@@ -84,6 +82,7 @@ class Response
 		int _fd;
 		fd_set _set;
 		bool _is_request_handled;
+		std::iostream* _body;
 
 	public:
 		Response(Request	request);
