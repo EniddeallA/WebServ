@@ -20,17 +20,6 @@ Response& Response::operator=(const Response& other)
 
 Response::~Response(){}
 
-statusCode Response::getStatusCode() const
-{
-	return _statuscode;
-}
-
-void Response::setStatusCode(statusCode statuscode)
-{
-	_statuscode = statuscode;
-}
-
-
 /*
 	*To do:
 		- Accurate response status codes {80%}
@@ -164,15 +153,14 @@ void Response::ok(std::string const &path)
 }
 
 void Response::handleRequest() {
-	if (_request.getRequestMethod() == "GET") {
+	if (_request.getRequestMethod() == "GET")
 		this->handleGetRequest();
-	} else if (_request.getRequestMethod() == "POST") {
+	else if (_request.getRequestMethod() == "POST")
 		this->handlePostRequest();
-	} else if (_request.getRequestMethod() == "DELETE") {
+	else if (_request.getRequestMethod() == "DELETE")
 		this->handleDeleteRequest();
-	} else {
+	else 
 		return ;
-	}
 	_is_request_handled = true;
 }
 
@@ -208,4 +196,84 @@ void Response::handlePostRequest()
 	_response += "Content-Type: " + _request.getContentType() + "\r\n"; 
 	_response +=  "Connection: keep-alive";
 	_response +=  "Accept-Ranges: bytes";
+}
+
+static void deleteDirectoryFiles(DIR * dir, const std::string & path) {
+	struct dirent * entry = NULL;
+	struct stat st;
+	std::string filepath;
+	DIR * dirp;
+	
+	while ((entry = readdir(dir))) {
+
+		filepath = path + entry->d_name;
+
+		if (std::strcmp(entry->d_name, ".") == 0 || std::strcmp(entry->d_name, "..") == 0) {
+			continue;
+		}
+
+		if (stat(filepath.c_str(), &st) == -1) {
+			std::cerr << "stat(): " << filepath << ": " << strerror(errno) << std::endl;
+		}
+
+		if (S_ISDIR(st.st_mode)) {
+			filepath += "/";
+			if ((dirp = opendir(filepath.c_str()))) {
+				deleteDirectoryFiles(dirp, filepath.c_str());
+			} else {
+				std::cerr << "opendir(): " << filepath.c_str() << ": " << strerror(errno) << std::endl;
+			}
+		} else {
+			if (remove(filepath.c_str()) == -1) {
+				std::cerr << "remove() file: " << filepath.c_str() << ": " << strerror(errno) << std::endl;
+			}
+		}
+	}
+	if (remove(path.c_str()) == -1) {
+		std::cerr << "remove() dir: " << path.c_str() << ": " << strerror(errno) << std::endl;
+	}
+}
+
+void Response::handleDeleteRequest()
+{
+	struct stat st;
+	DIR * dirp = NULL;
+
+	errno = 0;
+	if (lstat(_request.getFilePath().c_str(), &st) == -1) {
+		if (errno == ENOTDIR) {
+			throw StatusCodeException(HttpStatus::conflict);
+		} else {
+			throw StatusCodeException(HttpStatus::notFound);
+		}
+	}
+
+	if (S_ISDIR(st.st_mode)) {
+		if (_request.getRequestTarget().at(_request.getRequestTarget().length() - 1) != '/') {
+			throw StatusCodeException(HttpStatus::conflict);
+		} else {
+			if ((dirp = opendir(_request.getFilePath().c_str()))) {
+				deleteDirectoryFiles(dirp, _request.getFilePath());
+			}
+		}
+	} else {
+		remove(_request.getFilePath().c_str());
+	}
+
+	if (errno) {
+		perror("");
+	}
+	if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG) {
+		throw StatusCodeException(HttpStatus::notFound);
+    } else if (errno == EACCES || errno == EPERM) {
+		throw StatusCodeException(HttpStatus::forbidden);
+    } else if (errno == EEXIST) {
+		throw StatusCodeException(HttpStatus::methodNotAllowed);
+    } else if (errno == ENOSPC) {
+		throw StatusCodeException(HttpStatus::insufficientStorage);
+    } else if (errno) {
+		throw StatusCodeException(HttpStatus::internalServerError);
+    } else {
+		throw StatusCodeException(HttpStatus::noContent);
+	}
 }
