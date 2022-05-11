@@ -5,12 +5,14 @@
 #include <sys/select.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <dirent.h>
+#include <string.h>
 #include "request.hpp"
 #include "Utils.hpp"
 
-enum class statusCode
+enum statusCode
 {
-
+		None = 0,
 	/* 1xx: Informational 
 		It means the request has been received and the 
 		process is continuing.

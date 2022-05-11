@@ -287,11 +287,6 @@ std::string Request::getBodyName( void ) const
 	return _bodyName;
 }
 
-std::ofstream& Request::getBodyFile( void )
-{
-	return _bodyFile;
-}
-
 bool    Request::getKeepAlive( void ) const
 {
 	return _keepAlive;
