@@ -241,7 +241,19 @@ std::string	Request::_bodyToFile() {
 }
 
 
-void		Request::clear( void ) {
+// void		Request::clear( void ){
+// 	_requestMethod.clear();
+// 	_requestQuery.clear();
+// 	_requestTarget.clear();
+// 	_str.clear();
+// 	_headers.clear();
+// 	if (_bodyName.empty() == false) {
+// 		std::remove(_bodyName.c_str());
+// 	}
+// }
+
+
+void		Request::clear( void ){
 	_requestMethod.clear();
 	_requestQuery.clear();
 	_requestTarget.clear();
@@ -250,49 +262,57 @@ void		Request::clear( void ) {
 	if (_bodyName.empty() == false) {
 		std::remove(_bodyName.c_str());
 	}
+
+	_error = 0;
+	_requestEnd = false;
+	_hasBody = false; 
+	_keepAlive = false;
+	_headersEnd = false;
+	_bodySize = 0;
+	_contentLength = 0;
 }
 
-int Request::getError( void ) const
-{
-	return _error;
-}
+// int Request::getError( void ) const
+// {
+// 	return _error;
+// }
 
-std::string Request::getRequestMethod() const
-{
-	return _requestMethod;
-}
+// std::string Request::getRequestMethod() const
+// {
+// 	return _requestMethod;
+// }
 
-std::string Request::getRequestTarget() const
-{
-	return _requestTarget;
-}
+// std::string Request::getRequestTarget() const
+// {
+// 	return _requestTarget;
+// }
 
-std::string Request::getRequestQuery() const
-{
-	return _requestQuery;
-}
+// std::string Request::getRequestQuery() const
+// {
+// 	return _requestQuery;
+// }
 
-std::string Request::getHost( void ) const
-{
-	return _host;
-}
+// std::string Request::getHost( void ) const
+// {
+// 	return _host;
+// }
 
 t_headers Request::getHeaders( void ) const
 {
 	return _headers;
 }
 
-std::string Request::getBodyName( void ) const
-{
-	return _bodyName;
-}
+// std::string Request::getBodyName( void ) const
+// {
+// 	return _bodyName;
+// }
 
-bool    Request::getKeepAlive( void ) const
-{
-	return _keepAlive;
-}
+// bool    Request::getKeepAlive( void ) const
+// {
+// 	return _keepAlive;
+// }
 
-size_t Request::getContentLength( void ) const
-{
-	return _contentLength;
-}
+// size_t Request::getContentLength( void ) const
+// {
+// 	return _contentLength;
+// }
