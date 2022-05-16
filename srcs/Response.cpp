@@ -277,3 +277,63 @@ void Response::handleDeleteRequest()
 		throw StatusCodeException(HttpStatus::noContent);
 	}
 }
+
+std::stringstream * errorTemplate(const StatusCodeException & e) {
+	std::stringstream * alloc = new std::stringstream("");
+	std::stringstream & body = *alloc;
+
+	if (e.getStatusCode() >= 400) {
+		body << "<!DOCTYPE html>\n" ;
+		body << "<html lang=\"en\">\n";
+		body << "<head>\n";
+		body << "<title>" << e.getStatusCode() << "</title>\n";
+		body << "</head>\n";
+		body << "<body>\n";
+		body << "<h1 style=\"text-align:center\">" << e.getStatusCode() << " - " << HttpStatus::reasonPhrase(e.getStatusCode()) << "</h1>\n";
+		body << "<hr>\n";
+		body << "<h4 style=\"text-align:center\">WebServer</h4>\n";
+		body << "</body>\n";
+	}
+
+	return &body;
+}
+
+void Response::setErrorPage(const StatusCodeException & e, const Location_block *location, Server_block *server) {
+	_statuscode = e.getStatusCode();
+	time_t rawtime;
+
+	time(&rawtime);
+	_response += "Connection: keep-alive";
+	_response += "Content-Type: text/html";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response += "Server: webserver\r\n";
+	if (location->path != "")
+		_response += "Location: " + location->path;
+	const std::map<int, std::string> & error_page = server->error_page;
+
+	std::fstream * errPage = NULL;
+
+	if (error_page.find(_statuscode) != error_page.end()) {
+		errPage = new std::fstream();
+		std::string errPath = error_page.find(_statuscode)->second;
+		if (errPath[0] == '/' || (errPath[0] == '.' && errPath[1] == '/')) {
+			errPage->open(errPath.c_str());
+		} else {
+			std::string filename = location->root;
+
+			filename += errPath;
+			errPage->open(filename.c_str());
+		}
+	}
+
+	delete _body;
+	if (!errPage || !errPage->is_open()) {
+		_body = errorTemplate(e);
+		if (errPage) {
+			delete errPage;
+	}
+	} else {
+		_body = errPage;
+	}
+	_response += "Transfer-Encoding: chunked";
+}

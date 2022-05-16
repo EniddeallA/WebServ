@@ -1,8 +1,6 @@
 #include <exception>
 #include "StatusCode.hpp"
 
-class Config;
-
 class StatusCodeException : public std::exception {
     private:
         HttpStatus::statusCode _code;
@@ -14,4 +12,8 @@ class StatusCodeException : public std::exception {
             return HttpStatus::reasonPhrase(_code);
         }
     	virtual ~StatusCodeException() throw() {return ;}
+
+        HttpStatus::statusCode getStatusCode() const {
+            return _code;
+        }
 };

@@ -11,6 +11,7 @@
 #include "request.hpp"
 #include "StatusCodeException.hpp"
 #include "Utils.hpp"
+#include "Parsing.hpp"
 
 class Response
 {
@@ -40,6 +41,8 @@ class Response
 		void handleGetRequest();
 		void handlePostRequest();
 		void handleDeleteRequest();
+
+		void setErrorPage(const StatusCodeException & e, const Location_block * location, Server_block *server);
 };
 
 #endif;
