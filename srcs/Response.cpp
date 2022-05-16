@@ -22,8 +22,8 @@ Response::~Response(){}
 
 /*
 	*To do:
-		- Accurate response status codes {80%}
-		- GET POST DELETE {10%}
+		- Accurate response status codes {90%}
+		- GET POST DELETE {90%}
 */
 
 void Response::unallowedMethod()
