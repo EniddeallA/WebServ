@@ -7,10 +7,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 	std::vector<int> fds;
 	int new_socket, valread;
 	int number_of_servers = all_servers.size();
-	// std::vector<std::string> v_of_request(MAX_REQUEST, "");
-	////////
 	std::vector<Request>v_of_request_object(MAX_REQUEST, Request());
-	/////////
 	int fd_max = 0;
 	char buffer[BUFFER] = {0};
 	for (int i = 0; i < number_of_servers; i++){ // start all servers
@@ -24,7 +21,6 @@ void start_servers(std::vector<Server_block> &all_servers){
 		FD_SET(all_servers[i].server_fd, &_fd_set_read);
 	}
 
-	// std::map<int, Server_block> fd_with_server;
 	std::map<int, char*> fd_with_response;
 	std::map<int, Response> fd_with_response_object;
 
@@ -48,45 +44,34 @@ void start_servers(std::vector<Server_block> &all_servers){
 						FD_SET(new_socket, &_fd_set_read);
 						fds.push_back(new_socket);
 						fd_max = new_socket;
-						// fd_with_server[new_socket] = all_servers[i - 3];
 					}
 				}
 				else
 					new_socket = i;
 
-			//////////////////////////////
 				if (fcntl(new_socket, F_SETFL, O_NONBLOCK) == -1){
 					throw "Error in fcntl() function";
 				}
-			//////////////////////////////
-				
 				valread = read(new_socket, buffer, BUFFER);
-				// v_of_request[new_socket] += buffer;
-
-				///////////////////////////////
 				std::string s = buffer;
-				v_of_request_object[new_socket].Parse(s);
-				std::cout << "read " << valread  << s << std::endl; 
-				///////////////////////////////
+				//
 				
-
+				std::cout << s;
+				v_of_request_object[new_socket].Parse(s);
+				
 				if (v_of_request_object[new_socket].isRequestCompleted() && valread != -1){ // tst valread !!!
 					std::cout << "====================================================" << valread << std::endl;
-					std::cout << v_of_request_object[new_socket].getBody();
-					std::cout << "====================================================\n";
+					// std::cout << v_of_request_object[new_socket].getBody();
+					// std::cout << "====================================================\n";
 					fd_with_response_object[new_socket] = Response(v_of_request_object[new_socket]);
 					fd_with_response_object[new_socket].handleRequest();
 					fd_with_response[new_socket] = (char*)fd_with_response_object[new_socket].get_respone().c_str();
-					std::cout << "====================================================RESPONCE\n";
-					std::cout << fd_with_response[new_socket] << std::endl;
-					std::cout << "====================================================RESPONCE\n";
+					// std::cout << "====================================================RESPONCE\n";
+					// std::cout << fd_with_response[new_socket] << std::endl;
+					// std::cout << "====================================================RESPONCE\n";
 					fd_with_send_size[new_socket] = 0;
 					FD_CLR(new_socket, &_fd_set_read);
 					FD_SET(new_socket, &_fd_set_write);
-
-					// v_of_request[new_socket].clear();
-					// v_of_request_object[new_socket].clear();
-					//////////////////////////////////
 				}
 			}
 			if (FD_ISSET(i, &_fd_set_write_temp)){ //CHECK FOR WRITTING FD_SET
@@ -103,7 +88,6 @@ void start_servers(std::vector<Server_block> &all_servers){
 				index += sended;
 				if (index >= l){
 					if (v_of_request_object[new_socket]._isKeepAlive() == false){ //correct this function the default is keep-alive not close
-						// std::cout << "CLOSE CONNECTION" << std::endl;
 						FD_CLR(new_socket, &_fd_set_write);
 						close(new_socket);
 						fd_max = fds[0];
