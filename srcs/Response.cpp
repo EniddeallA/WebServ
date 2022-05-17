@@ -172,7 +172,7 @@ void Response::handleRequest() {
 void Response::handleGetRequest()
 {
 	struct stat fileStat;
-	std::string file_path = _request.getFilePath();
+	std::string file_path = _request.getBody();
 	time_t rawtime;
 
 	time(&rawtime);
@@ -189,7 +189,7 @@ void Response::handleGetRequest()
 void Response::handlePostRequest()
 {
 	struct stat fileStat;
-	std::string file_path = _request.getFilePath();
+	std::string file_path = _request.getBody();
 	time_t rawtime;
 
 	time(&rawtime);
@@ -245,7 +245,7 @@ void Response::handleDeleteRequest()
 	DIR * dirp = NULL;
 
 	errno = 0;
-	if (lstat(_request.getFilePath().c_str(), &st) == -1) {
+	if (lstat(_request.getBody().c_str(), &st) == -1) {
 		if (errno == ENOTDIR) {
 			throw StatusCodeException(HttpStatus::conflict);
 		} else {
@@ -257,12 +257,12 @@ void Response::handleDeleteRequest()
 		if (_request.getRequestTarget().at(_request.getRequestTarget().length() - 1) != '/') {
 			throw StatusCodeException(HttpStatus::conflict);
 		} else {
-			if ((dirp = opendir(_request.getFilePath().c_str()))) {
-				deleteDirectoryFiles(dirp, _request.getFilePath());
+			if ((dirp = opendir(_request.getBody().c_str()))) {
+				deleteDirectoryFiles(dirp, _request.getBody());
 			}
 		}
 	} else {
-		remove(_request.getFilePath().c_str());
+		remove(_request.getBody().c_str());
 	}
 
 	if (errno) {
