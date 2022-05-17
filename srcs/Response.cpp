@@ -122,11 +122,30 @@ void Response::internalError()
 	delete tmp_res;
 }
 
+void Response::time_out()
+{
+	time_t rawtime;
+	std::string *tmp_res;
+	std::stringstream ss;
+
+	time(&rawtime);
+	tmp_res = errorPage("504 Gateway Time-out");
+	ss << tmp_res->length();
+	_response += "HTTP/1.1 504 Gateway Time-out\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\nServer: webserver\r\n";
+	_response += "Content-Type: text/html\r\n";
+	_response += "Content-Length: " + ss.str() + "\r\n";
+	_response += "Connection: close\r\n\r\n";
+	_response += *tmp_res;
+	delete tmp_res;
+}
+
 void Response::ok(std::string const &path)
 {
 	std::string line;
 	std::string *tmp_resp = new std::string();
-	size_t len;
 	fd_set tmp_set;
 
 	if (_fd == -1)
