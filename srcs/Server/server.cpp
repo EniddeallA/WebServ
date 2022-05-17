@@ -1,5 +1,5 @@
 #include "../../includes/Parsing.hpp"
-
+#include "includes/Response.hpp"
 void start_servers(std::vector<Server_block> &all_servers){
 	fd_set 	_fd_set_read, _fd_set_read_temp, _fd_set_write, _fd_set_write_temp;
 
@@ -26,6 +26,8 @@ void start_servers(std::vector<Server_block> &all_servers){
 
 	// std::map<int, Server_block> fd_with_server;
 	std::map<int, char*> fd_with_response;
+	std::map<int, Response> fd_with_response_object;
+
 	std::map<int, int> fd_with_send_size;
 	int max_server_fd = fd_max;
 	while (1){
@@ -54,7 +56,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 
 			//////////////////////////////
 				if (fcntl(new_socket, F_SETFL, O_NONBLOCK) == -1){
-					throw "Error in fcntl";
+					throw "Error in fcntl() function";
 				}
 			//////////////////////////////
 				
@@ -69,10 +71,11 @@ void start_servers(std::vector<Server_block> &all_servers){
 				
 
 				if (v_of_request_object[new_socket].isRequestCompleted() && valread != -1){
-					std::cout << "====================================================\n";
-					std::cout << v_of_request_object[new_socket].getBody();
-					std::cout << "====================================================\n";
-					fd_with_response[new_socket] =  get_response();
+					// std::cout << "====================================================\n";
+					// std::cout << v_of_request_object[new_socket].getBody();
+					// std::cout << "====================================================\n";
+					fd_with_response_object[new_socket] = Response(v_of_request_object[new_socket]);
+					fd_with_response[new_socket] = fd_with_response_object[new_socket].get_respone().c_str();
 					fd_with_send_size[new_socket] = 0;
 					FD_CLR(new_socket, &_fd_set_read);
 					FD_SET(new_socket, &_fd_set_write);

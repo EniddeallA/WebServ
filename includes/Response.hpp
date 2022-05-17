@@ -47,4 +47,4 @@ class Response
 		void setErrorPage(const StatusCodeException & e, const Location_block * location, Server_block *server);
 };
 
-#endif;
+#endif
