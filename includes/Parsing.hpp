@@ -31,6 +31,7 @@
 #include <set>
 #include <vector>
 #include "request.hpp"
+// #include "Response.hpp"
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -61,6 +62,7 @@ struct Server_block{
 		std::vector<std::string> 			allowed_funct;
 		std::string 						error_page_path;
 		std::string 						error_code;
+		std::map<int, std::string>			error_page;
 		std::vector<std::string> 			name;
 		std::string							max_body_size;
         std::string 						root;
@@ -88,4 +90,5 @@ void 						initial_fd_set(fd_set &, fd_set &, fd_set &, fd_set &);
 char 						*get_response();
 bool						port_already_binded(std::vector<Server_block> &, int, int);
 bool						syntax_of_port_is_correct(std::string);
+bool 						is_number(std::string str);
 #endif

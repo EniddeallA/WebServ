@@ -29,14 +29,15 @@ void fill_server_data(Server_block &server, _itr begin, _itr end){
 				if (allow != allows[0] && allow != allows[1] && allow != allows[2])
 					throw "Function not valide in allowed_functions";
 			}
-			
-
 		}
 		else if (key == "error_page"){
 			if (split(value, " ").size() != 2)
 				throw "Error page should have 2 arguments";
 			server.error_code = split(value, " ")[0];
+			if (is_number(server.error_code) == false)
+				throw "Error code argument should be just digit charachters";
 			server.error_page_path = split(value, " ")[1];
+			server.error_page[atoi(server.error_code.c_str())] = server.error_page_path;
 		}
 		else if (key == "server_name"){
 			server.name = split(value, " ");

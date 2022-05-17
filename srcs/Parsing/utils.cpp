@@ -127,3 +127,11 @@ bool syntax_of_port_is_correct(std::string port){
 	}
 	return true;
 }
+
+bool is_number(std::string str){
+	for (size_t i = 0; i < str.length(); i++){
+		if (isdigit(str[i]) == false)
+			return false;
+	}
+	return true;
+}
