@@ -40,6 +40,7 @@ class Response
 		void badRequest();
 		void internalError();
 		void httpVersionNotSupported(std::string const &version);
+		void time_out();
 		void ok(std::string const &tmp_path);
 
 		void handleRequest();
