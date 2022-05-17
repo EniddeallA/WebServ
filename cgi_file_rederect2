@@ -1,0 +1,33 @@
+Content-Type: text/html; charset=ISO-8859-1
+
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+<title>Environment</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+</head>
+<body>
+CONTENT_LENGTH = 140732821374240
+<br>
+CONTENT_TYPE = 
+<br>
+GATEWAY_INTERFACE = CGI/1.1
+<br>
+PATH_INFO = /
+<br>
+PATH_TRANSLATED = /
+<br>
+REQUEST_METHOD = 
+<br>
+SERVER_PROTOCOL = HTTP/1.1
+<br>
+SERVER_SOFTWARE = FT_Web_SERVE
+<br>
+VERSIONER_PERL_PREFER_32_BIT = no<br>
+VERSIONER_PERL_VERSION = 5.18<br>
+__CF_USER_TEXT_ENCODING = 0x598:0:0<br>
+
+</body>
+</html>

@@ -1,5 +1,5 @@
 #include "../../includes/Parsing.hpp"
-#include "includes/Response.hpp"
+#include "../../includes/Response.hpp"
 void start_servers(std::vector<Server_block> &all_servers){
 	fd_set 	_fd_set_read, _fd_set_read_temp, _fd_set_write, _fd_set_write_temp;
 
@@ -65,17 +65,21 @@ void start_servers(std::vector<Server_block> &all_servers){
 
 				///////////////////////////////
 				std::string s = buffer;
-				// std::cout << s;
 				v_of_request_object[new_socket].Parse(s);
+				std::cout << "read " << valread  << s << std::endl; 
 				///////////////////////////////
 				
 
-				if (v_of_request_object[new_socket].isRequestCompleted() && valread != -1){
-					// std::cout << "====================================================\n";
-					// std::cout << v_of_request_object[new_socket].getBody();
-					// std::cout << "====================================================\n";
+				if (v_of_request_object[new_socket].isRequestCompleted() && valread != -1){ // tst valread !!!
+					std::cout << "====================================================" << valread << std::endl;
+					std::cout << v_of_request_object[new_socket].getBody();
+					std::cout << "====================================================\n";
 					fd_with_response_object[new_socket] = Response(v_of_request_object[new_socket]);
-					fd_with_response[new_socket] = fd_with_response_object[new_socket].get_respone().c_str();
+					fd_with_response_object[new_socket].handleRequest();
+					fd_with_response[new_socket] = (char*)fd_with_response_object[new_socket].get_respone().c_str();
+					std::cout << "====================================================RESPONCE\n";
+					std::cout << fd_with_response[new_socket] << std::endl;
+					std::cout << "====================================================RESPONCE\n";
 					fd_with_send_size[new_socket] = 0;
 					FD_CLR(new_socket, &_fd_set_read);
 					FD_SET(new_socket, &_fd_set_write);
@@ -115,7 +119,6 @@ void start_servers(std::vector<Server_block> &all_servers){
 							fds.erase(fds.begin() + index);
 					}
 					else{
-						std::cout << "KEEP ALIVE CONNECTION" << std::endl;
 						FD_CLR(new_socket, &_fd_set_write);
 						FD_SET(new_socket, &_fd_set_read);
 					}

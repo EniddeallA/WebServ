@@ -158,6 +158,7 @@ void Response::ok(std::string const &path)
 }
 
 void Response::handleRequest() {
+	std::cout << "check  for method " << _request.getRequestMethod() << std::endl;
 	if (_request.getRequestMethod() == "GET")
 		this->handleGetRequest();
 	else if (_request.getRequestMethod() == "POST")

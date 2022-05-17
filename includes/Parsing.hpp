@@ -31,7 +31,6 @@
 #include <set>
 #include <vector>
 #include "request.hpp"
-// #include "Response.hpp"
 #include <sys/types.h>
 #include <sys/wait.h>
 

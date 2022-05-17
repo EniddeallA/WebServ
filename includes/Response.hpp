@@ -26,6 +26,9 @@ class Response
 
 	public:
 		Response(Request	request);
+		Response(){
+
+		}
 		Response(const Response& other);
 		Response& operator=(const Response& other);
 		~Response();

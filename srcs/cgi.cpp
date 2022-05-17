@@ -189,8 +189,8 @@ void cgi(Request request){
 }
 
 
-int main(){
-	Request request;
-	cgi(request);
-	return 0;
-}
+// int main(){
+// 	Request request;
+// 	cgi(request);
+// 	return 0;
+// }
