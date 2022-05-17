@@ -29,6 +29,8 @@ class Response
 		Response(const Response& other);
 		Response& operator=(const Response& other);
 		~Response();
+	
+		std::string get_respone( void ) const;
 		
 		void setHeader(size_t status_code, std::string const &message);
 		void unallowedMethod();
