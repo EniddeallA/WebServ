@@ -20,6 +20,11 @@ Response& Response::operator=(const Response& other)
 
 Response::~Response(){}
 
+std::string Response::get_respone( void ) const
+{
+	return _response
+}
+
 /*
 	*To do:
 		- Accurate response status codes {90%}
