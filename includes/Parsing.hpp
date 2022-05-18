@@ -69,7 +69,6 @@ struct Server_block{
 		int 								server_fd;
 		struct sockaddr_in 					s_address;
 		long								max_body_size_in_kb;
-
 };
 
 std::vector<Server_block>	parsse_the_config_file(std::string);
