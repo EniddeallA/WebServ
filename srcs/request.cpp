@@ -13,11 +13,39 @@ Request::Request(Request const &src) {
 	_requestMethod = src._requestMethod;
 	_requestTarget = src._requestTarget;
 	_requestQuery = src._requestQuery;
+	_host = src._host;
 	_bodyName = src._bodyName;
-	
+	_str = src._str;
+	_hasBody = src._hasBody;
+	_keepAlive = src._keepAlive;
+	_headersEnd = src._headersEnd;
+	_requestEnd = src._requestEnd;
+	_isCL = src._isCL;
+	_isTE = src._isTE;
+	_headers = src._headers;
+	//_bodyFile = src._bodyFile;
+	_bodySize = src._bodySize;
+	_contentLength = src._contentLength;
 }
 
 Request& Request::operator=(Request const &src){
+	_error = src._error;
+	_requestMethod = src._requestMethod;
+	_requestTarget = src._requestTarget;
+	_requestQuery = src._requestQuery;
+	_host = src._host;
+	_bodyName = src._bodyName;
+	_str = src._str;
+	_hasBody = src._hasBody;
+	_keepAlive = src._keepAlive;
+	_headersEnd = src._headersEnd;
+	_requestEnd = src._requestEnd;
+	_isCL = src._isCL;
+	_isTE = src._isTE;
+	_headers = src._headers;
+	//_bodyFile = src._bodyFile;
+	_bodySize = src._bodySize;
+	_contentLength = src._contentLength;
 	return *this;
 }
 
