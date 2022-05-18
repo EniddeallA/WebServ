@@ -60,16 +60,16 @@ void start_servers(std::vector<Server_block> &all_servers){
 				v_of_request_object[new_socket].Parse(s);
 				
 				if (v_of_request_object[new_socket].isRequestCompleted() && valread != -1){ // tst valread !!!
-					v_of_request_object[new_socket].printData();
 					std::cout << "====================================================" << valread << std::endl;
+					v_of_request_object[new_socket].printData();
 					// std::cout << v_of_request_object[new_socket].getBody();
-					// std::cout << "====================================================\n";
+					std::cout << "====================================================\n";
 					fd_with_response_object[new_socket] = Response(v_of_request_object[new_socket]);
 					fd_with_response_object[new_socket].handleRequest();
 					fd_with_response[new_socket] = (char*)fd_with_response_object[new_socket].get_respone().c_str();
-					// std::cout << "====================================================RESPONCE\n";
-					// std::cout << fd_with_response[new_socket] << std::endl;
-					// std::cout << "====================================================RESPONCE\n";
+					std::cout << "====================================================RESPONCE\n";
+					std::cout << fd_with_response[new_socket] << std::endl;
+					std::cout << "====================================================RESPONCE\n";
 					fd_with_send_size[new_socket] = 0;
 					FD_CLR(new_socket, &_fd_set_read);
 					FD_SET(new_socket, &_fd_set_write);

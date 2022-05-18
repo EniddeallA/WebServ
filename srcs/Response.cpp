@@ -3,7 +3,8 @@
 Response::Response(Request	request):
 	_request(request),
 	_fd(-1)
-{}
+{
+}
 
 Response::Response(const Response& other)
 {
@@ -177,7 +178,6 @@ void Response::ok(std::string const &path)
 }
 
 void Response::handleRequest() {
-	std::cout << "check  for method " << _request.getRequestMethod() << std::endl;
 	if (_request.getRequestMethod() == "GET")
 		this->handleGetRequest();
 	else if (_request.getRequestMethod() == "POST")
@@ -204,6 +204,12 @@ void Response::handleGetRequest()
 	_response += "Content-Type: " + _request.getContentType() + "\r\n"; 
 	_response +=  "Connection: keep-alive";
 	_response +=  "Accept-Ranges: bytes";
+	std::cout << "====================================================" << std::endl;
+	_request.printData();
+	std::cout << "check  for method " << _request.getRequestMethod() << std::endl;
+	std::cout << "====================================================" << std::endl;
+	std::cout << _response << std::endl;
+	std::cout << "==================================================== DEBUG RESPONSE" << std::endl;
 }
 
 void Response::handlePostRequest()
