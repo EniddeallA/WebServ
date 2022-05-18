@@ -60,6 +60,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 				v_of_request_object[new_socket].Parse(s);
 				
 				if (v_of_request_object[new_socket].isRequestCompleted() && valread != -1){ // tst valread !!!
+					v_of_request_object[new_socket].printData();
 					std::cout << "====================================================" << valread << std::endl;
 					// std::cout << v_of_request_object[new_socket].getBody();
 					// std::cout << "====================================================\n";

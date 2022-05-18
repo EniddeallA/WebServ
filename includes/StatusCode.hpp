@@ -77,7 +77,7 @@ namespace HttpStatus
 
 	inline const char * reasonPhrase(statusCode code)
 	{
-		switch (code)
+		switch ((int)code)
 		{
 			case 0: return "None";
 			case 100: return "Continue";

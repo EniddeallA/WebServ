@@ -16,6 +16,8 @@
 # define HTTP_VERSION_NOT_SUPPORTED 505
 # define TOO_LARGE 413
 # define METHOD_NOT_ALLOWED 405
+# define CL     "content-length"
+# define TE     "transfer-encoding"
 
 typedef std::map<std::string, std::string> t_headers;
 
@@ -78,6 +80,7 @@ class Request{
 		std::string                 _host, _bodyName, _str;
 		bool                        _hasBody, _keepAlive;
 		bool                        _headersEnd, _requestEnd;
+		bool						_isCL, _isTE;
 		std::vector<std::string>    _allowedMethods;
 		t_headers _headers;
 		std::ofstream               _bodyFile;

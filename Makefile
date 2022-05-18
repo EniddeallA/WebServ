@@ -3,11 +3,11 @@ SRCS		=	main.cpp srcs/Response.cpp srcs/Utils.cpp srcs/cgi.cpp srcs/request.cpp 
 
 
    
-CPP_VERSION	=	-std=c++98
+CPP_VERSION	=	#-std=c++98
 
 COMPILER	=	clang++
 
-FLAGS		=	-Wextra -Wall -Werror
+FLAGS		=	-g3 #-Wextra -Wall -Werror
 
 NAME		=	ft_server
 

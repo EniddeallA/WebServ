@@ -2,7 +2,7 @@
 
 Request::Request() : _error(0), _requestMethod(""), _requestTarget(""), _requestEnd(false),
 	_requestQuery(""), _bodyName(""), _str(""), _hasBody(false), _keepAlive(false), _headersEnd(false),
-	_bodySize(0), _contentLength(0) {
+	_bodySize(0), _contentLength(0), _isCL(false), _isTE(false) {
 		_allowedMethods.push_back("GET");
 		_allowedMethods.push_back("POST");
 		_allowedMethods.push_back("DELETE");
@@ -93,8 +93,15 @@ void Request::parseHeaders(std::string headers)
 			_error = BAD_REQUEST;
 			throw "Error while request parsing";
 		}
-		if (vec2[0] == "Connection" && vec2[1] == "keep-alive")
+		if (lowercase(vec2[0]) == "connection" && lowercase(vec2[1]) == "keep-alive")
 			_keepAlive = true;
+		if (lowercase(vec2[0]) == CL && _isTE == false) {
+			_isCL = true;
+			_contentLength = convertsizeT(vec2[1]);
+
+		} else if ((lowercase(vec2[0]) == TE && lowercase(vec2[1]) == "chunked") && _isCL == false ) {
+			_isTE = true;
+		}
 	}
 };
 
@@ -152,8 +159,7 @@ void	Request::parseBody(std::string &req) {
 		if (_bodyFile.good() == false)
 			throw "Error while opening file stream [body]";
 	}
-	if (_headers.find("Content-Length") != _headers.end()) {
-		_contentLength = convertsizeT(_headers.find("Content-Length")->second);
+	if (_isCL == true) {
 		_bodySize += req.size();
 		_bodyFile << req;
 		if (_bodySize == _contentLength) {
@@ -165,7 +171,8 @@ void	Request::parseBody(std::string &req) {
 			throw "Error on request body";
 		}
 	} 
-	else if (_headers.find("Transfer-Encoding") != _headers.end() && _headers["Transfer-Encoding"] == "chunked") {
+	else if (_isTE == true) {
+		std::cerr << "TE not ready yet\n[*] Use CL instead for now\n";
 		toChuncked(req);
 	}
 	else
@@ -178,7 +185,7 @@ void 		Request::toChuncked(std::string &req) {
 		return ;
 	size_t end = 0;
 	/** WARNING
-	 *  TRAIT CHUNKED AND RECHECK
+	 *  MUST RE-WORK ON DECODING
 	*/
 	# define CHUNK_SIZE 0
 	# define CHUNK_BODY 1
@@ -199,7 +206,7 @@ void 		Request::toChuncked(std::string &req) {
 				_requestEnd =true;
 				return ;
 				/** WARNING 
-				 * HANDLER
+				 * HANDLER , CHECK LAST LINE IF EMPTY
 				*/
 			}
 			std::string line =  req.substr(0, end);

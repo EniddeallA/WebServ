@@ -55,3 +55,16 @@ std::string	time_last_modification(struct stat buffer)
 		<< (ltm->tm_hour) % 24 << ":" << ltm->tm_min << ":" << ltm->tm_sec << " GMT";
 	return date.str();
 }
+
+std::string              lowercase(std::string src) {
+    std::string ret = "";
+
+    for (int i = 0; i < src.length(); i++) {
+        if (src[i] >= 'A' && src[i] <= 'Z') {
+            ret += char(src[i] + 32);
+        } else {
+            ret += src[i];
+        }
+    }
+    return ret;
+}

@@ -26,5 +26,5 @@ size_t                   convertsizeT(std::string& src);
 size_t                   to_hex(std::string &str);
 bool                     isSpace(unsigned char c);
 std::string	time_last_modification(struct stat buffer);
-
+std::string              lowercase(std::string src);
 #endif
