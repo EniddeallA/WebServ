@@ -28,6 +28,11 @@ std::string Response::get_respone( void ) const
 	return _response;
 }
 
+std::iostream* Response::get_body( void ) const
+{
+	return _body;
+}
+
 /*
 	*To do:
 		- Accurate response status codes {90%}
