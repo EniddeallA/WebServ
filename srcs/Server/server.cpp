@@ -63,9 +63,11 @@ void start_servers(std::vector<Server_block> &all_servers){
 					std::cout << "====================================================" << valread << std::endl;
 					v_of_request_object[new_socket].printData();
 					// std::cout << v_of_request_object[new_socket].getBody();
-					std::cout << "====================================================\n";
+					std::cout << "====================================================END OF PRINTING IN SERVER" << all_servers.size()  << " new socket is " << new_socket << " size is " << v_of_request_object.size()<< std::endl;
 					fd_with_response_object[new_socket] = Response(v_of_request_object[new_socket]);
-					fd_with_response_object[new_socket].handleRequest(all_servers[3]);
+					std::cout << "start handiling " << std::endl;
+					fd_with_response_object[new_socket].handleRequest(all_servers[all_servers.size() - 1]); // just for test use the last server bloc
+					std::cout << "finish handiling " << std::endl;
 					// fd_with_response[new_socket] = (char*)fd_with_response_object[new_socket].get_respone().c_str();
 					fd_with_response[new_socket] = get_response();
 					// file_to_return(all_servers[3], v_of_request_object[new_socket].getRequestTarget()); // fkdsjvnvjjdshgjlghjgdlshsdlghghds
