@@ -2,9 +2,11 @@
 
 Response::Response(Request	request):
 	_request(request),
-	_fd(-1)
-{
-}
+	_fd(-1),
+	_path(0),
+	_response(0),
+	_body(0)
+{}
 
 Response::Response(const Response& other)
 {
@@ -24,6 +26,11 @@ Response::~Response(){}
 std::string Response::get_respone( void ) const
 {
 	return _response;
+}
+
+std::iostream* Response::get_body( void ) const
+{
+	return _body;
 }
 
 /*
@@ -177,48 +184,86 @@ void Response::ok(std::string const &path)
 	delete tmp_resp;
 }
 
-void Response::handleRequest() {
-	if (_request.getRequestMethod() == "GET")
-		this->handleGetRequest();
-	else if (_request.getRequestMethod() == "POST")
-		this->handlePostRequest();
-	else if (_request.getRequestMethod() == "DELETE")
+Location_block Response::getLocation(Server_block server)
+{
+	Location_block location;
+
+	for(Location_block it : server.all_locations)
+	{
+		std::string target = _request.getRequestTarget();
+		_path.clear();
+		while (target.find_last_of("/") != std::string::npos)
+		{
+			if (it.path == target)
+				return it;
+			_path = target.substr(target.find_last_of("/"), target.size()) + _path;
+			target = target.substr(0, target.find_last_of("/"));
+		}
+	}
+}
+
+void Response::handleRequest(Server_block server) {
+	Location_block location = getLocation(server);
+	_path = server.root + _path;
+
+	std::cout << "check  for method " << _request.getRequestMethod() << std::endl;
+	_is_request_handled = true;
+	if (_request.getRequestMethod() == "GET" &&
+			std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "GET") != location.allowed_funct.end())
+		this->handleGetRequest(location);
+	else if (_request.getRequestMethod() == "POST" &&
+			std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
+		this->handlePostRequest(location);
+	else if (_request.getRequestMethod() == "DELETE" &&
+			std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "DELETE") != location.allowed_funct.end())
 		this->handleDeleteRequest();
 	else 
-		return ;
-	_is_request_handled = true;
+	{
+		this->unallowedMethod();
+		_is_request_handled = false;
+	}
 }
 
-void Response::handleGetRequest()
+void Response::handleGetRequest(Location_block location)
 {
 	struct stat fileStat;
-	std::string file_path = _request.getBody();
 	time_t rawtime;
-
+	std::fstream * file = new std::fstream();
+	
+	file->open(_path.c_str());
+	delete _body;
+	_body = file;
 	time(&rawtime);
-	stat (file_path.c_str(), &fileStat);
+	stat (_path.c_str(), &fileStat);
 	_response += "Date: " + std::string(ctime(&rawtime));
-	_response += "Server: webserver\r\n";
-	_response += "Last-Modified: " + time_last_modification(fileStat);
-	_response += "Transfer-Encoding: chunked";
-	_response += "Content-Type: " + _request.getContentType() + "\r\n"; 
-	_response +=  "Connection: keep-alive";
-	_response +=  "Accept-Ranges: bytes";
-}
-
-void Response::handlePostRequest()
-{
-	struct stat fileStat;
-	std::string file_path = _request.getBody();
-	time_t rawtime;
-
-	time(&rawtime);
-	stat (file_path.c_str(), &fileStat);
-	_response += "Date: " + std::string(ctime(&rawtime));
-	_response += "Server: webserver\r\n";
-	_response += "Last-Modified: " + time_last_modification(fileStat);
+	_response += "\r\nServer: webserver";
+	_response += "\r\nLast-Modified: " + time_last_modification(fileStat);
 	_response += "\r\nTransfer-Encoding: chunked";
-	_response += "\r\nContent-Type: " + _request.getContentType(); 
+	const char *type = MimeTypes::getType(_path.c_str());
+	if (type)
+		_response += "\r\nContent-Type: " + std::string(type); 
+	_response += "\r\nConnection: keep-alive";
+	_response += "\r\nAccept-Ranges: bytes";
+}
+
+void Response::handlePostRequest(Location_block location)
+{
+	struct stat fileStat;
+	time_t rawtime;
+	std::fstream * file = new std::fstream();
+	
+	file->open(_path.c_str());
+	delete _body;
+	_body = file;
+	time(&rawtime);
+	stat (_path.c_str(), &fileStat);
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response += "\r\nServer: webserver";
+	_response += "\r\nLast-Modified: " + time_last_modification(fileStat);
+	_response += "\r\nTransfer-Encoding: chunked";
+	const char *type = MimeTypes::getType(_path.c_str());
+	if (type)
+		_response += "\r\nContent-Type: " + std::string(type); 
 	_response +=  "\r\nConnection: keep-alive";
 	_response +=  "\r\nAccept-Ranges: bytes";
 }
@@ -319,7 +364,6 @@ std::stringstream * errorTemplate(const StatusCodeException & e) {
 		body << "<h4 style=\"text-align:center\">WebServer</h4>\n";
 		body << "</body>\n";
 	}
-
 	return &body;
 }
 

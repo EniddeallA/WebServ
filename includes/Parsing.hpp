@@ -30,7 +30,6 @@
 #include <fcntl.h>
 #include <set>
 #include <vector>
-#include "request.hpp"
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <algorithm>
@@ -70,7 +69,6 @@ struct Server_block{
 		int 								server_fd;
 		struct sockaddr_in 					s_address;
 		long								max_body_size_in_kb;
-
 };
 
 std::vector<Server_block>	parsse_the_config_file(std::string);
@@ -96,3 +94,5 @@ bool 						is_number(std::string str);
 
 void   				 		file_to_return(Server_block server, std::string path);
 #endif
+
+#include "request.hpp"

@@ -12,6 +12,8 @@
 #include "StatusCodeException.hpp"
 #include "Utils.hpp"
 #include "Parsing.hpp"
+#include "MimeTypes.hpp"
+#include <algorithm>
 
 class Response
 {
@@ -23,6 +25,7 @@ class Response
 		fd_set _set;
 		bool _is_request_handled;
 		std::iostream* _body;
+		std::string _path;
 
 	public:
 		Response(Request	request);
@@ -34,6 +37,7 @@ class Response
 		~Response();
 	
 		std::string get_respone( void ) const;
+		std::iostream* get_body( void ) const;
 		
 		void setHeader(size_t status_code, std::string const &message);
 		void unallowedMethod();
@@ -43,9 +47,10 @@ class Response
 		void time_out();
 		void ok(std::string const &tmp_path);
 
-		void handleRequest();
-		void handleGetRequest();
-		void handlePostRequest();
+		Location_block getLocation(Server_block server);
+		void handleRequest(Server_block server);
+		void handleGetRequest(Location_block file_path);
+		void handlePostRequest(Location_block file_path);
 		void handleDeleteRequest();
 
 		void setErrorPage(const StatusCodeException & e, const Location_block * location, Server_block *server);
