@@ -37,6 +37,7 @@ class Response
 		~Response();
 	
 		std::string get_respone( void ) const;
+		std::iostream* get_body( void ) const;
 		
 		void setHeader(size_t status_code, std::string const &message);
 		void unallowedMethod();
