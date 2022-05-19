@@ -56,17 +56,19 @@ void start_servers(std::vector<Server_block> &all_servers){
 				std::string s = buffer;
 				//
 				
-				std::cout << s;
+				// std::cout << s;
 				v_of_request_object[new_socket].Parse(s);
 				
 				if (v_of_request_object[new_socket].isRequestCompleted() && valread != -1){ // tst valread !!!
-					v_of_request_object[new_socket].printData();
 					std::cout << "====================================================" << valread << std::endl;
+					v_of_request_object[new_socket].printData();
 					// std::cout << v_of_request_object[new_socket].getBody();
-					// std::cout << "====================================================\n";
+					std::cout << "====================================================\n";
 					fd_with_response_object[new_socket] = Response(v_of_request_object[new_socket]);
 					fd_with_response_object[new_socket].handleRequest();
-					fd_with_response[new_socket] = (char*)fd_with_response_object[new_socket].get_respone().c_str();
+					// fd_with_response[new_socket] = (char*)fd_with_response_object[new_socket].get_respone().c_str();
+					fd_with_response[new_socket] = get_response();
+					file_to_return(all_servers[3], v_of_request_object[new_socket].getRequestTarget());
 					// std::cout << "====================================================RESPONCE\n";
 					// std::cout << fd_with_response[new_socket] << std::endl;
 					// std::cout << "====================================================RESPONCE\n";

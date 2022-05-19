@@ -3,7 +3,8 @@
 Response::Response(Request	request):
 	_request(request),
 	_fd(-1)
-{}
+{
+}
 
 Response::Response(const Response& other)
 {
@@ -177,7 +178,6 @@ void Response::ok(std::string const &path)
 }
 
 void Response::handleRequest() {
-	std::cout << "check  for method " << _request.getRequestMethod() << std::endl;
 	if (_request.getRequestMethod() == "GET")
 		this->handleGetRequest();
 	else if (_request.getRequestMethod() == "POST")
@@ -197,7 +197,7 @@ void Response::handleGetRequest()
 
 	time(&rawtime);
 	stat (file_path.c_str(), &fileStat);
-	_response += "Date" + std::string(ctime(&rawtime));
+	_response += "Date: " + std::string(ctime(&rawtime));
 	_response += "Server: webserver\r\n";
 	_response += "Last-Modified: " + time_last_modification(fileStat);
 	_response += "Transfer-Encoding: chunked";
@@ -214,13 +214,13 @@ void Response::handlePostRequest()
 
 	time(&rawtime);
 	stat (file_path.c_str(), &fileStat);
-	_response += "Date" + std::string(ctime(&rawtime));
+	_response += "Date: " + std::string(ctime(&rawtime));
 	_response += "Server: webserver\r\n";
 	_response += "Last-Modified: " + time_last_modification(fileStat);
-	_response += "Transfer-Encoding: chunked";
-	_response += "Content-Type: " + _request.getContentType() + "\r\n"; 
-	_response +=  "Connection: keep-alive";
-	_response +=  "Accept-Ranges: bytes";
+	_response += "\r\nTransfer-Encoding: chunked";
+	_response += "\r\nContent-Type: " + _request.getContentType(); 
+	_response +=  "\r\nConnection: keep-alive";
+	_response +=  "\r\nAccept-Ranges: bytes";
 }
 
 static void deleteDirectoryFiles(DIR * dir, const std::string & path) {
@@ -329,11 +329,11 @@ void Response::setErrorPage(const StatusCodeException & e, const Location_block 
 
 	time(&rawtime);
 	_response += "Connection: keep-alive";
-	_response += "Content-Type: text/html";
-	_response += "Date: " + std::string(ctime(&rawtime));
-	_response += "Server: webserver\r\n";
+	_response += "\r\nContent-Type: text/html";
+	_response += "\r\nDate: " + std::string(ctime(&rawtime));
+	_response += "\r\nServer: webserver";
 	if (location->path != "")
-		_response += "Location: " + location->path;
+		_response += "\r\nLocation: " + location->path;
 	const std::map<int, std::string> & error_page = server->error_page;
 
 	std::fstream * errPage = NULL;
@@ -360,5 +360,5 @@ void Response::setErrorPage(const StatusCodeException & e, const Location_block 
 	} else {
 		_body = errPage;
 	}
-	_response += "Transfer-Encoding: chunked";
+	_response += "\r\nTransfer-Encoding: chunked";
 }
