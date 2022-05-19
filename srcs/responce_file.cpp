@@ -2,6 +2,7 @@
 /*
 to explain:
 http://localhost:8081/home/route1/file1
+http://localhost:8081/conatct
 
 file.conf:
 server {
@@ -11,6 +12,7 @@ server {
   { 
     root ./folder1/
     ...
+    return 302 /contact
   }
 }
 mn server block:
@@ -42,7 +44,6 @@ void    file_to_return(Server_block server, std::string path){
     // if they are return function there
     // std::vector<std::string> splited_path = split(path, "/");
     Location_block l_block;
-
     int i = 0;
     int count = 0;
     while (i < path.size()){
@@ -58,13 +59,18 @@ void    file_to_return(Server_block server, std::string path){
             std::cout << "************************************************************************\n";
             std::cout << l_block.path << std::endl;
             std::cout << path << std::endl;
-            if (l_block.path == path){
+            if (l_block.path == path){ // gennerate file to uplade
                 std::cout << "-----------------------------------------------------------\n";
                 std::cout << "path is " << path << " compare with " << l_block.path << std::endl;
                 std::cout << "-----------------------------------------------------------\n";
+                if (l_block.return_path.size()){ //send responce
+                    std::cout << "--------------------------------Return function---------------\n";
+                    std::cout << "Return code is " << l_block.return_code << "  to path" << l_block.return_path << std::endl;
+                    std::cout << "--------------------------------Return function---------------\n";
+                }
                 break;
             }
-        }
+         }
         while(path.size() && path[path.size() - 1] != '/') {
             path.pop_back();
         }
