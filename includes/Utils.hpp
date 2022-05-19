@@ -22,9 +22,11 @@ static const std::string mon_name[12] = {
 };
 
 std::vector<std::string> splinter(const std::string& line, char del = ' ') ;
+std::vector<std::string> splinter2(const std::string& line, char del = ' ') ;
 size_t                   convertsizeT(std::string& src);
 size_t                   to_hex(std::string &str);
 bool                     isSpace(unsigned char c);
-std::string	time_last_modification(struct stat buffer);
+std::string				 time_last_modification(struct stat buffer);
 std::string              lowercase(std::string src);
+std::string				 trim(const std::string& line);
 #endif

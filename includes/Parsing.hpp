@@ -30,9 +30,9 @@
 #include <fcntl.h>
 #include <set>
 #include <vector>
-#include "request.hpp"
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <algorithm>
 
 typedef std::map<std::string, std::string>::iterator _itr;
 struct Location_block
@@ -89,4 +89,10 @@ char 						*get_response();
 bool						port_already_binded(std::vector<Server_block> &, int, int);
 bool						syntax_of_port_is_correct(std::string);
 bool 						is_number(std::string str);
+
+
+
+void   				 		file_to_return(Server_block server, std::string path);
 #endif
+
+#include "request.hpp"

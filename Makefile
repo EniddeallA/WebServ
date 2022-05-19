@@ -1,5 +1,5 @@
 
-SRCS		=	main.cpp srcs/Response.cpp srcs/Utils.cpp srcs/cgi.cpp srcs/request.cpp srcs/Parsing/Parsing.cpp srcs/Parsing/fill_data_in_struct.cpp srcs/Parsing/utils.cpp srcs/Server/server.cpp srcs/Server/server_utils.cpp
+SRCS		=	main.cpp srcs/Response.cpp srcs/Utils.cpp srcs/cgi.cpp srcs/request.cpp srcs/Parsing/Parsing.cpp srcs/Parsing/fill_data_in_struct.cpp srcs/Parsing/utils.cpp srcs/Server/server.cpp srcs/Server/server_utils.cpp srcs/responce_file.cpp
 
 
    
@@ -7,7 +7,7 @@ CPP_VERSION	=	#-std=c++98
 
 COMPILER	=	clang++
 
-FLAGS		=	-g3 #-Wextra -Wall -Werror
+FLAGS		=	#-g3 #-Wextra -Wall -Werror
 
 NAME		=	ft_server
 
