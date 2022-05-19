@@ -30,7 +30,6 @@
 #include <fcntl.h>
 #include <set>
 #include <vector>
-#include "request.hpp"
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <algorithm>
@@ -96,3 +95,5 @@ bool 						is_number(std::string str);
 
 void   				 		file_to_return(Server_block server, std::string path);
 #endif
+
+#include "request.hpp"

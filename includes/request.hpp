@@ -7,10 +7,11 @@
 # include <map>
 # include "Utils.hpp"
 # include <cstdio>
-# include "Parsing.hpp"
 #ifndef REQUEST
 
 # define REQUEST
+
+# include "Parsing.hpp"
 
 # define HTTP_VERSION "HTTP/1.1"
 # define BAD_REQUEST 400
@@ -76,7 +77,7 @@ class Request{
 		void toChuncked(std::string &req);
 		void preBody( void );
 		void setLocation( void );
-		void setServer( std::vector<Server_block> const serv_confs );
+		void setServer( std::vector<Server_block > const serv_confs );
 		
 	private:
 		int                         _error;
