@@ -45,12 +45,14 @@ class Response
 		void internalError();
 		void httpVersionNotSupported(std::string const &version);
 		void time_out();
+		void notFound();
 		void ok(std::string const &tmp_path);
 
+		std::string auto_index();
 		Location_block getLocation(Server_block server);
 		void handleRequest(Server_block server);
-		void handleGetRequest(Location_block file_path);
-		void handlePostRequest(Location_block file_path);
+		void handleGetRequest();
+		void handlePostRequest();
 		void handleDeleteRequest();
 
 		void setErrorPage(const StatusCodeException & e, const Location_block * location, Server_block *server);
