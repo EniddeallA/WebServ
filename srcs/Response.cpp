@@ -67,6 +67,20 @@ void Response::badRequest()
 	_response += "Connection: close\r\n\r\n";
 }
 
+void Response::notFound()
+{
+	time_t rawtime;
+
+	time(&rawtime);
+	_response = "HTTP/1.1 404 Not Found\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\n";
+	_response += "Server: webserver\r\n";
+	_response += "Content-Length: 0\r\n";
+	_response += "Connection: close\r\n\r\n";
+}
+
 void Response::httpVersionNotSupported(std::string const &version)
 {
 	time_t rawtime;
@@ -202,29 +216,70 @@ Location_block Response::getLocation(Server_block server)
 	}
 }
 
+std::string Response::auto_index()
+{
+	DIR *dir; struct dirent *diread;
+    std::vector<std::string> files;
+
+	if ((dir = opendir(_path.c_str())) != nullptr) {
+        while ((diread = readdir(dir)) != nullptr) {
+            files.push_back(diread->d_name);
+        }
+        closedir (dir);
+    } else {
+		notFound();
+    }
+	std::string body;
+
+	body = std::string("<html>\r\n<head>\r\n");
+	body += std::string("<title>Index of ") + _path;
+	body += std::string("</title>\r\n</head>\r\n<body>\r\n<h1>Index of ") + _path;
+	body += std::string("</h1>\r\n<hr>");
+	for (auto file : files) 
+		body += std::string("<a>") + file + std::string("</a>r\n");
+	body += std::string("\r\n</body>\r\n</html>\r\n");
+	return body;
+}
+
 void Response::handleRequest(Server_block server) {
 	Location_block location = getLocation(server);
 	_path = server.root + _path;
+	struct stat s;
 
-	std::cout << "check  for method " << _request.getRequestMethod() << std::endl;
-	_is_request_handled = true;
-	if (_request.getRequestMethod() == "GET" &&
-			std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "GET") != location.allowed_funct.end())
-		this->handleGetRequest(location);
-	else if (_request.getRequestMethod() == "POST" &&
-			std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
-		this->handlePostRequest(location);
-	else if (_request.getRequestMethod() == "DELETE" &&
-			std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "DELETE") != location.allowed_funct.end())
-		this->handleDeleteRequest();
-	else 
+	stat(_path.c_str(), &s);
+	if(s.st_mode & S_IFDIR)
 	{
-		this->unallowedMethod();
-		_is_request_handled = false;
+		std::fstream * file = new std::fstream();
+		if (location.auto_index == "on")
+			_response = auto_index();
+		else
+			_path += "/" + location.index_file;
+		file->open(_path.c_str());
+		delete _body;
+		_body = file;
+	}
+	else if(s.st_mode & S_IFREG)
+	{
+		std::cout << "check  for method " << _request.getRequestMethod() << std::endl;
+		_is_request_handled = true;
+		if (_request.getRequestMethod() == "GET" &&
+				std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "GET") != location.allowed_funct.end())
+			this->handleGetRequest();
+		else if (_request.getRequestMethod() == "POST" &&
+				std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
+			this->handlePostRequest();
+		else if (_request.getRequestMethod() == "DELETE" &&
+				std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "DELETE") != location.allowed_funct.end())
+			this->handleDeleteRequest();
+		else 
+		{
+			this->unallowedMethod();
+			_is_request_handled = false;
+		}
 	}
 }
 
-void Response::handleGetRequest(Location_block location)
+void Response::handleGetRequest()
 {
 	struct stat fileStat;
 	time_t rawtime;
@@ -246,7 +301,7 @@ void Response::handleGetRequest(Location_block location)
 	_response += "\r\nAccept-Ranges: bytes";
 }
 
-void Response::handlePostRequest(Location_block location)
+void Response::handlePostRequest()
 {
 	struct stat fileStat;
 	time_t rawtime;
