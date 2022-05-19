@@ -7,6 +7,7 @@
 # include <map>
 # include "Utils.hpp"
 # include <cstdio>
+# include "Parsing.hpp"
 #ifndef REQUEST
 
 # define REQUEST
@@ -43,11 +44,10 @@ class Request{
 	   /*
 		GETTERS
 	   */
-	//    std::string getRequestMethod( void ) const;
+		// std::string getRequestMethod( void ) const;
 		// std::string getRequestTarget( void ) const;
 		// std::string getRequestQuery( void ) const;
 		// std::string getHost( void ) const;
-		t_headers getHeaders( void ) const;
 		// std::string getBodyName( void ) const;
 		// bool    getKeepAlive( void ) const;
 		// int getError( void ) const;
@@ -64,6 +64,8 @@ class Request{
         bool            _isKeepAlive() const { return _keepAlive == true; }
         size_t          getContentLength() const { return _contentLength; }
         std::string     getContentType() { return ((_headers.find("Content-Type") != _headers.end()) ? _headers["Content-Type"] : ""); }
+		t_headers getHeaders( void ) const;
+		
 
 
 
@@ -73,11 +75,13 @@ class Request{
 		void parseBody(std::string &req);
 		void toChuncked(std::string &req);
 		void preBody( void );
+		void setLocation( void );
+		void setServer( std::vector<Server_block> const serv_confs );
 		
 	private:
 		int                         _error;
 		std::string                 _requestMethod, _requestTarget, _requestQuery;
-		std::string                 _host, _bodyName, _str;
+		std::string                 _host, _bodyName, _str, _port;
 		bool                        _hasBody, _keepAlive;
 		bool                        _headersEnd, _requestEnd;
 		bool						_isCL, _isTE;
@@ -85,6 +89,8 @@ class Request{
 		t_headers _headers;
 		std::ofstream               _bodyFile;
 		size_t                      _bodySize, _contentLength;
+		// Location_block				_location;
+		Server_block				_server;
 
 
 	private:

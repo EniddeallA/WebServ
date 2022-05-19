@@ -20,6 +20,17 @@ std::vector<std::string> splinter(const std::string& line, char del) {
     return ret;
 }
 
+std::vector<std::string> splinter2(const std::string& line, char del) {
+    std::vector<std::string>    ret;
+    std::string                 tmp;
+    size_t     i = 0, start = line.find(':'), end = 0;
+    
+    ret.push_back(line.substr(0, start));
+    ret.push_back(line.substr(start + 1, line.length() - start));
+
+    return ret;
+}
+
 size_t       convertsizeT(std::string& src) {
     std::stringstream ss(src);
     size_t  ret;
@@ -67,4 +78,16 @@ std::string              lowercase(std::string src) {
         }
     }
     return ret;
+}
+
+std::string				 trim(const std::string& line) {
+    std::string::const_iterator start = line.begin(), end = line.end();
+    while (start != end && isSpace(*start) == true) {
+        start++;
+    }
+    end--;
+    while(std::distance(start, end) > 0 && isSpace(*end) == true) {
+        end--;
+    }
+    return std::string(start, end + 1);
 }

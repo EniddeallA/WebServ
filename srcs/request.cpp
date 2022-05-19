@@ -107,7 +107,19 @@ void Request::parseHeaders(std::string headers)
 	std::vector<std::string> vec = splinter(headers, '\n'), vec2;
 	for (size_t i = 0; i < vec.size(); i++) {
 		vec[i].erase(vec[i].find('\r'));
-		vec2 = splinter(vec[i], ':');
+		vec2 = splinter2(vec[i], ':');
+
+		if (lowercase(vec2[0]) == "host" && _host.empty() == true) {
+			vec2[1] = trim(vec2[1]);
+			if (vec2[1].find(':') != std::string::npos) {
+				// found and split
+				_host = splinter2(vec2[1], ':')[0];
+				_port = splinter2(vec2[1], ':')[1];
+			} else {
+				_host = vec2[1];
+				_port = "80";
+			}
+		}
 		if (isSpace(vec2[1][0])) {
 			vec2[1].erase(0, 1);
 			if (isSpace(vec2[1][0])){
@@ -306,6 +318,17 @@ void		Request::clear( void ){
 	_bodySize = 0;
 	_contentLength = 0;
 }
+
+void	Request::setServer( std::vector<Server_block> const serv_confs ) {
+	for (size_t i = 0; i < serv_confs.size(); i++ ) {
+		for (size_t j = 0; j < serv_confs[i].name.size() ; j++) {
+			if (_host == serv_confs[i].name[j]) {
+
+			}
+		}
+	}
+}
+
 
 // int Request::getError( void ) const
 // {
