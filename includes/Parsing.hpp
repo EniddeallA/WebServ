@@ -50,6 +50,7 @@ struct Location_block
 	std::string 						return_path;
     std::string							max_body_size;
 	long								max_body_size_in_kb;
+	std::string							index_file;
 };
 
 struct Server_block{

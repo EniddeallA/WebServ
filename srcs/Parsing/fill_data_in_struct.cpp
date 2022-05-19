@@ -96,6 +96,8 @@ void fill_location_data(Server_block server, Location_block &location, _itr begi
 		}
 		if (key == "client_max_body_size")
 			location.max_body_size = value;	
+		if (key == "index")
+			location.index_file = value;
 	}
 }
 
