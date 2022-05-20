@@ -44,6 +44,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 						FD_SET(new_socket, &_fd_set_read);
 						fds.push_back(new_socket);
 						fd_max = new_socket;
+
 					}
 				}
 				else
@@ -68,8 +69,8 @@ void start_servers(std::vector<Server_block> &all_servers){
 					std::cout << "start handiling " << std::endl;
 					fd_with_response_object[new_socket].handleRequest(all_servers[all_servers.size() - 1]); // just for test use the last server bloc
 					std::cout << "finish handiling " << std::endl;
-					// fd_with_response[new_socket] = (char*)fd_with_response_object[new_socket].get_respone().c_str();
-					fd_with_response[new_socket] = get_response();
+					fd_with_response[new_socket] = (char*)fd_with_response_object[new_socket].get_respone().c_str();
+					// fd_with_response[new_socket] = get_response();
 					// file_to_return(all_servers[3], v_of_request_object[new_socket].getRequestTarget()); // fkdsjvnvjjdshgjlghjgdlshsdlghghds
 					// std::cout << "====================================================RESPONCE\n";
 					// std::cout << fd_with_response[new_socket] << std::endl;

@@ -286,7 +286,10 @@ std::string Response::auto_index()
 	body += std::string("</title>\r\n</head>\r\n<body>\r\n<h1>Index of ") + _path;
 	body += std::string("</h1>\r\n<hr>");
 	for(int i=0; i < files.size(); i++)
+	{
+		std::cout << files[i] << "  " << _path << std::endl;
 		body += std::string("<a>") + files[i] + std::string("</a>r\n");
+	}
 	body += std::string("\r\n</body>\r\n</html>\r\n");
 	return body;
 }
@@ -296,7 +299,14 @@ void Response::handleRequest(Server_block server) {
 	Location_block location = getLocation(server);
 	std::cout << "check for location " << location.path << std::endl;
 	_path = server.root + _path;
+
+	if (location.return_path.size())
+	{
+		*_body << location.return_path;
+	}
+
 	struct stat s;
+	std::cout << " path is " << _path << std::endl;
 
 	stat(_path.c_str(), &s);
 	if(s.st_mode & S_IFDIR)
