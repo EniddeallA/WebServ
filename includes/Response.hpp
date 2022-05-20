@@ -24,14 +24,12 @@ class Response
 		int _fd;
 		fd_set _set;
 		bool _is_request_handled;
-		std::iostream* _body;
+		std::fstream* _body;
 		std::string _path;
 
 	public:
 		Response(Request	request);
-		Response(){
-
-		}
+		Response(){};
 		Response(const Response& other);
 		Response& operator=(const Response& other);
 		~Response();
