@@ -266,8 +266,6 @@ Location_block Response::getLocation(Server_block server)
 
 }
 
-
-
 std::string Response::auto_index()
 {
 	DIR *dir; struct dirent *diread;
@@ -287,8 +285,8 @@ std::string Response::auto_index()
 	body += std::string("<title>Index of ") + _path;
 	body += std::string("</title>\r\n</head>\r\n<body>\r\n<h1>Index of ") + _path;
 	body += std::string("</h1>\r\n<hr>");
-	for (auto file : files) 
-		body += std::string("<a>") + file + std::string("</a>r\n");
+	for(int i=0; i < files.size(); i++)
+		body += std::string("<a>") + files[i] + std::string("</a>r\n");
 	body += std::string("\r\n</body>\r\n</html>\r\n");
 	return body;
 }
@@ -457,23 +455,22 @@ void Response::handleDeleteRequest()
 	}
 }
 
-std::stringstream * errorTemplate(const StatusCodeException & e) {
-	std::stringstream * alloc = new std::stringstream("");
-	std::stringstream & body = *alloc;
+std::fstream* errorTemplate(const StatusCodeException & e) {
+	std::fstream * body;
 
 	if (e.getStatusCode() >= 400) {
-		body << "<!DOCTYPE html>\n" ;
-		body << "<html lang=\"en\">\n";
-		body << "<head>\n";
-		body << "<title>" << e.getStatusCode() << "</title>\n";
-		body << "</head>\n";
-		body << "<body>\n";
-		body << "<h1 style=\"text-align:center\">" << e.getStatusCode() << " - " << HttpStatus::reasonPhrase(e.getStatusCode()) << "</h1>\n";
-		body << "<hr>\n";
-		body << "<h4 style=\"text-align:center\">WebServer</h4>\n";
-		body << "</body>\n";
+		*body << "<!DOCTYPE html>\n" ;
+		*body << "<html lang=\"en\">\n";
+		*body << "<head>\n";
+		*body << "<title>" << e.getStatusCode() << "</title>\n";
+		*body << "</head>\n";
+		*body << "<body>\n";
+		*body << "<h1 style=\"text-align:center\">" << e.getStatusCode() << " - " << HttpStatus::reasonPhrase(e.getStatusCode()) << "</h1>\n";
+		*body << "<hr>\n";
+		*body << "<h4 style=\"text-align:center\">WebServer</h4>\n";
+		*body << "</body>\n";
 	}
-	return &body;
+	return body;
 }
 
 void Response::setErrorPage(const StatusCodeException & e, const Location_block *location, Server_block *server) {

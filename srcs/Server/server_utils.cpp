@@ -35,7 +35,7 @@ void start_server(Server_block &server){
 
 //DEFAULT RESPONSE FUNCTION
 char *get_response(){
-	char * resp = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!";
+	char * resp = (char *)"HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!";
 	return resp;
 }
 
