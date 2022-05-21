@@ -5,7 +5,7 @@ http://localhost:8081/home/route1/file1
 http://localhost:8081/conatct
 
 file.conf:
-server {
+server {                                                                        /home/route1/file1                  /route1/file1
   listen localhost:8081
   ...
   location /home

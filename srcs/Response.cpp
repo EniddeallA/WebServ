@@ -196,7 +196,8 @@ Location_block Response::getLocation(Server_block server)
     // if they are return function there
     // std::vector<std::string> splited_path = split(path, "/");
 	std::string path = _request.getRequestTarget();
-	std::cout << "path is " << path << std::endl;
+	std::string save = "";
+	std::string concate  = "";
     Location_block l_block;
     int i = 0;
     int count = 0;
@@ -206,17 +207,11 @@ Location_block Response::getLocation(Server_block server)
         i++;
     }
     
-    std::cout << "ENTER TO FUNCTION size is " << count << std::endl;
-    for (int r = 0; r < count; r++){
+    for (int r = 0; r < count + 1; r++){
         for (int i = 0; i < server.all_locations.size(); i++){
             l_block = server.all_locations[i];
-            std::cout << "************************************************************************\n";
-            std::cout << l_block.path << std::endl;
-            std::cout << path << std::endl;
             if (l_block.path == path){ // gennerate file to uplade
-                std::cout << "-----------------------------------------------------------\n";
-                std::cout << "path is " << path << " compare with " << l_block.path << std::endl;
-                std::cout << "-----------------------------------------------------------\n";
+				_path = save;
                 if (l_block.return_path.size()){ //send responce
                     std::cout << "--------------------------------Return function---------------\n";
                     std::cout << "Return code is " << l_block.return_code << "  to path" << l_block.return_path << std::endl;
@@ -225,12 +220,24 @@ Location_block Response::getLocation(Server_block server)
 				return l_block;
             }
          }
+		 concate = "";
+		 char c;
         while(path.size() && path[path.size() - 1] != '/') {
+			c = path[path.size() - 1];
+			concate = c + concate;
             path.pop_back();
+
         }
-        if (path.size() && path[path.size() - 1] == '/')
+        if (path.size() > 1 && path[path.size() - 1] == '/'){
             path.pop_back();
+			concate = '/' + concate;
+		}
+		else if (path.size() && path[path.size() - 1] == '/'){
+			concate = '/' + concate;
+		}
+		save = concate + save;
     }
+
 	return l_block;
 
 }
@@ -239,7 +246,7 @@ std::string Response::auto_index()
 {
 	DIR *dir; struct dirent *diread;
     std::vector<std::string> files;
-
+	std::cout << "_path is for aut index" << _path << std::endl;
 	if ((dir = opendir(_path.c_str())) != nullptr) {
         while ((diread = readdir(dir)) != nullptr) {
             files.push_back(diread->d_name);
@@ -253,14 +260,11 @@ std::string Response::auto_index()
 	std::cout<< "hello  000" <<std::endl;
 	body = std::string("<html>\r\n<head>\r\n");
 	body += std::string("<title>Index of ") + _path;
-	body += std::string("</title>\r\n</head>\r\n<body>\r\n<h2><h2>Directory listing for ") + _path;
-	body += std::string("</h2>\r\n<hr>\r\n<ul>\r\n");
-	for(int i=0; i < files.size(); i++)
-	{
-		std::cout << files[i] << "  " << _path << std::endl;
-		body += std::string("<li><a href='" + files[i] +"'>") + files[i] + std::string("</a>\r\n");
+	body += std::string("</title>\r\n</head>\r\n<body>\r\n<h1>Index of ") + _path;
+	body += std::string("</h1>\r\n<hr>");
+	for(int i=0; i < files.size(); i++){
+		body += std::string("<a>") + files[i] + std::string("</a>r\n");
 	}
-	body += std::string("</ul>\r\n<hr>");
 	body += std::string("\r\n</body>\r\n</html>\r\n");
 	this->ok(body.size());
 	return body;
@@ -269,7 +273,6 @@ std::string Response::auto_index()
 void Response::handleRequest(Server_block server) {
 	// std::cout << "start handling req" << std::endl;
 	Location_block location = getLocation(server);
-	// std::cout << "check for location " << location.path << std::endl;
 	_path = server.root + _path;
 
 	if (location.return_path.size())
