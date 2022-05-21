@@ -68,7 +68,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 					fd_with_response_object[new_socket] = Response(v_of_request_object[new_socket]);
 					// std::cout << "start handiling " << std::endl;
 					fd_with_response_object[new_socket].handleRequest(all_servers[all_servers.size() - 1]); // just for test use the last server bloc
-					fd_with_response[new_socket] = (char*)fd_with_response_object[new_socket].get_respone().c_str(); //? that just return the head but we still need the body
+					fd_with_response[new_socket] = strdup(fd_with_response_object[new_socket].get_respone().c_str()); //? that just return the head but we still need the body
 					std::cout << "finish geting responce " << std::endl;
 					// std::cout << "====================================================RESPONCE\n";
 					// std::cout << fd_with_response[new_socket] << std::endl;
@@ -94,21 +94,19 @@ void start_servers(std::vector<Server_block> &all_servers){
 				if (index + buffer_size > l) 
 					buffer_size = l - index;
 				int sended = write(new_socket, fd_with_response[new_socket] + index, buffer_size);
-									std::cout << "write head" << std::endl;
-									write(0, fd_with_response[new_socket] + index, buffer_size);
 				fd_with_send_size [new_socket] += sended;
 				index += sended;
 
 				if (index >= l){ //? after sending the head i need to start sending the body
-					std::cout << "finish sendiing head and start sending body" << std::endl;
+					// std::cout << "finish sendiing head and start sending body" << std::endl;
 
 					bzero(buffer, BUFFER);
-					fd_with_response_object[new_socket].get_body()->read(buffer, BUFFER - 1);
+					fd_with_response_object[new_socket].get_body().read(buffer, BUFFER - 1);
 					write(new_socket, buffer, buffer_size);
-					std::cout << "body buffer is " << buffer ;
+					write(1, buffer, buffer_size);
 
 				}
-				if (index >= l && fd_with_response_object[new_socket].get_body()->eof()){ //? after finish sending all responce
+				if (index >= l && fd_with_response_object[new_socket].get_body().eof()){ //? after finish sending all responce
 					std::cout << "finish sendiing body" << std::endl;
 
 					if (v_of_request_object[new_socket]._isKeepAlive() == false){ //correct this function the default is keep-alive not close

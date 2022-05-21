@@ -1,3 +1,5 @@
+#ifndef REQUEST
+# define REQUEST
 # include <iostream>
 # include <string>
 # include <fstream>
@@ -7,9 +9,6 @@
 # include <map>
 # include "Utils.hpp"
 # include <cstdio>
-#ifndef REQUEST
-
-# define REQUEST
 
 # include "Parsing.hpp"
 

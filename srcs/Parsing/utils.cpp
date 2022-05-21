@@ -128,6 +128,22 @@ bool syntax_of_port_is_correct(std::string port){
 	return true;
 }
 
+long convert_to_kb(std::string value){
+	long size = atol(value.c_str()) * 1000;
+	return size;
+}
+
+int	criet_and_open_file(std::string file_name){
+	int fd = open(file_name.c_str(), std::ios::out | std::ios::trunc| O_WRONLY);
+	if (fd == -1){
+		std::fstream outfile;
+		outfile.open(file_name.c_str(), std::ios_base::app);
+		outfile.close();
+		fd = open(file_name.c_str(), std::ios::out | std::ios::trunc| O_RDWR);
+	}
+	return fd;
+}
+
 bool is_number(std::string str){
 	for (size_t i = 0; i < str.length(); i++){
 		if (isdigit(str[i]) == false)

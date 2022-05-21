@@ -30,11 +30,19 @@ std::string Response::get_respone( void ) const
 	return _response;
 }
 
-std::iostream* Response::get_body( void ) const
+std::fstream& Response::get_body( void )
 {
 	return _body;
 }
 
+int Response::get_fd( void ) const
+{
+	return _fd;
+}
+
+void Response::close_fd( void ){
+	close(_fd);
+}
 /*
 	*To do:
 		- Accurate response status codes {90%}
@@ -190,6 +198,15 @@ void Response::ok(size_t bodysize)
 // }
 
 
+void Response::create_file()
+{
+	std::string filepath = "/tmp/autoindex_" + std::to_string(time(NULL));
+	std::ofstream out(filepath);
+	_filepath = filepath;
+	out << _response;
+	out.close();
+	_fd = open(filepath.c_str(), O_RDONLY);
+}
 
 Location_block Response::getLocation(Server_block server)
 {
@@ -242,7 +259,7 @@ Location_block Response::getLocation(Server_block server)
 
 }
 
-std::string Response::auto_index()
+void Response::auto_index()
 {
 	DIR *dir; struct dirent *diread;
     std::vector<std::string> files;
@@ -256,18 +273,18 @@ std::string Response::auto_index()
 		notFound();
     }
 	std::string body;
-	std::cout<< "hello" <<std::endl;
-	std::cout<< "hello  000" <<std::endl;
-	body = std::string("<html>\r\n<head>\r\n");
+	body += std::string("<html>\r\n<head>\r\n");
 	body += std::string("<title>Index of ") + _path;
-	body += std::string("</title>\r\n</head>\r\n<body>\r\n<h1>Index of ") + _path;
-	body += std::string("</h1>\r\n<hr>");
+	body +=std::string("</title>\r\n</head>\r\n<body>\r\n<h1>Index of ") + _path;
+	body += std::string("</h1>\r\n<hr>\r\n<ul>\r\n");
 	for(int i=0; i < files.size(); i++){
-		body += std::string("<a>") + files[i] + std::string("</a>r\n");
+		body += std::string("<a href='" + files[i] + "'>") + files[i] + std::string("</a>\r\n");
 	}
-	body += std::string("\r\n</body>\r\n</html>\r\n");
+	body += std::string("</ul>\r\n</body>\r\n</html>\r\n");
 	this->ok(body.size());
-	return body;
+	_response += body;
+	std::cout << _response << std::endl;
+	create_file();
 }
 
 void Response::handleRequest(Server_block server) {
@@ -277,11 +294,10 @@ void Response::handleRequest(Server_block server) {
 
 	if (location.return_path.size())
 	{
-		*_body << location.return_path;
+		_body << location.return_path;
 	}
 
 	struct stat s;
-	// std::cout << " path is " << _path << std::endl;
 
 	stat(_path.c_str(), &s);
 	if(s.st_mode & S_IFDIR)
@@ -289,14 +305,10 @@ void Response::handleRequest(Server_block server) {
 		std::fstream * file = new std::fstream();
 		if (location.auto_index == "on")
 		{
-			_response += auto_index();
-			// std::cout << _response <<std::endl;
+			auto_index();
 		}
 		else
 			_path += "/" + location.index_file;
-		file->open(_path.c_str());
-		delete _body;
-		_body = file;
 	}
 	else if(s.st_mode & S_IFREG)
 	{
@@ -323,11 +335,8 @@ void Response::handleGetRequest()
 {
 	struct stat fileStat;
 	time_t rawtime;
-	std::fstream * file = new std::fstream();
 	
-	file->open(_path.c_str());
-	delete _body;
-	_body = file;
+	_body.open(_path.c_str());
 	time(&rawtime);
 	stat (_path.c_str(), &fileStat);
 	_response += "Date: " + std::string(ctime(&rawtime));
@@ -339,17 +348,15 @@ void Response::handleGetRequest()
 		_response += "\r\nContent-Type: " + std::string(type); 
 	_response += "\r\nConnection: keep-alive";
 	_response += "\r\nAccept-Ranges: bytes";
+	create_file();
 }
 
 void Response::handlePostRequest()
 {
 	struct stat fileStat;
 	time_t rawtime;
-	std::fstream * file = new std::fstream();
 	
-	file->open(_path.c_str());
-	delete _body;
-	_body = file;
+	_body.open(_path.c_str());
 	time(&rawtime);
 	stat (_path.c_str(), &fileStat);
 	_response += "Date: " + std::string(ctime(&rawtime));
@@ -361,6 +368,7 @@ void Response::handlePostRequest()
 		_response += "\r\nContent-Type: " + std::string(type); 
 	_response +=  "\r\nConnection: keep-alive";
 	_response +=  "\r\nAccept-Ranges: bytes";
+	create_file();
 }
 
 static void deleteDirectoryFiles(DIR * dir, const std::string & path) {
@@ -443,60 +451,51 @@ void Response::handleDeleteRequest()
 	}
 }
 
-std::fstream* errorTemplate(const StatusCodeException & e) {
-	std::fstream * body;
+void Response::errorTemplate(const StatusCodeException & e) {
 
 	if (e.getStatusCode() >= 400) {
-		*body << "<!DOCTYPE html>\n" ;
-		*body << "<html lang=\"en\">\n";
-		*body << "<head>\n";
-		*body << "<title>" << e.getStatusCode() << "</title>\n";
-		*body << "</head>\n";
-		*body << "<body>\n";
-		*body << "<h1 style=\"text-align:center\">" << e.getStatusCode() << " - " << HttpStatus::reasonPhrase(e.getStatusCode()) << "</h1>\n";
-		*body << "<hr>\n";
-		*body << "<h4 style=\"text-align:center\">WebServer</h4>\n";
-		*body << "</body>\n";
+		_body << "<!DOCTYPE html>\n" ;
+		_body << "<html lang=\"en\">\n";
+		_body << "<head>\n";
+		_body << "<title>" << e.getStatusCode() << "</title>\n";
+		_body << "</head>\n";
+		_body << "<body>\n";
+		_body << "<h1 style=\"text-align:center\">" << e.getStatusCode() << " - " << HttpStatus::reasonPhrase(e.getStatusCode()) << "</h1>\n";
+		_body << "<hr>\n";
+		_body << "<h4 style=\"text-align:center\">WebServer</h4>\n";
+		_body << "</body>\n";
 	}
-	return body;
 }
 
-void Response::setErrorPage(const StatusCodeException & e, const Location_block *location, Server_block *server) {
-	_statuscode = e.getStatusCode();
-	time_t rawtime;
+// void Response::setErrorPage(const StatusCodeException & e, const Location_block *location, Server_block *server) {
+// 	_statuscode = e.getStatusCode();
+// 	time_t rawtime;
 
-	time(&rawtime);
-	_response += "Connection: keep-alive";
-	_response += "\r\nContent-Type: text/html";
-	_response += "\r\nDate: " + std::string(ctime(&rawtime));
-	_response += "\r\nServer: webserver";
-	if (location->path != "")
-		_response += "\r\nLocation: " + location->path;
-	const std::map<int, std::string> & error_page = server->error_page;
+// 	time(&rawtime);
+// 	_response += "Connection: keep-alive";
+// 	_response += "\r\nContent-Type: text/html";
+// 	_response += "\r\nDate: " + std::string(ctime(&rawtime));
+// 	_response += "\r\nServer: webserver";
+// 	if (location->path != "")
+// 		_response += "\r\nLocation: " + location->path;
+// 	const std::map<int, std::string> & error_page = server->error_page;
 
-	std::fstream * errPage = NULL;
+// 	std::fstream errPage;
 
-	if (error_page.find(_statuscode) != error_page.end()) {
-		errPage = new std::fstream();
-		std::string errPath = error_page.find(_statuscode)->second;
-		if (errPath[0] == '/' || (errPath[0] == '.' && errPath[1] == '/')) {
-			errPage->open(errPath.c_str());
-		} else {
-			std::string filename = location->root;
+// 	if (error_page.find(_statuscode) != error_page.end()) {
+// 		std::string errPath = error_page.find(_statuscode)->second;
+// 		if (errPath[0] == '/' || (errPath[0] == '.' && errPath[1] == '/')) {
+// 			errPage.open(errPath.c_str());
+// 		} else {
+// 			std::string filename = location->root;
 
-			filename += errPath;
-			errPage->open(filename.c_str());
-		}
-	}
+// 			filename += errPath;
+// 			errPage.open(filename.c_str());
+// 		}
+// 	}
 
-	delete _body;
-	if (!errPage || !errPage->is_open()) {
-		_body = errorTemplate(e);
-		if (errPage) {
-			delete errPage;
-	}
-	} else {
-		_body = errPage;
-	}
-	_response += "\r\nTransfer-Encoding: chunked";
-}
+// 	if (!errPage || !errPage.is_open()) {
+// 		_body = errorTemplate(e);
+// 	_response += "\r\nTransfer-Encoding: chunked";
+// 	}
+// }
