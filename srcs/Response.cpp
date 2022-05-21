@@ -212,6 +212,7 @@ Location_block Response::getLocation(Server_block server)
 {
     // if they are return function there
     // std::vector<std::string> splited_path = split(path, "/");
+	_request.printData();
 	std::string path = _request.getRequestTarget();
 	std::string save = "";
 	std::string concate  = "";
@@ -229,6 +230,7 @@ Location_block Response::getLocation(Server_block server)
             l_block = server.all_locations[i];
             if (l_block.path == path){ // gennerate file to uplade
 				_path = save;
+				std::cout << "*****************_path is " << _path << std::endl;
                 if (l_block.return_path.size()){ //send responce
                     std::cout << "--------------------------------Return function---------------\n";
                     std::cout << "Return code is " << l_block.return_code << "  to path" << l_block.return_path << std::endl;
@@ -259,7 +261,7 @@ Location_block Response::getLocation(Server_block server)
 
 }
 
-void Response::auto_index()
+void Response::auto_index(Location_block location)
 {
 	DIR *dir; struct dirent *diread;
     std::vector<std::string> files;
@@ -278,7 +280,10 @@ void Response::auto_index()
 	body +=std::string("</title>\r\n</head>\r\n<body>\r\n<h1>Index of ") + _path;
 	body += std::string("</h1>\r\n<hr>\r\n<ul>\r\n");
 	for(int i=0; i < files.size(); i++){
-		body += std::string("<a href='" + files[i] + "'>") + files[i] + std::string("</a>\r\n");
+		std::string to_go  = _request.getRequestTarget();
+		if (to_go.size() && to_go[to_go.size() - 1] != '/')
+			to_go += '/';
+		body += std::string("<a href='" + to_go + files[i] + "'>") + files[i] + std::string("</a>\r\n");
 	}
 	body += std::string("</ul>\r\n</body>\r\n</html>\r\n");
 	this->ok(body.size());
@@ -291,7 +296,7 @@ void Response::handleRequest(Server_block server) {
 	// std::cout << "start handling req" << std::endl;
 	Location_block location = getLocation(server);
 	_path = server.root + _path;
-
+	std::cout << "PATH 2 IS " << _path << std::endl;
 	if (location.return_path.size())
 	{
 		_body << location.return_path;
@@ -305,7 +310,7 @@ void Response::handleRequest(Server_block server) {
 		std::fstream * file = new std::fstream();
 		if (location.auto_index == "on")
 		{
-			auto_index();
+			auto_index(location);
 		}
 		else
 			_path += "/" + location.index_file;

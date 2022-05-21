@@ -52,7 +52,7 @@ class Response
 		void notFound();
 		void ok(size_t bodysize);
 
-		void auto_index();
+		void auto_index(Location_block location);
 		Location_block getLocation(Server_block server);
 		void handleRequest(Server_block server);
 		void handleGetRequest();

@@ -84,30 +84,73 @@ void start_servers(std::vector<Server_block> &all_servers){
 				}
 			}
 			//? i need to send the head then send the body
+			// if (FD_ISSET(i, &_fd_set_write_temp)){ //CHECK FOR WRITTING FD_SET
+			// 	new_socket = i;
+			// 	int index = fd_with_send_size[new_socket];
+			// 	int l = 0;
+			// 	int buffer_size = BUFFER;
+			// 	while (fd_with_response[new_socket][l])
+			// 		l++;
+			// 	if (index + buffer_size > l) 
+			// 		buffer_size = l - index;
+			// 	int sended = write(new_socket, fd_with_response[new_socket] + index, buffer_size);
+			// 	fd_with_send_size [new_socket] += sended;
+			// 	index += sended;
+
+			// 	if (index >= l){ //? after sending the head i need to start sending the body
+			// 		// std::cout << "finish sendiing head and start sending body" << std::endl;
+
+			// 		bzero(buffer, BUFFER);
+			// 		fd_with_response_object[new_socket].get_body().read(buffer, BUFFER - 1);
+			// 		write(new_socket, buffer, buffer_size);
+			// 		write(1, buffer, buffer_size);
+
+			// 	}
+			// 	if (index >= l && fd_with_response_object[new_socket].get_body().eof()){ //? after finish sending all responce
+			// 		std::cout << "finish sendiing body" << std::endl;
+
+			// 		if (v_of_request_object[new_socket]._isKeepAlive() == false){ //correct this function the default is keep-alive not close
+			// 			FD_CLR(new_socket, &_fd_set_write);
+			// 			close(new_socket);
+			// 			fd_max = fds[0];
+			// 			int index = 0;
+			// 			for (size_t i = 0; i < fds.size(); i++){
+			// 				if (fds[i] == new_socket){
+			// 					index = i;
+			// 					continue;
+			// 				}
+			// 				fd_max = std::max(fds[i], fd_max);
+			// 			}
+			// 			if (index != 0)
+			// 				fds.erase(fds.begin() + index);
+			// 		}
+			// 		else{
+			// 			FD_CLR(new_socket, &_fd_set_write);
+			// 			FD_SET(new_socket, &_fd_set_read);
+			// 		}
+			// 		v_of_request_object[new_socket].clear();
+			// 	}
+			// }
+
+
 			if (FD_ISSET(i, &_fd_set_write_temp)){ //CHECK FOR WRITTING FD_SET
 				new_socket = i;
-				int index = fd_with_send_size[new_socket];
-				int l = 0;
-				int buffer_size = BUFFER;
-				while (fd_with_response[new_socket][l])
-					l++;
-				if (index + buffer_size > l) 
-					buffer_size = l - index;
-				int sended = write(new_socket, fd_with_response[new_socket] + index, buffer_size);
-				fd_with_send_size [new_socket] += sended;
-				index += sended;
+				bzero(buffer, BUFFER);
+				int fd = fd_with_response_object[new_socket].get_fd(); //! implement fcntl to all fds!!!!!
+				valread =  read(fd, buffer, BUFFER);
+				// std::cout << "start sending body << fd is " << fd << " valread " << valread  << std::endl;
 
-				if (index >= l){ //? after sending the head i need to start sending the body
-					// std::cout << "finish sendiing head and start sending body" << std::endl;
+				int sended = write(new_socket, buffer, valread); 
+								
+				//! NEED TO RETURN FD TO POSITION OF  VALREAD - SENDED I THINK;
 
-					bzero(buffer, BUFFER);
-					fd_with_response_object[new_socket].get_body().read(buffer, BUFFER - 1);
-					write(new_socket, buffer, buffer_size);
-					write(1, buffer, buffer_size);
 
-				}
-				if (index >= l && fd_with_response_object[new_socket].get_body().eof()){ //? after finish sending all responce
-					std::cout << "finish sendiing body" << std::endl;
+
+				// fd_with_send_size [new_socket] += sended;
+				// index += sended;
+
+				if (valread == 0 ){ //? after finish sending all responce
+					// std::cout << "finish sendiing body" << std::endl;
 
 					if (v_of_request_object[new_socket]._isKeepAlive() == false){ //correct this function the default is keep-alive not close
 						FD_CLR(new_socket, &_fd_set_write);
@@ -131,6 +174,11 @@ void start_servers(std::vector<Server_block> &all_servers){
 					v_of_request_object[new_socket].clear();
 				}
 			}
+
+
+
+
+
 		}
 	}
 }
