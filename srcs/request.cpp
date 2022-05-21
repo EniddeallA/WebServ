@@ -248,6 +248,7 @@ void 		Request::toChuncked(std::string &req) {
 				/** WARNING 
 				 * HANDLER , CHECK LAST LINE IF EMPTY
 				*/
+
 			}
 			std::string line =  req.substr(0, end);
 			if (line.length() != size) {
