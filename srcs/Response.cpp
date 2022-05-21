@@ -64,6 +64,20 @@ void Response::unallowedMethod()
 	_response += "Connection: close\r\n\r\n";
 }
 
+void Response::forbidden()
+{
+	time_t rawtime;
+
+	time(&rawtime);
+	_response = "HTTP/1.1 403 Forbidden\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\n";
+	_response += "Server: webserver\r\n";
+	_response += "Content-Length: 0\r\n";
+	_response += "Connection: close\r\n\r\n";
+}
+
 void Response::badRequest()
 {
 	time_t rawtime;
@@ -283,7 +297,7 @@ void Response::auto_index(Location_block location)
 			std::string to_go  = _request.getRequestTarget();
 			if (to_go.size() && to_go[to_go.size() - 1] != '/')
 				to_go += '/';
-			body += std::string("<a href='" + to_go + files[i] + "'>") + files[i] + std::string("</a>\r\n");
+			body += std::string("<a href='" + to_go + files[i] + "'>") + files[i] + std::string("</a></br>\r\n");
 		}
 		body += std::string("</ul>\r\n</body>\r\n</html>\r\n");
 		this->ok(body.size());
@@ -328,6 +342,7 @@ void Response::handleRequest(Server_block server) {
 	stat(_path.c_str(), &s);
 	if(s.st_mode & S_IFDIR)
 	{
+
 		std::fstream * file = new std::fstream();
 		if (location.auto_index == "on")
 		{
