@@ -65,7 +65,8 @@ class Request{
         bool            _isKeepAlive() const { return _keepAlive == true; }
         size_t          getContentLength() const { return _contentLength; }
         std::string     getContentType() { return ((_headers.find("Content-Type") != _headers.end()) ? _headers["Content-Type"] : ""); }
-		t_headers getHeaders( void ) const;
+		t_headers 		getHeaders( void ) const;
+		Server_block 	setServer( std::vector<Server_block > const serv_confs );
 		
 
 
@@ -77,7 +78,7 @@ class Request{
 		void toChuncked(std::string &req);
 		void preBody( void );
 		void setLocation( void );
-		void setServer( std::vector<Server_block > const serv_confs );
+		
 		
 	private:
 		int                         _error;
@@ -85,7 +86,7 @@ class Request{
 		std::string                 _host, _bodyName, _str, _port;
 		bool                        _hasBody, _keepAlive;
 		bool                        _headersEnd, _requestEnd;
-		bool						_isCL, _isTE;
+		bool						_isCL, _isTE, _serverFound;
 		std::vector<std::string>    _allowedMethods;
 		t_headers _headers;
 		std::ofstream               _bodyFile;
