@@ -24,8 +24,9 @@ class Response
 		int _fd;
 		fd_set _set;
 		bool _is_request_handled;
-		std::fstream* _body;
+		std::fstream _body;
 		std::string _path;
+		std::string autoindex;
 
 	public:
 		Response(Request	request);
@@ -35,7 +36,8 @@ class Response
 		~Response();
 	
 		std::string get_respone( void ) const;
-		std::iostream* get_body( void ) const;
+		std::fstream& get_body( void );
+		void errorTemplate(const StatusCodeException & e);
 		
 		void setHeader(size_t status_code, std::string const &message, size_t bodysize);
 		void unallowedMethod();
@@ -46,7 +48,7 @@ class Response
 		void notFound();
 		void ok(size_t bodysize);
 
-		std::string auto_index();
+		void auto_index();
 		Location_block getLocation(Server_block server);
 		void handleRequest(Server_block server);
 		void handleGetRequest();
