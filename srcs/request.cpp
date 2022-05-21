@@ -282,9 +282,9 @@ void		Request::printData( void ) {
 			<< "Content-Length :: [" << _contentLength << "]\n" 
 			<< "Body file :: [" << _bodyName << "]\n"
 			<< "Error :: [" << _error << "]\n";
-	std::cout << "=================================\n";
+	//std::cout << "=================================\n";
 	for (t_headers::iterator it = _headers.begin(); it != _headers.end(); ++it) {
-		std:: cout << "[" << (it)->first << "] :: [" << (it)->second << "]\n";
+		//std:: cout << "[" << (it)->first << "] :: [" << (it)->second << "]\n";
 	}
 }
 
