@@ -138,7 +138,8 @@ void start_servers(std::vector<Server_block> &all_servers){
 				if (valread <= 0 ){ //? after finish sending all responce
 					std::cout << "****************************************************" << std::endl;
 					std::cout << "finish sendiing data" << std::endl;
-
+					close(fd_with_response_object[new_socket].get_fd());
+					unlink(fd_with_response_object[new_socket].get_file_path().c_str());
 					if (v_of_request_object[new_socket]._isKeepAlive() == false){ //correct this function the default is keep-alive not close
 						FD_CLR(new_socket, &_fd_set_write);
 						close(new_socket);

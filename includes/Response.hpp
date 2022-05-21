@@ -28,10 +28,12 @@ class Response
 		std::string _path;
 		std::string _filepath;
 		int is_autoindex;
+		int	_file_not_found;
 
 	public:
 		Response(Request	request);
 		Response(){};
+		std::string get_file_path();
 		Response(const Response& other);
 		Response& operator=(const Response& other);
 		~Response();

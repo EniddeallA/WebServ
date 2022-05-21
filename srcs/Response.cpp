@@ -200,6 +200,9 @@ void Response::ok(size_t bodysize)
 // }
 
 
+std::string Response::get_file_path(){
+	return _filepath;
+}
 void Response::create_file()
 {
 	std::string filepath = "/tmp/autoindex_" + std::to_string(time(NULL));
@@ -215,6 +218,7 @@ Location_block Response::getLocation(Server_block server)
     // if they are return function there
     // std::vector<std::string> splited_path = split(path, "/");
 	//_request.printData();
+	_file_not_found = 0;
 	std::string path = _request.getRequestTarget();
 	std::string save = "";
 	std::string concate  = "";
@@ -258,6 +262,8 @@ Location_block Response::getLocation(Server_block server)
 		}
 		save = concate + save;
     }
+	// if not_found;
+	_file_not_found = 1;
 	return l_block;
 }
 
@@ -319,10 +325,27 @@ void Response::handleRequest(Server_block server) {
 	Location_block location = getLocation(server);
 	_path = server.root + _path;
 	std::cout << "PATH 2 IS " << _path << std::endl;
-	if (location.return_path.size())
-	{
-		_body << location.return_path;
+	if (_file_not_found){
+		// this->notFound();
+		struct stat fileStat;
+		_body.open("./error_pages/404.html");
+		stat ("./error_pages/404.html", &fileStat);
+
+		int fd = open("./error_pages/404.html", O_RDONLY);
+		char buff[fileStat.st_size];
+		read(fd, buff, fileStat.st_size);
+
+		setHeader(404, "Not Found", fileStat.st_size);
+		_response += buff;
+		close(fd);
+		_body.close();
+		create_file();
+		return;
 	}
+	// if (location.return_path.size())
+	// {
+	// 	_body << location.return_path;
+	// }
 
 	struct stat s;
 	stat(_path.c_str(), &s);
@@ -363,10 +386,42 @@ void Response::handleRequest(Server_block server) {
 				this->handleDeleteRequest();
 			else 
 			{
-				this->unallowedMethod();
+				std::cout << "enter to the last else ___in alowed method" << std::endl;
+				struct stat fileStat;
+				_body.open("./error_pages/405.html");
+				stat ("./error_pages/405.html", &fileStat);
+
+				int fd = open("./error_pages/405.html", O_RDONLY);
+				char buff[fileStat.st_size];
+				read(fd, buff, fileStat.st_size);
+
+				setHeader(405, "Method Not Allowed", fileStat.st_size);
+				_response += buff;
+				close(fd);
+				_body.close();
+				create_file();
+				return;
+				// this->unallowedMethod();
 				_is_request_handled = false;
 			}
 		}
+	}
+	else{
+			std::cout << "enter to the last else " << std::endl;
+			struct stat fileStat;
+			_body.open("./error_pages/404.html");
+			stat ("./error_pages/404.html", &fileStat);
+
+			int fd = open("./error_pages/404.html", O_RDONLY);
+			char buff[fileStat.st_size];
+			read(fd, buff, fileStat.st_size);
+
+			setHeader(404, "Not Found", fileStat.st_size);
+			_response += buff;
+			close(fd);
+			_body.close();
+			create_file();
+			return;
 	}
 }
 
@@ -397,6 +452,7 @@ void Response::handleGetRequest()
 	int fd = open(_path.c_str(), O_RDONLY);
 	char buff[fileStat.st_size];
 	read(fd, buff, fileStat.st_size);
+	close(fd);
 	this->ok(fileStat.st_size);
 	_response += buff;
 	create_file();

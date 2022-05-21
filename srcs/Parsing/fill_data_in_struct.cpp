@@ -99,6 +99,7 @@ void fill_location_data(Server_block server, Location_block &location, _itr begi
 		if (key == "index")
 			location.index_file = value;
 	}
+
 }
 
 bool check_server_name_duplicate(std::vector<std::string> server_1, std::vector<std::string> server_2){
