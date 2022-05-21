@@ -321,14 +321,25 @@ void		Request::clear( void ){
 }
 
 Server_block	Request::setServer( std::vector<Server_block> const serv_confs ) {
+	std::vector< Server_block > blocks;
 	for (size_t i = 0; i < serv_confs.size(); i++ ) {
 		for (size_t j = 0; j < serv_confs[i].name.size() ; j++) {
 			if (_host == serv_confs[i].name[j]) {
-				_serverFound = true;
-				return serv_confs[i];
+				blocks.push_back(serv_confs[i]);
 			}
 		}
 	}
+	if (blocks.size() == 1) {
+		return blocks[0];
+	} else if (blocks.size() == 0) {
+		blocks = serv_confs;
+	}
+	for (size_t i = 0; i < blocks.size(); i++) {
+		if (_port == blocks[i].port) {
+			return blocks[i];
+		}
+	}
+	return serv_confs[0];
 }
 
 
