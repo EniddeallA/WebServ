@@ -339,6 +339,7 @@ void Response::handleGetRequest()
 	_body.open(_path.c_str());
 	time(&rawtime);
 	stat (_path.c_str(), &fileStat);
+	_response += "HTTP/1.1 200 ok";
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response += "\r\nServer: webserver";
 	_response += "\r\nLast-Modified: " + time_last_modification(fileStat);
