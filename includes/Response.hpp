@@ -53,6 +53,7 @@ class Response
 		void httpVersionNotSupported(std::string const &version);
 		void time_out();
 		void notFound();
+		void forbidden();
 		void ok(size_t bodysize);
 
 		void auto_index(Location_block location);
