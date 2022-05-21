@@ -26,7 +26,7 @@ class Response
 		bool _is_request_handled;
 		std::fstream _body;
 		std::string _path;
-		std::string autoindex;
+		std::string _filepath;
 
 	public:
 		Response(Request	request);
@@ -36,8 +36,12 @@ class Response
 		~Response();
 	
 		std::string get_respone( void ) const;
+		int get_fd( void ) const;
+		void close_fd( void);
+
 		std::fstream& get_body( void );
 		void errorTemplate(const StatusCodeException & e);
+		void create_file();
 		
 		void setHeader(size_t status_code, std::string const &message, size_t bodysize);
 		void unallowedMethod();

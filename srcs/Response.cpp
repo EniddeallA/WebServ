@@ -35,6 +35,14 @@ std::fstream& Response::get_body( void )
 	return _body;
 }
 
+int Response::get_fd( void ) const
+{
+	return _fd;
+}
+
+void Response::close_fd( void ){
+	close(_fd);
+}
 /*
 	*To do:
 		- Accurate response status codes {90%}
@@ -190,6 +198,15 @@ void Response::ok(size_t bodysize)
 // }
 
 
+void Response::create_file()
+{
+	std::string filepath = "/tmp/autoindex_" + std::to_string(time(NULL));
+	std::ofstream out(filepath);
+	_filepath = filepath;
+	out << _response;
+	out.close();
+	_fd = open(filepath.c_str(), O_RDONLY);
+}
 
 Location_block Response::getLocation(Server_block server)
 {
@@ -256,7 +273,7 @@ void Response::auto_index()
 		notFound();
     }
 	std::string body;
-	body = std::string("<html>\r\n<head>\r\n");
+	body += std::string("<html>\r\n<head>\r\n");
 	body += std::string("<title>Index of ") + _path;
 	body +=std::string("</title>\r\n</head>\r\n<body>\r\n<h1>Index of ") + _path;
 	body += std::string("</h1>\r\n<hr>\r\n<ul>\r\n");
@@ -264,20 +281,10 @@ void Response::auto_index()
 		body += std::string("<a href='" + files[i] + "'>") + files[i] + std::string("</a>\r\n");
 	}
 	body += std::string("</ul>\r\n</body>\r\n</html>\r\n");
-	// body.seekg (0, _body.end);
-    // int length = _body.tellg();
-    // _body.seekg (0, _body.beg);
-	_body.write(body.c_str(), body.size());
-	char buf[100];	
-	std::cout << "********************\n";
-	while (!_body.eof()){
-		_body.read(buf, 99);
-		std::cout << buf ;
-	}
-	std::cout << "********************\n";
-    _body.seekg (0, _body.beg);	
-
 	this->ok(body.size());
+	_response += body;
+	std::cout << _response << std::endl;
+	create_file();
 }
 
 void Response::handleRequest(Server_block server) {
@@ -302,8 +309,6 @@ void Response::handleRequest(Server_block server) {
 		}
 		else
 			_path += "/" + location.index_file;
-		_body.open(_path.c_str());
-
 	}
 	else if(s.st_mode & S_IFREG)
 	{
@@ -343,6 +348,7 @@ void Response::handleGetRequest()
 		_response += "\r\nContent-Type: " + std::string(type); 
 	_response += "\r\nConnection: keep-alive";
 	_response += "\r\nAccept-Ranges: bytes";
+	create_file();
 }
 
 void Response::handlePostRequest()
@@ -362,6 +368,7 @@ void Response::handlePostRequest()
 		_response += "\r\nContent-Type: " + std::string(type); 
 	_response +=  "\r\nConnection: keep-alive";
 	_response +=  "\r\nAccept-Ranges: bytes";
+	create_file();
 }
 
 static void deleteDirectoryFiles(DIR * dir, const std::string & path) {

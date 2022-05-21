@@ -1,10 +1,10 @@
 #include "../includes/Parsing.hpp"
+#include "../includes/request.hpp"
 
 // THE URL FORMAT
 /**
  * 
       script-URI = <scheme> "://" <server-name> ":" <server-port> <script-path> <extra-path> "?" <query-string>
-
  * 
  */
 //  Meta-variables contain data about the request passed from the server to the script
@@ -29,6 +29,21 @@
 					   "SERVER_SOFTWARE" | scheme |
 					   protocol-var-name | extension-var-name
 */
+
+struct cgi_object
+{
+	Request 	req;
+	int			pid;
+	long int	start_time;
+	std::string file_name;
+};
+long int get_current_time(){
+
+	struct timeval tp;
+	gettimeofday(&tp, NULL);
+	long int us = tp.tv_sec * 1000000 + tp.tv_usec;
+	return us;
+}
 
 std::vector<std::string> make_meta_variables_for_cgi(Request request){
 	//prefer to return vector insted of tring
@@ -89,7 +104,6 @@ std::vector<std::string> make_meta_variables_for_cgi(Request request){
 	return vec_of_string;
 }
 
-
 char **vector_to_char(std::vector<std::string> params){
 	char **out = new char*[params.size() + 1];
 	for (size_t i = 0; i < params.size(); i++){
@@ -137,60 +151,78 @@ void run_cgi(std::string path, std::vector<std::string> params, std::string &out
 
 /* 
 	the input of the cgi is the request body
-	chose one cgi to yun it  (php, perl, python)
+	chose one cgi to run it  (php, perl, python)
 */
 
 
 
-void cgi(Request request){
+cgi_object  cgi(Request request){
+	cgi_object obj;
 	std::vector<std::string> vec_of_meta_vars = make_meta_variables_for_cgi(request);
 	char **meta_vars = vector_to_char(vec_of_meta_vars);
-	std::string file_name = "cgi_file_rederect2";
-	char **vars = new char*[4];
-	vars[0] = strdup("/usr/bin/perl");
-	vars[1] = strdup("-wT");
-	vars[2] = strdup("/Users/kbenlyaz/desktop/env.cgi");
-	vars[3] = NULL;
+	long int now = get_current_time();
+	std::stringstream ss;
+	ss << now;
+	std::string file_name =  ss.str();
+
+	char **vars = new char*[3];
+	vars[0] = strdup("/usr/local/bin/python3");
+	vars[1] = strdup("Cgi/script.py");
+	vars[2] = NULL;
+	// vars[2] = strdup("/Users/kbenlyaz/desktop/env.cgi");
+
 	std::string output;
 	int pid = fork();
-	//////////////////////////////////////////////////
-	std::vector<std::string> meta;
-	meta.push_back("Content-type=");
-	//////////////////////////////////////////////////
 	if (pid == 0){
-		int fd = open(file_name.c_str(), std::ios::out | std::ios::trunc| O_WRONLY);
-		if (fd == -1){
-			std::fstream outfile;
-			outfile.open(file_name.c_str(), std::ios_base::app);
-			outfile.close();
-			fd = open(file_name.c_str(), std::ios::out | std::ios::trunc| O_RDWR);
-
-			std::cout << "fd is " << fd << std::endl;
-		}
+		int fd = criet_and_open_file(file_name);
 		dup2(fd, 2);
 		dup2(fd, 1);
 		int exec = execve(vars[0], vars, meta_vars);
 		perror("Execve Fail");
  	}
 	else{
-		int status;
-		while(waitpid(pid, NULL, 0) > 0){
-		}
-		int fd = open(file_name.c_str(), O_RDONLY);
-		char *s = new char[1000];
-		while(read(fd, s, 1000)  == 1000){
-			output += s;
-		}
-		output += s;
-		std::cout << output;
-		close(fd);
+		obj.req = request;
+		obj.file_name = file_name;
+		obj.pid = pid;
+		obj.start_time = now;
+		// int status;
+		// while(waitpid(pid, NULL, 0) > 0){
+		// }
+		// int fd = open(file_name.c_str(), O_RDONLY);
+		// char *s = new char[1000];
+		// while(read(fd, s, 1000)  == 1000){
+		// 	output += s;
+		// }
+		// output += s;
+		// std::cout << output;
+		// close(fd);
 		// unlink(file_name.c_str());
+		return obj;
 	}
+	return obj;
 }
 
+void if_cgi_is_finish(std::vector<cgi_object> &vec_of_cgi){
+	int i = 0;
+	for (size_t i = 0; i < vec_of_cgi.size(); i++){
+	// while (vec_of_cgi.size() > i++){
+		cgi_object obj = vec_of_cgi[i];
+		long int  now = get_current_time();
+		std::cout << "check time " << now  << " with " << obj.start_time << std::endl;
+		if (waitpid(obj.pid, NULL, 0) < 0){
+			std::cout << obj.file_name << " is finish " << std::endl;
+			vec_of_cgi.erase(vec_of_cgi.begin() + i);
+			// send responce 
+			unlink(obj.file_name.c_str());
+			return ;
+		}
+		else if (now - obj.start_time > CGI_TIME_OUT){// check timeout
+			std::cout << obj.file_name << " is timed out " << std::endl;
+			vec_of_cgi.erase(vec_of_cgi.begin() + i);
+			// send responce 
+			unlink(obj.file_name.c_str());
+			return ;
 
-// int main(){
-// 	Request request;
-// 	cgi(request);
-// 	return 0;
-// }
+		}
+	}
+}
