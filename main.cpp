@@ -13,7 +13,7 @@ int main(int argc, char const *argv[])
         }
     }
     catch (char const *e){
-        std::cout << "ERROR HAS BEN FOUND : " << e << std::endl ;
+        //std::cout << "ERROR HAS BEN FOUND : " << e << std::endl ;
     }
     return 0;
 }

@@ -27,6 +27,7 @@ class Response
 		std::fstream _body;
 		std::string _path;
 		std::string _filepath;
+		int is_autoindex;
 
 	public:
 		Response(Request	request);
