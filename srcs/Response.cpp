@@ -97,7 +97,7 @@ void Response::httpVersionNotSupported(std::string const &version)
 	_response += "Connection: close\r\n\r\n";
 }
 
-void Response::setHeader(size_t status_code, std::string const &message)
+void Response::setHeader(size_t status_code, std::string const &message, size_t bodysize)
 {
 	time_t rawtime;
 	std::stringstream ss, ss_content;	
@@ -105,14 +105,12 @@ void Response::setHeader(size_t status_code, std::string const &message)
 	ss << status_code;
 	time(&rawtime);
 	_response += "HTTP/1.1 " + ss.str() + " " + message + "\r\n";
+	_response += "Server: webserver\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response.erase(--_response.end());
 	_response += "\r\n";
-	_response += "Server: webserver\r\n";
-	ss_content << _request.getContentLength();
-	_response += "Content-Length: " + ss_content.str() + "\r\n";
 	_response += "Content-Type: text/html\r\n";
-	_response += "Connection: close\r\n\r\n";
+	_response += "Content-Length: " + std::to_string(bodysize) + "\r\n\n";
 }
 
 std::string *errorPage(std::string const &message)
@@ -166,38 +164,9 @@ void Response::time_out()
 	delete tmp_res;
 }
 
-void Response::ok(std::string const &path)
+void Response::ok(size_t bodysize)
 {
-	std::string line;
-	std::string *tmp_resp = new std::string();
-	fd_set tmp_set;
-
-	if (_fd == -1)
-		_fd = open(path.c_str(), O_RDONLY);
-	FD_SET(_fd, &_set);
-	tmp_set = _set;
-	if (select(_fd + 1, &tmp_set, NULL, NULL, NULL) < 0)
-	{
-		_response.clear();
-		internalError();
-		return;
-	}
-	if (FD_ISSET(_fd, &tmp_set))
-	{
-		char buff[1024];
-		int ret = read(_fd, buff, 1024);
-		*tmp_resp += std::string(buff, ret);
-	}
-	else
-	{
-		_response.clear();
-		internalError();
-		return;
-	}
-	if (_response.empty())
-		setHeader(200, "ok");
-	_response += *tmp_resp;
-	delete tmp_resp;
+	setHeader(200, "ok", bodysize);
 }
 
 // Location_block Response::getLocation(Server_block server)
@@ -280,24 +249,27 @@ std::string Response::auto_index()
 		notFound();
     }
 	std::string body;
-
+	std::cout<< "hello" <<std::endl;
+	std::cout<< "hello  000" <<std::endl;
 	body = std::string("<html>\r\n<head>\r\n");
 	body += std::string("<title>Index of ") + _path;
-	body += std::string("</title>\r\n</head>\r\n<body>\r\n<h1>Index of ") + _path;
-	body += std::string("</h1>\r\n<hr>");
+	body += std::string("</title>\r\n</head>\r\n<body>\r\n<h2><h2>Directory listing for ") + _path;
+	body += std::string("</h2>\r\n<hr>\r\n<ul>\r\n");
 	for(int i=0; i < files.size(); i++)
 	{
 		std::cout << files[i] << "  " << _path << std::endl;
-		body += std::string("<a>") + files[i] + std::string("</a>r\n");
+		body += std::string("<li><a href='" + files[i] +"'>") + files[i] + std::string("</a>\r\n");
 	}
+	body += std::string("</ul>\r\n<hr>");
 	body += std::string("\r\n</body>\r\n</html>\r\n");
+	this->ok(body.size());
 	return body;
 }
 
 void Response::handleRequest(Server_block server) {
-	std::cout << "start handling req" << std::endl;
+	// std::cout << "start handling req" << std::endl;
 	Location_block location = getLocation(server);
-	std::cout << "check for location " << location.path << std::endl;
+	// std::cout << "check for location " << location.path << std::endl;
 	_path = server.root + _path;
 
 	if (location.return_path.size())
@@ -306,14 +278,17 @@ void Response::handleRequest(Server_block server) {
 	}
 
 	struct stat s;
-	std::cout << " path is " << _path << std::endl;
+	// std::cout << " path is " << _path << std::endl;
 
 	stat(_path.c_str(), &s);
 	if(s.st_mode & S_IFDIR)
 	{
 		std::fstream * file = new std::fstream();
 		if (location.auto_index == "on")
-			_response = auto_index();
+		{
+			_response += auto_index();
+			// std::cout << _response <<std::endl;
+		}
 		else
 			_path += "/" + location.index_file;
 		file->open(_path.c_str());
