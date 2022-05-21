@@ -37,14 +37,14 @@ class Response
 		std::string get_respone( void ) const;
 		std::iostream* get_body( void ) const;
 		
-		void setHeader(size_t status_code, std::string const &message);
+		void setHeader(size_t status_code, std::string const &message, size_t bodysize);
 		void unallowedMethod();
 		void badRequest();
 		void internalError();
 		void httpVersionNotSupported(std::string const &version);
 		void time_out();
 		void notFound();
-		void ok(std::string const &tmp_path);
+		void ok(size_t bodysize);
 
 		std::string auto_index();
 		Location_block getLocation(Server_block server);
