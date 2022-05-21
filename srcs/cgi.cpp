@@ -143,7 +143,7 @@ void run_cgi(std::string path, std::vector<std::string> params, std::string &out
 			output += s;
 		}
 		output += s;
-		std::cout << output;
+		//std::cout << output;
 		close(fd);
 		unlink(file_name.c_str());
 	}
@@ -194,7 +194,7 @@ cgi_object  cgi(Request request){
 		// 	output += s;
 		// }
 		// output += s;
-		// std::cout << output;
+		// //std::cout << output;
 		// close(fd);
 		// unlink(file_name.c_str());
 		return obj;
@@ -208,16 +208,16 @@ void if_cgi_is_finish(std::vector<cgi_object> &vec_of_cgi){
 	// while (vec_of_cgi.size() > i++){
 		cgi_object obj = vec_of_cgi[i];
 		long int  now = get_current_time();
-		std::cout << "check time " << now  << " with " << obj.start_time << std::endl;
+		//std::cout << "check time " << now  << " with " << obj.start_time << std::endl;
 		if (waitpid(obj.pid, NULL, 0) < 0){
-			std::cout << obj.file_name << " is finish " << std::endl;
+			//std::cout << obj.file_name << " is finish " << std::endl;
 			vec_of_cgi.erase(vec_of_cgi.begin() + i);
 			// send responce 
 			unlink(obj.file_name.c_str());
 			return ;
 		}
 		else if (now - obj.start_time > CGI_TIME_OUT){// check timeout
-			std::cout << obj.file_name << " is timed out " << std::endl;
+			//std::cout << obj.file_name << " is timed out " << std::endl;
 			vec_of_cgi.erase(vec_of_cgi.begin() + i);
 			// send responce 
 			unlink(obj.file_name.c_str());

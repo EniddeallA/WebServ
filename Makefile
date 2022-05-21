@@ -9,7 +9,7 @@ CPP_VERSION	=	#-std=c++98
 
 COMPILER	=	clang++
 
-FLAGS		=	#-g3 #-Wextra -Wall -Werror
+FLAGS		=	-g #-Wextra -Wall -Werror
 
 NAME		=	ft_server
 

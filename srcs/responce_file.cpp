@@ -52,21 +52,21 @@ void    file_to_return(Server_block server, std::string path){
         i++;
     }
     
-    std::cout << "ENTER TO FUNCTION size is " << count << std::endl;
+    // //std::cout << "ENTER TO FUNCTION size is " << count << std::endl;
     for (int r = 0; r < count; r++){
         for (int i = 0; i < server.all_locations.size(); i++){
             l_block = server.all_locations[i];
-            std::cout << "************************************************************************\n";
-            std::cout << l_block.path << std::endl;
-            std::cout << path << std::endl;
+            // //std::cout << "************************************************************************\n";
+            //std::cout << l_block.path << std::endl;
+            //std::cout << path << std::endl;
             if (l_block.path == path){ // gennerate file to uplade
-                std::cout << "-----------------------------------------------------------\n";
-                std::cout << "path is " << path << " compare with " << l_block.path << std::endl;
-                std::cout << "-----------------------------------------------------------\n";
+                //std::cout << "-----------------------------------------------------------\n";
+                //std::cout << "path is " << path << " compare with " << l_block.path << std::endl;
+                //std::cout << "-----------------------------------------------------------\n";
                 if (l_block.return_path.size()){ //send responce
-                    std::cout << "--------------------------------Return function---------------\n";
-                    std::cout << "Return code is " << l_block.return_code << "  to path" << l_block.return_path << std::endl;
-                    std::cout << "--------------------------------Return function---------------\n";
+                    //std::cout << "--------------------------------Return function---------------\n";
+                    //std::cout << "Return code is " << l_block.return_code << "  to path" << l_block.return_path << std::endl;
+                    //std::cout << "--------------------------------Return function---------------\n";
                 }
                 break;
             }
