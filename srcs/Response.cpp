@@ -240,13 +240,14 @@ Location_block Response::getLocation(Server_block server)
             count++;
         i++;
     }
-    
+    std::cout << "number of locations is " <<  server.all_locations.size() << std::endl;
     for (int r = 0; r < count + 1; r++){
         for (int i = 0; i < server.all_locations.size(); i++){
+			std::cout << "compare is " << path << " and " << l_block.path << std::endl;
             l_block = server.all_locations[i];
             if (l_block.path == path){ // gennerate file to uplade
 				_path = save;
-				//std::cout << "*****************_path is " << _path << std::endl;
+				std::cout << "*****************_path is " << _path << std::endl;
                 if (l_block.return_path.size()){ //send responce
                     //std::cout << "--------------------------------Return function---------------\n";
                     //std::cout << "Return code is " << l_block.return_code << "  to path" << l_block.return_path << std::endl;
@@ -261,7 +262,6 @@ Location_block Response::getLocation(Server_block server)
 			c = path[path.size() - 1];
 			concate = c + concate;
             path.pop_back();
-
         }
         if (path.size() > 1 && path[path.size() - 1] == '/'){
             path.pop_back();
@@ -272,9 +272,7 @@ Location_block Response::getLocation(Server_block server)
 		}
 		save = concate + save;
     }
-
 	return l_block;
-
 }
 
 void Response::auto_index(Location_block location)
@@ -334,7 +332,7 @@ void Response::handleRequest(Server_block server) {
 	// //std::cout << "start handling req" << std::endl;
 	Location_block location = getLocation(server);
 	_path = server.root + _path;
-	//std::cout << "PATH 2 IS " << _path << std::endl;
+	std::cout << "PATH 2 IS " << _path << std::endl;
 	if (location.return_path.size())
 	{
 		_body << location.return_path;
@@ -350,11 +348,16 @@ void Response::handleRequest(Server_block server) {
 		{
 			auto_index(location);
 		}
-		else
-			_path += "/" + location.index_file;
- 
+		else{
+			if (_path.size() && _path[_path.size() - 1] != '/')
+				_path += "/" + location.index_file;
+			else
+				_path +=  location.index_file;
+			std::cout << "PATH 3 IS " << _path << std::endl;
+		}
 	}
-	else if((s.st_mode & S_IFREG))
+	stat(_path.c_str(), &s);
+	if((s.st_mode & S_IFREG))
 	{
 		if (location.auto_index == "on")
 		{
@@ -386,29 +389,39 @@ void Response::handleGetRequest()
 {
 	struct stat fileStat;
 	time_t rawtime;
-	
-	time(&rawtime);
+	std::cout << "start get request" << std::endl;
+	_body.open(_path.c_str());
+	// time(&rawtime);
 	stat (_path.c_str(), &fileStat);
-	_response += "HTTP/1.1 200 ok\r\n";
-	_response += "Date: " + std::string(ctime(&rawtime));
-	_response += "\r\nServer: webserver";
-	_response += "\r\nLast-Modified: " + time_last_modification(fileStat);
-	_response += "\r\nTransfer-Encoding: chunked";
-	const char *type = MimeTypes::getType(_path.c_str());
-	if (type)
-		_response += "\r\nContent-Type: " + std::string(type); 
-	_response += "\r\nConnection: keep-alive";
-	_response += "\r\nAccept-Ranges: bytes";
-	struct stat s;
-	stat(_path.c_str(), &s);
+	// _response += "200 OK\r\n";
+	// // _response += "Date: " + std::string(ctime(&rawtime));
+	// _response += "Server: webserver";
+	// _response += "\r\nLast-Modified: " + time_last_modification(fileStat);
+	// // _response += "\r\nTransfer-Encoding: chunked";
+	// const char *type = MimeTypes::getType(_path.c_str());
+	// if (type)
+	// 	_response += "\r\nContent-Type: " + std::string(type); 
+	// _response += "\r\nConnection: Closed";
+	// // _response += "\r\nAccept-Ranges: bytes";
+
+	// _response += "\r\nContent-Length: " + std::to_string(fileStat.st_size) + "\r\n";
+	// _response += buff;
+ 	// _response += "\r\n\r\n";
+	
+
 	int fd = open(_path.c_str(), O_RDONLY);
-	char buff[s.st_size];
-	read(fd, buff, s.st_size);
+	char buff[fileStat.st_size];
+	read(fd, buff, fileStat.st_size);
+	this->ok(fileStat.st_size);
 	_response += buff;
-	_response += "\r\n\r\n";
 	create_file();
 }
-
+/*
+		_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n\n";
+		_response += buff;
+		_response += "\r\n\r\n";
+		create_file();
+*/
 void Response::handlePostRequest()
 {
 	struct stat fileStat;
