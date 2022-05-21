@@ -2,7 +2,7 @@
 
 Request::Request() : _error(0), _requestMethod(""), _requestTarget(""), _requestEnd(false),
 	_requestQuery(""), _bodyName(""), _str(""), _hasBody(false), _keepAlive(false), _headersEnd(false),
-	_bodySize(0), _contentLength(0), _isCL(false), _isTE(false) {
+	_bodySize(0), _contentLength(0), _isCL(false), _isTE(false), _serverFound(false) {
 		_allowedMethods.push_back("GET");
 		_allowedMethods.push_back("POST");
 		_allowedMethods.push_back("DELETE");
@@ -320,11 +320,12 @@ void		Request::clear( void ){
 	_contentLength = 0;
 }
 
-void	Request::setServer( std::vector<Server_block> const serv_confs ) {
+Server_block	Request::setServer( std::vector<Server_block> const serv_confs ) {
 	for (size_t i = 0; i < serv_confs.size(); i++ ) {
 		for (size_t j = 0; j < serv_confs[i].name.size() ; j++) {
 			if (_host == serv_confs[i].name[j]) {
-
+				_serverFound = true;
+				return serv_confs[i];
 			}
 		}
 	}
