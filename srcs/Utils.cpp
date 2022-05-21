@@ -91,3 +91,8 @@ std::string				 trim(const std::string& line) {
     }
     return std::string(start, end + 1);
 }
+
+bool is_hex_notation(std::string const& s)
+{
+  return s.find_first_not_of("0123456789abcdefABCDEF") == std::string::npos;
+}

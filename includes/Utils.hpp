@@ -29,4 +29,6 @@ bool                     isSpace(unsigned char c);
 std::string				 time_last_modification(struct stat buffer);
 std::string              lowercase(std::string src);
 std::string				 trim(const std::string& line);
+bool					 is_hex_notation(std::string const& s);
+
 #endif

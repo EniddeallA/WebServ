@@ -221,8 +221,13 @@ void	Request::parseBody(std::string &req) {
 }
 
 void 		Request::toChuncked(std::string &req) {
-	if (req.empty() || _contentLength == 0)
+	if (req.empty())
 		return ;
+	if (isRequestCompleted() == true && req.empty() == false) {
+		/** WARNING
+		 * CHECK WITH TEAM
+		*/
+	}
 	size_t end = 0;
 	/** WARNING
 	 *  MUST RE-WORK ON DECODING
@@ -237,6 +242,10 @@ void 		Request::toChuncked(std::string &req) {
 		*/
 		if (status == CHUNK_SIZE) {
 			std::string hex = req.substr(0, end);
+			if (is_hex_notation(hex) == false) {
+				_error = BAD_REQUEST;
+				throw "Error on body parsing";
+			}
 			size = to_hex(hex);
 			req.erase(0, end + 2);
 			status = CHUNK_BODY;
@@ -254,10 +263,10 @@ void 		Request::toChuncked(std::string &req) {
 			if (line.length() != size) {
 				_error = BAD_REQUEST;
 				throw "Error on body parsing";
-			}
+			} 
+			status = CHUNK_SIZE;
 			req.erase(0, end + 2);
 			size = 0;
-			status = CHUNK_SIZE;
 		}
 	}
 }
@@ -339,7 +348,7 @@ Server_block	Request::setServer( std::vector<Server_block> const serv_confs ) {
 			return blocks[i];
 		}
 	}
-	return serv_confs[0];
+	return blocks[0];
 }
 
 
