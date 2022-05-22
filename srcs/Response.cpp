@@ -244,14 +244,11 @@ Location_block Response::getLocation(Server_block server)
             count++;
         i++;
     }
-    std::cout << "number of locations is " <<  server.all_locations.size() << std::endl;
     for (int r = 0; r < count + 1; r++){
         for (int i = 0; i < server.all_locations.size(); i++){
-			std::cout << "compare is " << path << " and " << l_block.path << std::endl;
             l_block = server.all_locations[i];
             if (l_block.path == path){ // gennerate file to uplade
 				_path = save;
-				std::cout << "*****************_path is " << _path << std::endl;
                 if (l_block.return_path.size()){ //send responce
                     //std::cout << "--------------------------------Return function---------------\n";
                     //std::cout << "Return code is " << l_block.return_code << "  to path" << l_block.return_path << std::endl;
@@ -338,7 +335,6 @@ void Response::handleRequest(Server_block server) {
 	// //std::cout << "start handling req" << std::endl;
 	Location_block location = getLocation(server);
 	_path = server.root + _path;
-	std::cout << "PATH 2 IS " << _path << std::endl;
 	if (_file_not_found){
 		// this->notFound();
 		struct stat fileStat;
@@ -356,11 +352,6 @@ void Response::handleRequest(Server_block server) {
 		create_file();
 		return;
 	}
-	// if (location.return_path.size())
-	// {
-	// 	_body << location.return_path;
-	// }
-
 	struct stat s;
 	stat(_path.c_str(), &s);
 	if(s.st_mode & S_IFDIR)
@@ -370,22 +361,19 @@ void Response::handleRequest(Server_block server) {
 		if (location.auto_index == "on")
 		{
 			auto_index(location);
+			return ;
+
 		}
 		else{
 			if (_path.size() && _path[_path.size() - 1] != '/')
 				_path += "/" + location.index_file;
 			else
 				_path +=  location.index_file;
-			std::cout << "PATH 3 IS " << _path << std::endl;
 		}
 	}
-	else if((s.st_mode & S_IFREG))
-	{
-		if (location.auto_index == "on")
-			auto_index(location);
-		else
-		{
-			std::cout << "check  for method " << _request.getRequestMethod() << std::endl;
+	stat(_path.c_str(), &s);
+	if((s.st_mode & S_IFREG))
+	{		
 			_is_request_handled = true;
 			if (_request.getRequestMethod() == "GET" &&
 					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "GET") != location.allowed_funct.end())
@@ -398,7 +386,6 @@ void Response::handleRequest(Server_block server) {
 				this->handleDeleteRequest();
 			else 
 			{
-				std::cout << "enter to the last else ___in alowed method" << std::endl;
 				struct stat fileStat;
 				_body.open("./error_pages/405.html");
 				stat ("./error_pages/405.html", &fileStat);
@@ -416,10 +403,8 @@ void Response::handleRequest(Server_block server) {
 				// this->unallowedMethod();
 				_is_request_handled = false;
 			}
-		}
 	}
 	else{
-			std::cout << "enter to the last else " << std::endl;
 			struct stat fileStat;
 			_body.open("./error_pages/404.html");
 			stat ("./error_pages/404.html", &fileStat);
@@ -441,7 +426,6 @@ void Response::handleGetRequest()
 {
 	struct stat fileStat;
 	time_t rawtime;
-	std::cout << "start get request" << std::endl;
 	_body.open(_path.c_str());
 	// time(&rawtime);
 	stat (_path.c_str(), &fileStat);
