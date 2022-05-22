@@ -26,6 +26,17 @@ Response& Response::operator=(const Response& other)
 
 Response::~Response(){}
 
+void Response::reset()
+{
+	_request.clear();
+	_response.clear();
+	_path.clear();
+	_fd = -1;
+	is_autoindex = 0;
+	_is_request_handled = false;
+	_statuscode = HttpStatus::statusCode(0);
+}
+
 std::string Response::get_respone( void ) const
 {
 	return _response;
@@ -50,147 +61,87 @@ void Response::close_fd( void ){
 		- GET POST DELETE {90%}
 */
 
-void Response::unallowedMethod()
+void Response::set_error_header(int statuscode, std::string msg, std::string path)
 {
 	time_t rawtime;
+	struct stat s;
 
 	time(&rawtime);
-	_response = "HTTP/1.1 405 Method Not Allowed\r\n";
+	_response = "HTTP/1.1 " + statuscode + msg + "\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response.erase(--_response.end());
 	_response += "\r\n";
 	_response += "Server: webserver\r\n";
-	_response += "Content-Length: 0\r\n";
+	stat(path.c_str(), &s);
+	int fd = open(path.c_str(), O_RDONLY);
+	char buff[s.st_size];
+	read(fd, buff, s.st_size);
+	_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n";
 	_response += "Connection: close\r\n\r\n";
+	_response += buff;
+	_response += "\r\n\r\n";
+}
+
+std::string errorPage(std::string const &message)
+{
+	std::string error_body;
+
+	error_body += std::string("<html>\r\n<head>\r\n");
+	error_body += std::string("<title>") + message;
+	error_body += std::string("</title>\r\n</head>\r\n<body>\r\n<center>\r\n<h1>") + message;
+	error_body += std::string("</h1>\r\n</center>\r\n<hr>\r\n<center>webserver</center>\r\n</body>\r\n</html>\r\n");
+	return error_body;
+}
+
+void Response::unallowedMethod()
+{
+	set_error_header(405, "Method Not Allowed", "../error_pages/405.html");
 }
 
 void Response::forbidden()
 {
-	time_t rawtime;
-
-	time(&rawtime);
-	_response = "HTTP/1.1 403 Forbidden\r\n";
-	_response += "Date: " + std::string(ctime(&rawtime));
-	_response.erase(--_response.end());
-	_response += "\r\n";
-	_response += "Server: webserver\r\n";
-	_response += "Content-Length: 0\r\n";
-	_response += "Connection: close\r\n\r\n";
+	set_error_header(403, "Forbidden", "../error_pages/403.html");
 }
 
 void Response::badRequest()
 {
-	time_t rawtime;
-
-	time(&rawtime);
-	_response = "HTTP/1.1 400 Bad Request\r\n";
-	_response += "Date: " + std::string(ctime(&rawtime));
-	_response.erase(--_response.end());
-	_response += "\r\n";
-	_response += "Server: webserver\r\n";
-	_response += "Content-Length: 0\r\n";
-	_response += "Connection: close\r\n\r\n";
+	set_error_header(400, "Bad Request", "../error_pages/400.html");
 }
 
 void Response::notFound()
 {
-	time_t rawtime;
-
-	time(&rawtime);
-	_response = "HTTP/1.1 404 Not Found\r\n";
-	_response += "Date: " + std::string(ctime(&rawtime));
-	_response.erase(--_response.end());
-	_response += "\r\n";
-	_response += "Server: webserver\r\n";
-	_response += "Content-Length: 0\r\n";
-	_response += "Connection: close\r\n\r\n";
+	set_error_header(404, "Not Found", "../error_pages/404.html");
 }
 
 void Response::httpVersionNotSupported(std::string const &version)
 {
-	time_t rawtime;
-
-	time(&rawtime);
-	_response = version + " 505 HTTP Version Not Supported\r\n";
-	_response += "Date: " + std::string(ctime(&rawtime));
-	_response.erase(--_response.end());
-	_response += "\r\n";
-	_response += "Server: webserver\r\n";
-	_response += "Content-Length: 0\r\n";
-	_response += "Connection: close\r\n\r\n";
+	set_error_header(505, "HTTP Version Not Supported", "../error_pages/505.html");
 }
 
-void Response::setHeader(size_t status_code, std::string const &message, size_t bodysize)
-{
-	time_t rawtime;
-	std::stringstream ss, ss_content;	
-
-	ss << status_code;
-	time(&rawtime);
-	_response += "HTTP/1.1 " + ss.str() + " " + message + "\r\n";
-	_response += "Server: webserver\r\n";
-	_response += "Date: " + std::string(ctime(&rawtime));
-	_response.erase(--_response.end());
-	_response += "\r\n";
-	_response += "Content-Type: text/html\r\n";	
-	std::cout << "++++++++++++++++++++++FILE : " << _path << std::endl;
-	_response += "Content-Length: " + std::to_string(bodysize) + "\r\n\n";
-}
-
-std::string *errorPage(std::string const &message)
-{
-	std::string *error_body = new std::string();
-
-	*error_body += std::string("<html>\r\n<head>\r\n");
-	*error_body += std::string("<title>") + message;
-	*error_body += std::string("</title>\r\n</head>\r\n<body>\r\n<center>\r\n<h1>") + message;
-	*error_body += std::string("</h1>\r\n</center>\r\n<hr>\r\n<center>webserver</center>\r\n</body>\r\n</html>\r\n");
-	return error_body;
-}
 
 void Response::internalError()
 {
-	time_t rawtime;
-	std::string *tmp_res;
-	std::stringstream ss;
-
-	time(&rawtime);
-	tmp_res = errorPage("500 Internal Server Error");
-	ss << tmp_res->length();
-	_response += "HTTP/1.1 500 Internal Server Error\r\n";
-	_response += "Date: " + std::string(ctime(&rawtime));
-	_response.erase(--_response.end());
-	_response += "\r\nServer: webserver\r\n";
-	_response += "Content-Type: text/html\r\n";
-	_response += "Content-Length: " + ss.str() + "\r\n";
-	_response += "Connection: close\r\n\r\n";
-	_response += *tmp_res;
-	delete tmp_res;
+	set_error_header(500, "Internal Server Error", "../error_pages/500.html");
 }
 
 void Response::time_out()
 {
-	time_t rawtime;
-	std::string *tmp_res;
-	std::stringstream ss;
-
-	time(&rawtime);
-	tmp_res = errorPage("504 Gateway Time-out");
-	ss << tmp_res->length();
-	_response += "HTTP/1.1 504 Gateway Time-out\r\n";
-	_response += "Date: " + std::string(ctime(&rawtime));
-	_response.erase(--_response.end());
-	_response += "\r\nServer: webserver\r\n";
-	_response += "Content-Type: text/html\r\n";
-	_response += "Content-Length: " + ss.str() + "\r\n";
-	_response += "Connection: close\r\n\r\n";
-	_response += *tmp_res;
-	delete tmp_res;
+	set_error_header(504, "Gateway Time-out", "../error_pages/504.html");
 }
 
 void Response::ok(size_t bodysize)
 {
-	setHeader(200, "ok", bodysize);
+		time_t rawtime;
+
+		time(&rawtime);
+		_response += "HTTP/1.1 200 ok\r\n";
+		_response += "Server: webserver\r\n";
+		_response += "Date: " + std::string(ctime(&rawtime));
+		_response.erase(--_response.end());
+		_response += "\r\n";
+		_response += "Content-Type: text/html\r\n";	
+		std::cout << "++++++++++++++++++++++FILE : " << _path << std::endl;
+		_response += "Content-Length: " + std::to_string(bodysize) + "\r\n\n";
 }
 
 // Location_block Response::getLocation(Server_block server)
@@ -217,6 +168,7 @@ void Response::ok(size_t bodysize)
 std::string Response::get_file_path(){
 	return _filepath;
 }
+
 void Response::create_file()
 {
 	std::string filepath = "/tmp/autoindex_" + std::to_string(time(NULL));
@@ -427,24 +379,7 @@ void Response::handleGetRequest()
 	struct stat fileStat;
 	time_t rawtime;
 	_body.open(_path.c_str());
-	// time(&rawtime);
 	stat (_path.c_str(), &fileStat);
-	// _response += "200 OK\r\n";
-	// // _response += "Date: " + std::string(ctime(&rawtime));
-	// _response += "Server: webserver";
-	// _response += "\r\nLast-Modified: " + time_last_modification(fileStat);
-	// // _response += "\r\nTransfer-Encoding: chunked";
-	// const char *type = MimeTypes::getType(_path.c_str());
-	// if (type)
-	// 	_response += "\r\nContent-Type: " + std::string(type); 
-	// _response += "\r\nConnection: Closed";
-	// // _response += "\r\nAccept-Ranges: bytes";
-
-	// _response += "\r\nContent-Length: " + std::to_string(fileStat.st_size) + "\r\n";
-	// _response += buff;
- 	// _response += "\r\n\r\n";
-	
-
 	int fd = open(_path.c_str(), O_RDONLY);
 	char buff[fileStat.st_size];
 	read(fd, buff, fileStat.st_size);
@@ -453,12 +388,7 @@ void Response::handleGetRequest()
 	_response += buff;
 	create_file();
 }
-/*
-		_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n\n";
-		_response += buff;
-		_response += "\r\n\r\n";
-		create_file();
-*/
+
 void Response::handlePostRequest()
 {
 	struct stat fileStat;
@@ -574,37 +504,4 @@ void Response::errorTemplate(const StatusCodeException & e) {
 		_body << "<h4 style=\"text-align:center\">WebServer</h4>\n";
 		_body << "</body>\n";
 	}
-}	
-
-// void Response::setErrorPage(const StatusCodeException & e, const Location_block *location, Server_block *server) {
-// 	_statuscode = e.getStatusCode();
-// 	time_t rawtime;
-
-// 	time(&rawtime);
-// 	_response += "Connection: keep-alive";
-// 	_response += "\r\nContent-Type: text/html";
-// 	_response += "\r\nDate: " + std::string(ctime(&rawtime));
-// 	_response += "\r\nServer: webserver";
-// 	if (location->path != "")
-// 		_response += "\r\nLocation: " + location->path;
-// 	const std::map<int, std::string> & error_page = server->error_page;
-
-// 	std::fstream errPage;
-
-// 	if (error_page.find(_statuscode) != error_page.end()) {
-// 		std::string errPath = error_page.find(_statuscode)->second;
-// 		if (errPath[0] == '/' || (errPath[0] == '.' && errPath[1] == '/')) {
-// 			errPage.open(errPath.c_str());
-// 		} else {
-// 			std::string filename = location->root;
-
-// 			filename += errPath;
-// 			errPage.open(filename.c_str());
-// 		}
-// 	}
-
-// 	if (!errPage || !errPage.is_open()) {
-// 		_body = errorTemplate(e);
-// 	_response += "\r\nTransfer-Encoding: chunked";
-// 	}
-// }
+}

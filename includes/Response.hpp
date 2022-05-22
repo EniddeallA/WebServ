@@ -41,11 +41,13 @@ class Response
 		std::string get_respone( void ) const;
 		int get_fd( void ) const;
 		void close_fd( void);
+		void reset();
 
 		std::fstream& get_body( void );
 		void errorTemplate(const StatusCodeException & e);
 		void create_file();
 		
+		void set_error_header(int statuscode, std::string msg, std::string path);
 		void setHeader(size_t status_code, std::string const &message, size_t bodysize);
 		void unallowedMethod();
 		void badRequest();
