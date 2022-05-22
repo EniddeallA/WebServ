@@ -128,7 +128,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 				// //std::cout << "start sending body << fd is " << fd << " valread " << valread  << std::endl;
 
 				int sended = write(new_socket, buffer, valread); 
-				write(1, buffer, valread); 
+				// write(1, buffer, valread); 
 
 				// std::cout << "sendind data << " << valread << " " << sended << std::endl;
 				//! NEED TO RETURN FD TO POSITION OF  VALREAD - SENDED I THINK;

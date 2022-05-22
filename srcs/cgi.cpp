@@ -184,7 +184,7 @@ cgi_object  cgi(Request request){
 		obj.req = request;
 		obj.file_name = file_name;
 		obj.pid = pid;
-		obj.start_time = now;
+		obj.start_time = now;	
 		// int status;
 		// while(waitpid(pid, NULL, 0) > 0){
 		// }
