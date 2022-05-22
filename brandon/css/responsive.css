@@ -1,0 +1,155 @@
+/*--------------------------------------------------------------------- File Name: responsive.css ---------------------------------------------------------------------*/
+
+
+/*------------------------------------------------------------------- 991px x 768px ---------------------------------------------------------------------*/
+
+@media (min-width: 1200px) and (max-width: 1342px) {
+    .afbecros::before {
+        left: 7px;
+    }
+    .testimonial.afbecros::before {
+        right: 7px;
+    }
+    .about::after {
+        right: 7px;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .text-bg h1 {
+        font-size: 76px;
+        line-height: 72px;
+    }
+    .afbecros::before {
+        left: 7px;
+    }
+    .testimonial.afbecros::before {
+        right: 7px;
+    }
+    .about::after {
+        right: 7px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .banner_main {
+        min-height: 537px;
+    }
+    .text-bg h1 {
+        font-size: 59px;
+        margin-top: 199px;
+        line-height: 44px;
+    }
+    .midil_img {
+        padding-left: 23%;
+    }
+    ul.location_icon li {
+        margin: 0 17px;
+    }
+    .classes_box h3 {
+        line-height: 30px;
+    }
+    .afbecros::before {
+        left: 7px;
+    }
+    .testimonial.afbecros::before {
+        right: 7px;
+    }
+    .about::after {
+        right: 7px;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+    .banner_main {
+        min-height: 537px;
+    }
+    .text-bg h1 {
+        font-size: 48px;
+        line-height: 51px;
+        margin-top: 179px;
+    }
+    .midil_img {
+        padding-left: 17%;
+    }
+    .text-bg p {
+        margin-top: -123px;
+    }
+    .titlepage h2 {
+        font-size: 31px;
+    }
+    ul.location_icon li {
+        margin: 0 28px;
+    }
+    .classes_box h3 {
+        padding-bottom: 30px;
+    }
+    .afbecros::before {
+        left: 7px;
+    }
+    .testimonial.afbecros::before {
+        right: 7px;
+    }
+    .about::after {
+        right: 7px;
+    }
+}
+
+@media (max-width: 575px) {
+    .header {
+        padding: 30px 0px 15px 0px;
+    }
+    .logo {
+        border: inherit;
+        float: left;
+        margin-top: 0px !important;
+    }
+    .banner_main {
+        background: inherit;
+    }
+    .text-bg figure {
+        margin: 0;
+    }
+    .text-bg h1 {
+        font-size: 35px;
+        line-height: 32px;
+        margin-top: 225px;
+    }
+    .text-bg p {
+        margin-top: 0;
+    }
+    #banner1 .carousel-indicators {
+        right: -19px;
+        bottom: -9px;
+        left: inherit;
+    }
+    .midil_img {
+        padding: 0;
+    }
+    .titlepage h2 {
+        font-size: 40px;
+    }
+    .about .titlepage figure img {
+        margin-top: 0;
+    }
+    .classes_box h3 {
+        padding-bottom: 30px;
+    }
+    .testimonial.afbecros::before,
+    .afbecros::before,
+    .afbecros::before,
+    .about::after {
+        background: inherit;
+        position: inherit;
+    }
+    .main_form {
+        margin: 0;
+    }
+    ul.location_icon li {
+        margin: 0 28px;
+    }
+    .right_bottun {
+        margin-top: 25px;
+    }
+}
+

@@ -67,10 +67,8 @@ void Response::set_error_header(int statuscode, std::string msg, std::string pat
 	struct stat s;
 
 	time(&rawtime);
-	std::cout << "start sset header" << std::endl;
 	char tmp[256];
     getcwd(tmp, 256);
-	std::cout << "start sset header " << tmp << std::endl;
 
 	_response = "HTTP/1.1 " + std::to_string(statuscode) + msg + "\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
@@ -79,15 +77,12 @@ void Response::set_error_header(int statuscode, std::string msg, std::string pat
 	_response += "Server: webserver\r\n";
 	stat(path.c_str(), &s);
 	int fd = open(path.c_str(), O_RDONLY);
-	std::cout << "size  " << s.st_size << "before reading " << path << std::endl;
 	char buff[s.st_size];
 	read(fd, buff, s.st_size);
-	std::cout << "fd  " << fd << "after reading" << std::endl;
 	_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n";
 	_response += "Connection: close\r\n\r\n";
 	_response += buff;
 	_response += "\r\n\r\n";
-	std::cout << "after sset header" << std::endl;
 }
 
 std::string errorPage(std::string const &message)
@@ -149,9 +144,7 @@ void Response::ok(size_t bodysize)
 		const char *check_type = MimeTypes::getType(_path.c_str());
 		// std::cout <<"path is 00 "<< is_autoindex  << _path << " check type " << check_type << std::endl;
 		if (((s.st_mode & S_IFREG)) && check_type == NULL){
-			std::cout << "set  download header" << std::endl;
 			std::string path_name = _path.substr(_path.find_last_of('/') + 1, _path.size());
-			std::cout << "file : " << path_name << std::endl;
 			_response += "Content-Disposition: attachement; filename=" + path_name + "\r\n";
 		}
 		_response += "Date: " + std::string(ctime(&rawtime));
@@ -159,7 +152,6 @@ void Response::ok(size_t bodysize)
 		_response += "\r\n";
 		if (check_type)
 			_response += "Content-Type: " + std::string(check_type) + "\r\n";	
-		std::cout << "++++++++++++++++++++++FILE : " << _path << std::endl;
 		_response += "Content-Length: " + std::to_string(bodysize) + "\r\n\n";
 }
 
@@ -256,14 +248,12 @@ Location_block Response::getLocation(Server_block server)
 
 void Response::auto_index(Location_block location)
 {
-	std::cout << " start auto index funct "<< std::endl;
 
 	is_autoindex = 1;
 	DIR *dir; struct dirent *diread;
     std::vector<std::string> files;
 	struct stat s;
 	stat(_path.c_str(), &s);
-	std::cout << "_path is for aut index" << _path << std::endl;
 	if ((dir = opendir(_path.c_str())) != nullptr) {
         while ((diread = readdir(dir)) != nullptr) {
             files.push_back(diread->d_name);
@@ -282,13 +272,9 @@ void Response::auto_index(Location_block location)
 			body += std::string("<a href='" + to_go + files[i] + "'>") + files[i] + std::string("</a></br>\r\n");
 		}
 		body += std::string("</ul>\r\n</body>\r\n</html>\r\n");
-		std::cout << "before ok"<< std::endl;
 
 		this->ok(body.size());
-		std::cout << "after ok"<< std::endl;
 		_response += body;
-
-		std::cout << "check for resp\n" << _response << std::endl;
 		create_file();
 		is_autoindex = 0;
     } else if ((s.st_mode & S_IFREG)) {
@@ -300,7 +286,6 @@ void Response::auto_index(Location_block location)
 		_response.erase(--_response.end());
 		_response += "\r\n";
 		_response += "Content-Type: text/html\r\n";	
-		std::cout << "++++++++++++++++++++++FILE2 : " << _path << std::endl;
 		_response += "Content-Disposition: attachement; filename='file'\r\n";
 		_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n\n";
 		int fd = open(_path.c_str(), O_RDONLY);
@@ -315,13 +300,9 @@ void Response::auto_index(Location_block location)
 }
 
 void Response::handleRequest(Server_block server) {
-	std::cout << "start handling req" << std::endl;
 	Location_block location = getLocation(server);
-	std::cout << "start handling req1" << std::endl;
 	_path = server.root + _path;
-	std::cout << "start handling req2" << std::endl;
 	if (_file_not_found){
-		std::cout << "file_not_found" << std::endl;
 		// this->notFound();
 		// struct stat fileStat;
 		// _body.open("./error_pages/404.html");
@@ -348,7 +329,6 @@ void Response::handleRequest(Server_block server) {
 		if (location.auto_index == "on")
 		{
 			is_autoindex = 1;
-			std::cout << "auto" << std::endl;
 			auto_index(location);
 			return ;
 
@@ -363,7 +343,6 @@ void Response::handleRequest(Server_block server) {
 	stat(_path.c_str(), &s);
 	if((s.st_mode & S_IFREG))
 	{		
-			std::cout << "is not directory" << std::endl;
 			_is_request_handled = true;
 			if (_request.getRequestMethod() == "GET" &&
 					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "GET") != location.allowed_funct.end())
@@ -415,28 +394,22 @@ void Response::handleRequest(Server_block server) {
 
 void Response::handleGetRequest()
 {
-	std::cout << "start handeling get request " << std::endl;
 	struct stat fileStat;
 	time_t rawtime;
 	_body.open(_path.c_str());
 	stat (_path.c_str(), &fileStat);
 	int fd = open(_path.c_str(), O_RDONLY);
-	std::cout << "path is " << _path << " fd is " << fd  << "size is " << fileStat.st_size << std::endl;
 	// char buff[fileStat.st_size];
 	char buff[1001] = {0};
-	int sz =0;
 	this->ok(fileStat.st_size);
-	std::cout << "-------------- READ ------------------" << std::endl;
 	int reading = 0;
 	while((reading = read(fd, buff, 1000))){
 		_response.append(buff, reading);
 	// std::string s(buff, reading);
 		// _response += s;
 		// std::cout << buff;
-		sz += reading;
 		bzero(buff, 1000);
 	}
-	std::cout << "-------------- ENDD ------------------" << sz << std::endl;
 
 	close(fd);
 	// std::cout << "resp is  "  << _response << std::endl;
