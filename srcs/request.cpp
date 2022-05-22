@@ -1,7 +1,7 @@
 #include "../includes/request.hpp"
 
 Request::Request() : _error(0), _requestMethod(""), _requestTarget(""), _requestEnd(false),
-	_requestQuery(""), _bodyName(""), _str(""), _hasBody(false), _keepAlive(false), _headersEnd(false),
+	_requestQuery(""), _bodyName(""), _str(""), _hasBody(false), _keepAlive(true), _headersEnd(false),
 	_bodySize(0), _contentLength(0), _isCL(false), _isTE(false), _serverFound(false) {
 		_allowedMethods.push_back("GET");
 		_allowedMethods.push_back("POST");
@@ -133,8 +133,8 @@ void Request::parseHeaders(std::string headers)
 			_error = BAD_REQUEST;
 			throw "Error while request parsing";
 		}
-		if (lowercase(vec2[0]) == "connection" && lowercase(vec2[1]) == "keep-alive")
-			_keepAlive = true;
+		if (lowercase(vec2[0]) == "connection" && lowercase(vec2[1]) == "close")
+			_keepAlive = false;
 		if (lowercase(vec2[0]) == CL && _isTE == false) {
 			_isCL = true;
 			_contentLength = convertsizeT(vec2[1]);

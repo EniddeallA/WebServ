@@ -219,7 +219,12 @@ std::string Response::get_file_path(){
 }
 void Response::create_file()
 {
-	std::string filepath = "/tmp/autoindex_" + std::to_string(time(NULL));
+
+	struct timeval tp;
+	gettimeofday(&tp, NULL);
+	long int us = tp.tv_sec * 1000000 + tp.tv_usec;
+	std::string file_name =   std::to_string(us);
+	std::string filepath = "/tmp/autoindex_" + file_name;
 	std::ofstream out(filepath);
 	_filepath = filepath;
 	out << _response;
@@ -308,7 +313,6 @@ void Response::auto_index(Location_block location)
 		//std::cout << _response << std::endl;
 		create_file();
 		is_autoindex = 0;
-		return ;
     } else if ((s.st_mode & S_IFREG)) {
 		time_t rawtime;
 		time(&rawtime);
@@ -328,7 +332,8 @@ void Response::auto_index(Location_block location)
 		_response += "\r\n\r\n";
 		create_file();
     }
-	notFound();
+	else
+		notFound();
 }
 
 void Response::handleRequest(Server_block server) {

@@ -54,11 +54,12 @@ void start_servers(std::vector<Server_block> &all_servers){
 				}
 				valread = read(new_socket, buffer, BUFFER);
 				std::string s = buffer;
-				std::cout << s;
+				// std::cout << s;
 				
 				v_of_request_object[new_socket].Parse(s);
 				
 				if (v_of_request_object[new_socket].isRequestCompleted() && valread != -1){ // tst valread !!!
+					v_of_request_object[new_socket].printData();
 					std::cout << "--------------------------------------------------------------------" << std::endl;
 					fd_with_response_object[new_socket] = Response(v_of_request_object[new_socket]);
 					fd_with_response_object[new_socket].handleRequest(all_servers[all_servers.size() - 1]); // just for test use the last server bloc
@@ -141,7 +142,8 @@ void start_servers(std::vector<Server_block> &all_servers){
 					std::cout << "finish sendiing data" << std::endl;
 					close(fd_with_response_object[new_socket].get_fd());
 					unlink(fd_with_response_object[new_socket].get_file_path().c_str());
-					if (v_of_request_object[new_socket]._isKeepAlive() == false){ //correct this function the default is keep-alive not close
+					// if (v_of_request_object[new_socket]._isKeepAlive() == false){ //correct this function the default is keep-alive not close
+					if (1 == 1){ //correct this function the default is keep-alive not close
 						FD_CLR(new_socket, &_fd_set_write);
 						close(new_socket);
 						fd_max = fds[0];
