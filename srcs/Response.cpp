@@ -421,14 +421,23 @@ void Response::handleGetRequest()
 	stat (_path.c_str(), &fileStat);
 	int fd = open(_path.c_str(), O_RDONLY);
 	std::cout << "path is " << _path << " fd is " << fd  << "size is " << fileStat.st_size << std::endl;
-	char buff[fileStat.st_size];
-	read(fd, buff, fileStat.st_size);
-	std::cout << "-------------- READ ------------------" << std::endl;
-	std::cout << buff << std::endl;
-	std::cout << "-------------- ENDD ------------------" << std::endl;
-	close(fd);
+	// char buff[fileStat.st_size];
+	char buff[1001] = {0};
+	int sz =0;
 	this->ok(fileStat.st_size);
-	_response += buff;
+	std::cout << "-------------- READ ------------------" << std::endl;
+	int reading = 0;
+	while((reading = read(fd, buff, 1000))){
+		_response.append(buff, reading);
+	// std::string s(buff, reading);
+		// _response += s;
+		// std::cout << buff;
+		sz += reading;
+		bzero(buff, 1000);
+	}
+	std::cout << "-------------- ENDD ------------------" << sz << std::endl;
+
+	close(fd);
 	// std::cout << "resp is  "  << _response << std::endl;
 	create_file();
 }
