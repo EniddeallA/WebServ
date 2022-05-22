@@ -308,7 +308,6 @@ void Response::auto_index(Location_block location)
 		//std::cout << _response << std::endl;
 		create_file();
 		is_autoindex = 0;
-		return ;
     } else if ((s.st_mode & S_IFREG)) {
 		time_t rawtime;
 		time(&rawtime);
@@ -328,7 +327,8 @@ void Response::auto_index(Location_block location)
 		_response += "\r\n\r\n";
 		create_file();
     }
-	notFound();
+	else
+		notFound();
 }
 
 void Response::handleRequest(Server_block server) {
@@ -574,7 +574,7 @@ void Response::errorTemplate(const StatusCodeException & e) {
 		_body << "<h4 style=\"text-align:center\">WebServer</h4>\n";
 		_body << "</body>\n";
 	}
-}
+}	
 
 // void Response::setErrorPage(const StatusCodeException & e, const Location_block *location, Server_block *server) {
 // 	_statuscode = e.getStatusCode();
