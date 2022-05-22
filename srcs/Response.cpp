@@ -260,9 +260,10 @@ void Response::auto_index(Location_block location)
         }
         closedir (dir);
 		std::string body;
+		std::string path_name = _path.substr(_path.find_last_of('/'), _path.size());
 		body += std::string("<html>\r\n<head>\r\n");
-		body += std::string("<title>Index of ") + _path;
-		body +=std::string("</title>\r\n</head>\r\n<body>\r\n<h1>Index of ") + _path;
+		body += std::string("<title>Index of ") + path_name;
+		body +=std::string("</title>\r\n</head>\r\n<body>\r\n<h1>Index of ") + path_name;
 		body += std::string("</h1>\r\n<hr>\r\n<ul>\r\n");
 		for(int i=0; i < files.size(); i++){
 			std::string to_go  = _request.getRequestTarget();

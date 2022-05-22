@@ -293,8 +293,8 @@ std::string	Request::_bodyToFile() {
 	int i = (rand() % 5000);
 	std::stringstream iss;
 
-	iss << "/tmp/websev_body_" << i ;
 	return iss.str();
+	iss << "/tmp/websev_body_" << i ;
 }
 
 
