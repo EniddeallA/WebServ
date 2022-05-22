@@ -9,7 +9,7 @@ CPP_VERSION	=	#-std=c++98
 
 COMPILER	=	clang++
 
-FLAGS		=	-g #-Wextra -Wall -Werror
+FLAGS		=	#-fsanitize=address#-Wextra -Wall -Werror 
 
 NAME		=	ft_server
 
@@ -19,7 +19,7 @@ $(NAME) : $(SRC)
 	@$(COMPILER) $(CPP_VERSION) $(FLAGS) $(SRCS) -o $(NAME)
 
 run : 
-	@$(COMPILER) $(CPP_VERSION)  $(SRCS)  -o $(NAME)
+	@$(COMPILER) $(CPP_VERSION) $(FLAGS) $(SRCS)  -o $(NAME)
 
 clean :
 	@rm -rf $(NAME)  *.dSYM .vscode a.out
