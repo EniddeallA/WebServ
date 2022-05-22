@@ -311,7 +311,6 @@ void Response::auto_index(Location_block location)
 		//std::cout << _response << std::endl;
 		create_file();
 		is_autoindex = 0;
-		return ;
     } else if ((s.st_mode & S_IFREG)) {
 		time_t rawtime;
 		time(&rawtime);
@@ -331,7 +330,8 @@ void Response::auto_index(Location_block location)
 		_response += "\r\n\r\n";
 		create_file();
     }
-	notFound();
+	else
+		notFound();
 }
 
 void Response::handleRequest(Server_block server) {
@@ -379,13 +379,10 @@ void Response::handleRequest(Server_block server) {
 			std::cout << "PATH 3 IS " << _path << std::endl;
 		}
 	}
-	stat(_path.c_str(), &s);
-	if((s.st_mode & S_IFREG))
+	else if((s.st_mode & S_IFREG))
 	{
 		if (location.auto_index == "on")
-		{
 			auto_index(location);
-		}
 		else
 		{
 			std::cout << "check  for method " << _request.getRequestMethod() << std::endl;
