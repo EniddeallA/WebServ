@@ -423,9 +423,6 @@ void Response::handleGetRequest()
 	std::cout << "path is " << _path << " fd is " << fd  << "size is " << fileStat.st_size << std::endl;
 	char buff[fileStat.st_size];
 	read(fd, buff, fileStat.st_size);
-	std::cout << "-------------- READ ------------------" << std::endl;
-	std::cout << buff << std::endl;
-	std::cout << "-------------- ENDD ------------------" << std::endl;
 	close(fd);
 	this->ok(fileStat.st_size);
 	_response += buff;
