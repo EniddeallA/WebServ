@@ -593,7 +593,7 @@ void Response::errorTemplate(const StatusCodeException & e) {
 		_body << "<h4 style=\"text-align:center\">WebServer</h4>\n";
 		_body << "</body>\n";
 	}
-}
+}	
 
 // void Response::setErrorPage(const StatusCodeException & e, const Location_block *location, Server_block *server) {
 // 	_statuscode = e.getStatusCode();
