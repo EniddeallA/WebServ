@@ -15,18 +15,30 @@
 
 /*--------------------------------------------------------------------- import Files ---------------------------------------------------------------------*/
 
-@import url(css/animate.min.css);
-@import url(css/normalize.css);
-@import url(css/icomoon.css);
-@import url(css/font-awesome.min.css);
-@import url(css/meanmenu.css);
-@import url(css/owl.carousel.min.css);
-@import url(css/swiper.min.css);
-@import url(css/slick.css);
-@import url(css/jquery.fancybox.min.css);
-@import url(css/jquery-ui.css);
-@import url(css/nice-select.css);
+/*@import url(css/animate.min.css);
+/*@import url(css/normalize.css);
+/*@import url(css/icomoon.css);
+/*@import url(css/font-awesome.min.css);
+/*@import url(css/meanmenu.css);
+/*@import url(css/owl.carousel.min.css);
+/*@import url(css/swiper.min.css);
+/*@import url(css/slick.css);
+/*@import url(css/jquery.fancybox.min.css);
+/*@import url(css/jquery-ui.css);
+/*@import url(css/nice-select.css);*/
 
+
+@import url(./animate.min.css);
+@import url(./normalize.css);
+@import url(./icomoon.css);
+@import url(./font-awesome.min.css);
+@import url(./meanmenu.css);
+@import url(./owl.carousel.min.css);
+/* @import url(./swiper.min.css); */
+@import url(./slick.css);
+@import url(./jquery.fancybox.min.css);
+@import url(./jquery-ui.css);
+@import url(./nice-select.css);
 /*--------------------------------------------------------------------- skeleton ---------------------------------------------------------------------*/
 
 * {

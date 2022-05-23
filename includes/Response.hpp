@@ -29,6 +29,8 @@ class Response
 		std::string _filepath;
 		int is_autoindex;
 		int	_file_not_found;
+		long _size_of_file;
+		long _size_sended;
 
 	public:
 		Response(Request	request);
@@ -39,9 +41,12 @@ class Response
 		~Response();
 	
 		std::string get_respone( void ) const;
-		int get_fd( void ) const;
+		int get_fd( void );
 		void close_fd( void);
 		void reset();
+		long get_size_of_file(){return _size_of_file;}
+		long get_size_sended(){return _size_sended;}
+		void update_size_sended(long send){_size_sended += send;}
 
 		std::fstream& get_body( void );
 		void errorTemplate(const StatusCodeException & e);
