@@ -24,6 +24,8 @@ Request::Request(Request const &src) {
 	_isTE = src._isTE;
 	_headers = src._headers;
 	//_bodyFile = src._bodyFile;
+	_port = src._port;
+
 	_bodySize = src._bodySize;
 	_contentLength = src._contentLength;
 }
@@ -45,6 +47,7 @@ Request& Request::operator=(Request const &src){
 	_headers = src._headers;
 	//_bodyFile = src._bodyFile;
 	_bodySize = src._bodySize;
+	_port = src._port;
 	_contentLength = src._contentLength;
 	return *this;
 }
@@ -143,6 +146,7 @@ void Request::parseHeaders(std::string headers)
 			_isTE = true;
 		}
 	}
+	std::cout << "port is " << _port << " and host is " << _host <<  std::endl;
 };
 
 void Request::parseFirstLine(std::vector<std::string> vec)
@@ -281,7 +285,8 @@ void		Request::printData( void ) {
 			<< "keep-alve :: [" << _keepAlive << "]\n"
 			<< "Content-Length :: [" << _contentLength << "]\n" 
 			<< "Body file :: [" << _bodyName << "]\n"
-			<< "Error :: [" << _error << "]\n";
+			<< "Error :: [" << _error << "]\n"
+			<< "Port :: [" << _port << "]\n";
 	std::cout << "=================================\n";
 	for (t_headers::iterator it = _headers.begin(); it != _headers.end(); ++it) {
 		//std:: cout << "[" << (it)->first << "] :: [" << (it)->second << "]\n";
@@ -327,9 +332,11 @@ void		Request::clear( void ){
 	_headersEnd = false;
 	_bodySize = 0;
 	_contentLength = 0;
+	_port.clear();
 }
 
 Server_block	Request::setServer( std::vector<Server_block> const serv_confs ) {
+	printData();
 	std::vector< Server_block > blocks;
 	for (size_t i = 0; i < serv_confs.size(); i++ ) {
 		for (size_t j = 0; j < serv_confs[i].name.size() ; j++) {
