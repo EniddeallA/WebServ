@@ -42,6 +42,7 @@ class Response
 		int get_fd( void ) const;
 		void close_fd( void);
 		void reset();
+		Request get_request(){return _request;}
 
 		std::fstream& get_body( void );
 		void errorTemplate(const StatusCodeException & e);
