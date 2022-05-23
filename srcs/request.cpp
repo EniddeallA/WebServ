@@ -146,7 +146,6 @@ void Request::parseHeaders(std::string headers)
 			_isTE = true;
 		}
 	}
-	std::cout << "port is " << _port << " and host is " << _host <<  std::endl;
 };
 
 void Request::parseFirstLine(std::vector<std::string> vec)
