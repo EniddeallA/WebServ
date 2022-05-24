@@ -325,13 +325,24 @@ void Response::handleRequest(Server_block server) {
 		}
 	}
 	stat(_path.c_str(), &s);
+<<<<<<< HEAD
 	std::cout << "heeeereee " << _request.getRequestMethod() << std::endl;
 	if((s.st_mode & S_IFREG) && _request.getRequestMethod() != "POST")
+=======
+
+	if((s.st_mode & S_IFREG) &&  _request.getRequestMethod() != "POST")
+>>>>>>> 8dc94cdc1b043f60b169ac4c3963847f234d51f2
 	{		
 			_is_request_handled = true;
 			if (_request.getRequestMethod() == "GET" &&
 					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "GET") != location.allowed_funct.end())
 				this->handleGetRequest();
+<<<<<<< HEAD
+=======
+			// else if (_request.getRequestMethod() == "POST" &&
+			// 		std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
+			// 	this->handlePostRequest();
+>>>>>>> 8dc94cdc1b043f60b169ac4c3963847f234d51f2
 			else if (_request.getRequestMethod() == "DELETE" &&
 					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "DELETE") != location.allowed_funct.end())
 				this->handleDeleteRequest();
@@ -344,10 +355,16 @@ void Response::handleRequest(Server_block server) {
 				_is_request_handled = false;
 			}
 	}
+<<<<<<< HEAD
 	else if (_request.getRequestMethod() == "POST"){
 		std::cout << "hereee" << std::endl;
 		if (std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
 			this->handlePostRequest(server, location);
+=======
+	else if ( _request.getRequestMethod() == "POST"){
+		if (std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
+			this->handlePostRequest();
+>>>>>>> 8dc94cdc1b043f60b169ac4c3963847f234d51f2
 	}
 	else{
 			struct stat fileStat;
@@ -387,6 +404,22 @@ void Response::handleGetRequest()
 
 void Response::handlePostRequest(Server_block server, Location_block location)
 {
+
+	//?get name to save the file 
+	int index =_request.getRequestTarget().find("upload/");
+	std::string name_to_save = _request.getRequestTarget().substr(index + 6, _request.getRequestTarget().size());
+	if (index == -1){
+		//? generate random name
+	struct timeval tp;
+	gettimeofday(&tp, NULL);
+	long int us = tp.tv_sec * 1000000 + tp.tv_usec;
+		name_to_save =  std::to_string(us);
+	}
+
+	std::cout << "check for file of body " << _request.getBody() << " check with "<< name_to_save  << " index " << index << std::endl;
+
+
+	std::cout << "check for error _2" << std::endl;
 	struct stat fileStat;
 	time_t rawtime;
 	

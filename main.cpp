@@ -1,8 +1,6 @@
 #include "includes/Parsing.hpp"
 
-void sigpipehandle(int sig) {
-    std::cerr << sig << std::endl;
-}
+
 
 int main(int argc, char const *argv[])
 {

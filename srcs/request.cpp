@@ -199,8 +199,10 @@ void	Request::parseBody(std::string &req) {
 	if (_bodyName.empty()) {
 		_bodyName = _bodyToFile();
 		_bodyFile.open(_bodyName.c_str());
-		if (_bodyFile.good() == false)
+		if (_bodyFile.good() == false){
+			std::cout << _bodyName << "name of body" << std::endl;
 			throw "Error while opening file stream [body]";
+		}
 	}
 	if (_isCL == true) {
 		_bodySize += req.size();
@@ -246,8 +248,9 @@ void 		Request::toChuncked(std::string &req) {
 		if (status == CHUNK_SIZE) {
 			std::string hex = req.substr(0, end);
 			if (is_hex_notation(hex) == false) {
+				std::cout << "HEX IS " << hex << std::endl;
 				_error = BAD_REQUEST;
-				throw "Error on body parsing";
+				throw "Error on body parsing ";
 			}
 			size = to_hex(hex);
 			req.erase(0, end + 2);
@@ -265,7 +268,7 @@ void 		Request::toChuncked(std::string &req) {
 			std::string line =  req.substr(0, end);
 			if (line.length() != size) {
 				_error = BAD_REQUEST;
-				throw "Error on body parsing";
+				throw "Error on body parsing lenght error";
 			} 
 			status = CHUNK_SIZE;
 			req.erase(0, end + 2);
@@ -297,8 +300,8 @@ std::string	Request::_bodyToFile() {
 	int i = (rand() % 5000);
 	std::stringstream iss;
 
-	return iss.str();
 	iss << "/tmp/websev_body_" << i ;
+	return iss.str();
 }
 
 
