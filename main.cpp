@@ -5,7 +5,6 @@
 int main(int argc, char const *argv[])
 {
     try {
-        // signal(SIGPIPE, sigpipehandle);
         signal(SIGPIPE, SIG_IGN);
         if (argc == 2){
             std::vector<Server_block> all_servers;

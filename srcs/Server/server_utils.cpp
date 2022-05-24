@@ -12,12 +12,8 @@ bool port_already_binded(std::vector<Server_block> &all_server, int index, int p
 void start_server(Server_block &server){
 	if ((server.server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 		throw "Fail in socket fd";
-	////////////////////////////////////////
-	////////////////////////////////////////
 	int one = 1;
 	setsockopt(server.server_fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
-	////////////////////////////////////////
-	////////////////////////////////////////
 
 	bzero(&(server.s_address), sizeof(server.s_address));
 	server.s_address.sin_family = AF_INET;
