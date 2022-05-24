@@ -56,7 +56,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 				}
 				valread = read(new_socket, buffer, BUFFER);
 				std::string s = buffer;
-				std::cout << s;
+				// std::cout << s;
 				
 				v_of_request_object[new_socket].Parse(s);
 				
