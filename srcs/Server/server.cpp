@@ -81,7 +81,6 @@ void start_servers(std::vector<Server_block> &all_servers){
 				valread =  read(fd, buffer, BUFFER);
 				// problem here
 				int sended = send(new_socket, buffer, valread, 0);
-				std::cout << sended << std::endl;
 				// end prob
 				if (sended > 0)
 					fd_with_response_object[new_socket].update_size_sended(sended);

@@ -50,7 +50,6 @@ class Response
 		Request get_request(){return _request;}
 
 		std::fstream& get_body( void );
-		void errorTemplate(const StatusCodeException & e);
 		void create_file();
 		
 		void set_error_header(int statuscode, std::string msg, std::string path);
@@ -68,10 +67,8 @@ class Response
 		Location_block getLocation(Server_block server);
 		void handleRequest(Server_block server);
 		void handleGetRequest();
-		void handlePostRequest();
+		void handlePostRequest(Server_block server, Location_block location);
 		void handleDeleteRequest();
-
-		void setErrorPage(const StatusCodeException & e, const Location_block * location, Server_block *server);
 };
 
 #endif

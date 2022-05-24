@@ -5,10 +5,6 @@ Response::Response(Request	request):
 	_fd(-1),
 	is_autoindex(0),
 	_size_sended(0)
-
-	// _path(0)
-	// _response(0)
-	// _body(0)
 {
 	_request = request;
 }
@@ -163,27 +159,6 @@ void Response::ok(size_t bodysize)
 		_response += "Content-Length: " + std::to_string(bodysize) + "\r\n\n";
 }
 
-// Location_block Response::getLocation(Server_block server)
-// {
-// 	Location_block location;
-
-// 	for(Location_block it : server.all_locations)
-// 	{
-// 		std::string target = _request.getRequestTarget();
-// 		_path.clear();
-// 		while (target.find_last_of("/") != std::string::npos)
-// 		{
-// 			//std::cout << "compare " << it.path << " with " << target << std::endl;
-// 			if (it.path == target)
-// 				return it;
-// 			_path = target.substr(target.find_last_of("/"), target.size()) + _path;
-// 			target = target.substr(0, target.find_last_of("/"));
-// 		}
-// 	}
-// 	//std::cout <<  "no matchind founded" << std::endl;
-// }
-
-
 std::string Response::get_file_path(){
 	return _filepath;
 }
@@ -315,6 +290,7 @@ void Response::handleRequest(Server_block server) {
 	Location_block location = getLocation(server);
 	_path = server.root + _path;
 	// std::cout << "check for index file__0 " <<  _path  << std::endl;
+	std::cout << "heeeereee" << _request.getRequestMethod() << std::endl;
 	if (_file_not_found){
 		
 		notFound();
@@ -349,7 +325,6 @@ void Response::handleRequest(Server_block server) {
 		}
 	}
 	stat(_path.c_str(), &s);
-
 	if((s.st_mode & S_IFREG) &&  _request.getRequestMethod() != "POST")
 	{		
 			_is_request_handled = true;
@@ -364,28 +339,16 @@ void Response::handleRequest(Server_block server) {
 				this->handleDeleteRequest();
 			else 
 			{
-				// struct stat fileStat;
-				// _body.open("./error_pages/405.html");
-				// stat ("./error_pages/405.html", &fileStat);
-
-				// int fd = open("./error_pages/405.html", O_RDONLY);
-				// char buff[fileStat.st_size];
-				// read(fd, buff, fileStat.st_size);
-
-				// set_error_header(405, "Method Not Allowed", fileStat.st_size);
 				unallowedMethod();
-				// _response += buff;
-				// close(fd);
 				_body.close();
 				create_file();
 				return;
-				// this->unallowedMethod();
 				_is_request_handled = false;
 			}
 	}
 	else if ( _request.getRequestMethod() == "POST"){
 		if (std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
-			this->handlePostRequest();
+			this->handlePostRequest(server, location);
 	}
 	else{
 			struct stat fileStat;
@@ -409,7 +372,6 @@ void Response::handleGetRequest()
 {
 	struct stat fileStat;
 	time_t rawtime;
-	_body.open(_path.c_str());
 	stat (_path.c_str(), &fileStat);
 	int fd = open(_path.c_str(), O_RDONLY);
 	// char buff[fileStat.st_size];
@@ -418,60 +380,45 @@ void Response::handleGetRequest()
 	int reading = 0;
 	while((reading = read(fd, buff, 1000))){
 		_response.append(buff, reading);
-	// std::string s(buff, reading);
-		// _response += s;
-		// std::cout << buff;
 		bzero(buff, 1000);
 	}
-
 	close(fd);
-	_body.close(); //!
-	// std::cout << "resp is  "  << _response << std::endl;
 	create_file();
 }
 
-void Response::handlePostRequest()
+void Response::handlePostRequest(Server_block server, Location_block location)
 {
-
-	//?get name to save the file 
 	int index =_request.getRequestTarget().find("upload/");
 	std::string name_to_save = _request.getRequestTarget().substr(index + 6, _request.getRequestTarget().size());
-	if (index == -1){
-		//? generate random name
-	struct timeval tp;
-	gettimeofday(&tp, NULL);
-	long int us = tp.tv_sec * 1000000 + tp.tv_usec;
-		name_to_save =  std::to_string(us);
+	if (!location.upload_store.empty())
+	{
+		std::string ext;
+		std::string file_name;
+		std::string file_path;
+
+		ext = _request.getContentType();
+		if (index == -1)
+		{
+			time_t t;
+			t = time(NULL);
+			file_path = server.root + location.upload_store + "/" + std::to_string(t);
+		}
+		else
+			file_path = server.root + location.upload_store + "/" + name_to_save;
+		std::cout << file_path << std::endl;
+		int fd = open(file_path.c_str(), O_CREAT, 0777);
+		write(fd, _request.getBody().c_str(), _request.getBody().size());
+		close(fd);
 	}
-
-	std::cout << "check for file of body " << _request.getBody() << " check with "<< name_to_save  << " index " << index << std::endl;
-
-
-	std::cout << "check for error _2" << std::endl;
-	struct stat fileStat;
+	
 	time_t rawtime;
-	_body.open(_path.c_str());
-
 	time(&rawtime);
-	stat (_path.c_str(), &fileStat);
-	_response += "HTTP/1.1 200 ok\r\n";
+	_response += "HTTP/1.1 201 created\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response += "\r\nServer: webserver";
-	_response += "\r\nLast-Modified: " + time_last_modification(fileStat);
-	_response += "\r\nTransfer-Encoding: chunked";
-	const char *type = MimeTypes::getType(_path.c_str());
-	if (type)
-		_response += "\r\nContent-Type: " + std::string(type); 
+	_response += "\r\nContent-Length: 0";
 	_response +=  "\r\nConnection: keep-alive";
 	_response +=  "\r\nAccept-Ranges: bytes\r\n\r\n";
-	int fd = open(_path.c_str(), O_RDONLY);
-	char buff[1001] = {0};
-	int reading = 0;
-	while((reading = read(fd, buff, 1000)) > 0){
-		_response.append(buff, reading);
-		bzero(buff, 1000);
-	}
-	close(fd);
 	create_file();
 }
 
@@ -552,21 +499,5 @@ void Response::handleDeleteRequest()
 		throw StatusCodeException(HttpStatus::internalServerError);
     } else {
 		throw StatusCodeException(HttpStatus::noContent);
-	}
-}
-
-void Response::errorTemplate(const StatusCodeException & e) {
-
-	if (e.getStatusCode() >= 400) {
-		_body << "<!DOCTYPE html>\n" ;
-		_body << "<html lang=\"en\">\n";
-		_body << "<head>\n";
-		_body << "<title>" << e.getStatusCode() << "</title>\n";
-		_body << "</head>\n";
-		_body << "<body>\n";
-		_body << "<h1 style=\"text-align:center\">" << e.getStatusCode() << " - " << HttpStatus::reasonPhrase(e.getStatusCode()) << "</h1>\n";
-		_body << "<hr>\n";
-		_body << "<h4 style=\"text-align:center\">WebServer</h4>\n";
-		_body << "</body>\n";
 	}
 }
