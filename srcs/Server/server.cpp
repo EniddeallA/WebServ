@@ -56,12 +56,13 @@ void start_servers(std::vector<Server_block> &all_servers){
 				}
 				valread = read(new_socket, buffer, BUFFER);
 				std::string s = buffer;
-				// std::cout << s;
+				std::cout << s;
 				
 				v_of_request_object[new_socket].Parse(s);
 				
 				if (v_of_request_object[new_socket].isRequestCompleted() && valread != -1){ // tst valread !!!
-					// std::cout << "--------------------------------------------------------------------" << std::endl;
+					std::cout << "--------------------------------------------------------------------" << std::endl;
+						v_of_request_object[new_socket].printData();
 					fd_with_response_object[new_socket] = Response(v_of_request_object[new_socket]);
 					fd_with_response_object[new_socket].handleRequest(v_of_request_object[new_socket].setServer(all_servers)); // just for test use the last server bloc
 					// fd_with_response[new_socket] = strdup(fd_with_response_object[new_socket].get_respone().c_str()); //? that just return the head but we still need the body
@@ -80,7 +81,6 @@ void start_servers(std::vector<Server_block> &all_servers){
 				valread =  read(fd, buffer, BUFFER);
 				// problem here
 				int sended = send(new_socket, buffer, valread, 0);
-				std::cout << sended << std::endl;
 				// end prob
 				if (sended > 0)
 					fd_with_response_object[new_socket].update_size_sended(sended);

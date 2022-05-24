@@ -101,7 +101,6 @@ void Request::Parse(std::string &req)
 		/** WARNING 
 		 * unlink _bodyFile
 		*/
-		std::cout << "THAT WHY 000000000" << std::endl;
 	}
 };
 
