@@ -1,16 +1,16 @@
 // #include "includes/UtilsUtils.hpp"
 #include "includes/Parsing.hpp"
-long int get_current_time(){
-
-	struct timeval tp;
-	gettimeofday(&tp, NULL);
-	long int us = tp.tv_sec * 1000000 + tp.tv_usec;
-	return us;
-}
 
 int main() {
-   	long int now = get_current_time();
-    std::string s =  std::to_string(now);
-    std::cout << s;
+	int fd = open("file.conf", O_RDONLY);
+	char buffer[100];
+	read(fd, buffer, 100);
+	std::cout << buffer << std::endl;
+	lseek(fd, -99 ,SEEK_CUR);
+	read(fd, buffer, 100);
+	std::cout << "****************************" << std::endl;
+	std::cout << buffer << std::endl;
+
+
 }
 

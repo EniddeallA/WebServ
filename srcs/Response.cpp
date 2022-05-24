@@ -3,7 +3,9 @@
 Response::Response(Request	request):
 	// _request(request),
 	_fd(-1),
-	is_autoindex(0)
+	is_autoindex(0),
+	_size_sended(0)
+
 	// _path(0)
 	// _response(0)
 	// _body(0)
@@ -35,6 +37,8 @@ void Response::reset()
 	is_autoindex = 0;
 	_is_request_handled = false;
 	_statuscode = HttpStatus::statusCode(0);
+	_size_of_file = 0;
+	_size_sended = 0;
 }
 
 std::string Response::get_respone( void ) const
@@ -47,8 +51,11 @@ std::fstream& Response::get_body( void )
 	return _body;
 }
 
-int Response::get_fd( void ) const
+int Response::get_fd( void )
 {
+	struct stat s;
+	stat(_filepath.c_str(), &s);
+	_size_of_file = (long)(s.st_size);
 	return _fd;
 }
 
@@ -79,6 +86,7 @@ void Response::set_error_header(int statuscode, std::string msg, std::string pat
 	int fd = open(path.c_str(), O_RDONLY);
 	char buff[s.st_size];
 	read(fd, buff, s.st_size);
+	close(fd);
 	_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n";
 	_response += "Connection: close\r\n\r\n";
 	_response += buff;
@@ -193,6 +201,9 @@ void Response::create_file()
 	out << _response;
 	out.close();
 	_fd = open(filepath.c_str(), O_RDONLY);
+	fcntl(_fd, F_SETFL, O_NONBLOCK); // LEARN MORE ABOUT fcntl
+
+	_size_sended = 0;
 }
 
 Location_block Response::getLocation(Server_block server)
@@ -293,6 +304,7 @@ void Response::auto_index(Location_block location)
 		read(fd, buff, s.st_size);
 		_response += buff;
 		_response += "\r\n\r\n";
+		close(fd);
 		create_file();
     }
 	else
