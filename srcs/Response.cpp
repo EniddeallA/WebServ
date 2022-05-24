@@ -385,7 +385,7 @@ void Response::handleRequest(Server_block server) {
 	}
 	else if ( _request.getRequestMethod() == "POST"){
 		if (std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
-			this->handlePostRequest();
+			this->handlePostRequest(server);
 	}
 	else{
 			struct stat fileStat;
@@ -430,20 +430,22 @@ void Response::handleGetRequest()
 	create_file();
 }
 
-void Response::handlePostRequest()
+void Response::handlePostRequest(Server_block server)
 {
 
 	//?get name to save the file 
+	location = get_location_block(server);
 	int index =_request.getRequestTarget().find("upload/");
 	std::string name_to_save = _request.getRequestTarget().substr(index + 6, _request.getRequestTarget().size());
+	std::string path_to_save ;
 	if (index == -1){
 		//? generate random name
 	struct timeval tp;
 	gettimeofday(&tp, NULL);
 	long int us = tp.tv_sec * 1000000 + tp.tv_usec;
-		name_to_save =  std::to_string(us);
+		name_to_save =  "FILE_" + std::to_string(us);
 	}
-
+	path_to_save = 
 	std::cout << "check for file of body " << _request.getBody() << " check with "<< name_to_save  << " index " << index << std::endl;
 
 
