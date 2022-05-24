@@ -349,15 +349,16 @@ void Response::handleRequest(Server_block server) {
 		}
 	}
 	stat(_path.c_str(), &s);
-	if((s.st_mode & S_IFREG))
+
+	if((s.st_mode & S_IFREG) &&  _request.getRequestMethod() != "POST")
 	{		
 			_is_request_handled = true;
 			if (_request.getRequestMethod() == "GET" &&
 					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "GET") != location.allowed_funct.end())
 				this->handleGetRequest();
-			else if (_request.getRequestMethod() == "POST" &&
-					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
-				this->handlePostRequest();
+			// else if (_request.getRequestMethod() == "POST" &&
+			// 		std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
+			// 	this->handlePostRequest();
 			else if (_request.getRequestMethod() == "DELETE" &&
 					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "DELETE") != location.allowed_funct.end())
 				this->handleDeleteRequest();
@@ -381,6 +382,10 @@ void Response::handleRequest(Server_block server) {
 				// this->unallowedMethod();
 				_is_request_handled = false;
 			}
+	}
+	else if ( _request.getRequestMethod() == "POST"){
+		if (std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
+			this->handlePostRequest();
 	}
 	else{
 			struct stat fileStat;
@@ -427,10 +432,26 @@ void Response::handleGetRequest()
 
 void Response::handlePostRequest()
 {
+
+	//?get name to save the file 
+	int index =_request.getRequestTarget().find("upload/");
+	std::string name_to_save = _request.getRequestTarget().substr(index + 6, _request.getRequestTarget().size());
+	if (index == -1){
+		//? generate random name
+	struct timeval tp;
+	gettimeofday(&tp, NULL);
+	long int us = tp.tv_sec * 1000000 + tp.tv_usec;
+		name_to_save =  std::to_string(us);
+	}
+
+	std::cout << "check for file of body " << _request.getBody() << " check with "<< name_to_save  << " index " << index << std::endl;
+
+
+	std::cout << "check for error _2" << std::endl;
 	struct stat fileStat;
 	time_t rawtime;
-	
 	_body.open(_path.c_str());
+
 	time(&rawtime);
 	stat (_path.c_str(), &fileStat);
 	_response += "HTTP/1.1 200 ok\r\n";
@@ -446,7 +467,7 @@ void Response::handlePostRequest()
 	int fd = open(_path.c_str(), O_RDONLY);
 	char buff[1001] = {0};
 	int reading = 0;
-	while((reading = read(fd, buff, 1000))){
+	while((reading = read(fd, buff, 1000)) > 0){
 		_response.append(buff, reading);
 		bzero(buff, 1000);
 	}
