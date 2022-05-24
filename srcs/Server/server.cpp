@@ -64,7 +64,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 					// std::cout << "--------------------------------------------------------------------" << std::endl;
 					fd_with_response_object[new_socket] = Response(v_of_request_object[new_socket]);
 					fd_with_response_object[new_socket].handleRequest(v_of_request_object[new_socket].setServer(all_servers)); // just for test use the last server bloc
-					fd_with_response[new_socket] = strdup(fd_with_response_object[new_socket].get_respone().c_str()); //? that just return the head but we still need the body
+					// fd_with_response[new_socket] = strdup(fd_with_response_object[new_socket].get_respone().c_str()); //? that just return the head but we still need the body
 			
 					fd_with_send_size[new_socket] = 0;
 					FD_CLR(new_socket, &_fd_set_read);
