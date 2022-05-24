@@ -433,7 +433,15 @@ void Response::handlePostRequest()
 	if (type)
 		_response += "\r\nContent-Type: " + std::string(type); 
 	_response +=  "\r\nConnection: keep-alive";
-	_response +=  "\r\nAccept-Ranges: bytes";
+	_response +=  "\r\nAccept-Ranges: bytes\r\n\r\n";
+	int fd = open(_path.c_str(), O_RDONLY);
+	char buff[1001] = {0};
+	int reading = 0;
+	while((reading = read(fd, buff, 1000))){
+		_response.append(buff, reading);
+		bzero(buff, 1000);
+	}
+	close(fd);
 	create_file();
 }
 
