@@ -31,7 +31,6 @@ void start_servers(std::vector<Server_block> &all_servers){
 		bzero(buffer, BUFFER);
 		_fd_set_read_temp = _fd_set_read;
 		_fd_set_write_temp = _fd_set_write;
-
 		int selected = select(fd_max +1, &_fd_set_read_temp, &_fd_set_write_temp, NULL,NULL); //check timeout
 		if (selected < 0){
 			throw ("Error in select function");
@@ -62,11 +61,9 @@ void start_servers(std::vector<Server_block> &all_servers){
 				v_of_request_object[new_socket].Parse(s);
 				
 				if (v_of_request_object[new_socket].isRequestCompleted() && valread != -1){ // tst valread !!!
-					std::cout << "--------------------------------------------------------------------" << std::endl;
-					v_of_request_object[new_socket].printData();
+					// std::cout << "--------------------------------------------------------------------" << std::endl;
 					fd_with_response_object[new_socket] = Response(v_of_request_object[new_socket]);
-					fd_with_response_object[new_socket].handleRequest(all_servers[all_servers.size() - 1]); // just for test use the last server bloc
-					std::cout << "--------------------------------------------------------------------" << std::endl;
+					fd_with_response_object[new_socket].handleRequest(v_of_request_object[new_socket].setServer(all_servers)); // just for test use the last server bloc
 					fd_with_response[new_socket] = strdup(fd_with_response_object[new_socket].get_respone().c_str()); //? that just return the head but we still need the body
 			
 					fd_with_send_size[new_socket] = 0;
@@ -74,18 +71,17 @@ void start_servers(std::vector<Server_block> &all_servers){
 					FD_SET(new_socket, &_fd_set_write);
 				}
 			}
-		
 
 			if (FD_ISSET(i, &_fd_set_write_temp)){ //CHECK FOR WRITTING FD_SET
 			//? for first time save leth and size of the file;
 				new_socket = i;
 				bzero(buffer, BUFFER);
 				int fd = fd_with_response_object[new_socket].get_fd(); //! implement fcntl to all fds!!!!!
-
 				valread =  read(fd, buffer, BUFFER);
-				int sended = write(new_socket, buffer, valread);
-				std::cout << "ON_sendiing " << sended << " of " << valread << std::endl;
-
+				// problem here
+				int sended = send(new_socket, buffer, valread, 0);
+				std::cout << sended << std::endl;
+				// end prob
 				if (sended > 0)
 					fd_with_response_object[new_socket].update_size_sended(sended);
 
@@ -93,17 +89,14 @@ void start_servers(std::vector<Server_block> &all_servers){
 					int defferent = valread - sended;
 					if (defferent > 0)
 						lseek(fd, -defferent ,SEEK_CUR);
-					else{
-						std::cout <<  "check for  " << valread << " " << sended << std::endl;
-					}
 				}
 
 
 
 				if (valread <= 0){ //? after finish sending all responce
-					std::cout << "****************************************************" << std::endl;
-					std::cout << "finish sendiing data for" << v_of_request_object[new_socket].getRequestTarget() << std::endl;
-					std::cout << "finish sendiing " << fd_with_response_object[new_socket].get_size_sended() << " of " << fd_with_response_object[new_socket].get_size_of_file() << std::endl;
+					// std::cout << "****************************************************" << std::endl;
+					// std::cout << "finish sendiing data for" << v_of_request_object[new_socket].getRequestTarget() << std::endl;
+					// std::cout << "finish sendiing " << fd_with_response_object[new_socket].get_size_sended() << " of " << fd_with_response_object[new_socket].get_size_of_file() << std::endl;
 
 					close(fd_with_response_object[new_socket].get_fd());
 					unlink(fd_with_response_object[new_socket].get_file_path().c_str());
@@ -129,9 +122,9 @@ void start_servers(std::vector<Server_block> &all_servers){
 						FD_SET(new_socket, &_fd_set_read);
 					}
 					v_of_request_object[new_socket].clear();
+					fd_with_response_object[new_socket].get_request().clear();
 				}
 			}
-
 
 
 

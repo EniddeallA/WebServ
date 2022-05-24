@@ -314,32 +314,28 @@ void Response::auto_index(Location_block location)
 void Response::handleRequest(Server_block server) {
 	Location_block location = getLocation(server);
 	_path = server.root + _path;
+	// std::cout << "check for index file__0 " <<  _path  << std::endl;
 	if (_file_not_found){
-		// this->notFound();
-		// struct stat fileStat;
-		// _body.open("./error_pages/404.html");
-		// stat ("./error_pages/404.html", &fileStat);
-
-		// int fd = open("./error_pages/404.html", O_RDONLY);
-		// char buff[fileStat.st_size];
-		// read(fd, buff, fileStat.st_size);
-
-		// set_error_header(404, "Not Found", fileStat.st_size);
+		
 		notFound();
-		// _response += buff;
-		// close(fd);
-		// _body.close();
+	
 		create_file();
 		return;
 	}
-	struct stat s;
+	struct stat s, s2;
 	stat(_path.c_str(), &s);
 	if(s.st_mode & S_IFDIR)
 	{
 
 		std::fstream * file = new std::fstream();
-		if (location.auto_index == "on")
-		{
+
+		//? check if index file exist return index_file else if auto index exit  return it else 404
+		std::string index_file = _path + "/" + location.index_file;;
+
+		stat(index_file.c_str(), &s2);
+		// std::cout << "check for index file " <<  index_file   << " " <<(s2.st_mode & S_IFREG) << std::endl;
+
+		if (location.auto_index == "on" && (location.index_file == ""  || (s2.st_mode & S_IFREG) == 0)){
 			is_autoindex = 1;
 			auto_index(location);
 			return ;
@@ -424,6 +420,7 @@ void Response::handleGetRequest()
 	}
 
 	close(fd);
+	_body.close(); //!
 	// std::cout << "resp is  "  << _response << std::endl;
 	create_file();
 }

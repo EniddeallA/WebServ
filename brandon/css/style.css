@@ -15,6 +15,7 @@
 
 /*--------------------------------------------------------------------- import Files ---------------------------------------------------------------------*/
 
+<<<<<<< HEAD
 /*@import url(css/animate.min.css);
 /*@import url(css/normalize.css);
 /*@import url(css/icomoon.css);
@@ -28,17 +29,26 @@
 /*@import url(css/nice-select.css);*/
 
 
+=======
+>>>>>>> 84a34b8f434d2b2ec36ddb20a4beddf8d429f1de
 @import url(./animate.min.css);
 @import url(./normalize.css);
 @import url(./icomoon.css);
 @import url(./font-awesome.min.css);
 @import url(./meanmenu.css);
 @import url(./owl.carousel.min.css);
+<<<<<<< HEAD
 /* @import url(./swiper.min.css); */
+=======
+>>>>>>> 84a34b8f434d2b2ec36ddb20a4beddf8d429f1de
 @import url(./slick.css);
 @import url(./jquery.fancybox.min.css);
 @import url(./jquery-ui.css);
 @import url(./nice-select.css);
+<<<<<<< HEAD
+=======
+
+>>>>>>> 84a34b8f434d2b2ec36ddb20a4beddf8d429f1de
 /*--------------------------------------------------------------------- skeleton ---------------------------------------------------------------------*/
 
 * {

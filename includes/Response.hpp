@@ -47,6 +47,7 @@ class Response
 		long get_size_of_file(){return _size_of_file;}
 		long get_size_sended(){return _size_sended;}
 		void update_size_sended(long send){_size_sended += send;}
+		Request get_request(){return _request;}
 
 		std::fstream& get_body( void );
 		void errorTemplate(const StatusCodeException & e);
