@@ -55,7 +55,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 				if (fcntl(new_socket, F_SETFL, O_NONBLOCK) == -1){
 					throw "Error in fcntl() function";
 				}
-				valread = read(new_socket, buffer, BUFFER);
+			valread = read(new_socket, buffer, BUFFER);
 				std::string s = buffer;
 				// std::cout << s;
 				
@@ -65,8 +65,9 @@ void start_servers(std::vector<Server_block> &all_servers){
 					std::cout << "--------------------------------------------------------------------" << std::endl;
 					v_of_request_object[new_socket].printData();
 					fd_with_response_object[new_socket] = Response(v_of_request_object[new_socket]);
-					fd_with_response_object[new_socket].handleRequest(all_servers[all_servers.size() - 1]); // just for test use the last server bloc
-					std::cout << "--------------------------------------------------------------------" << std::endl;
+					// fd_with_response_object[new_socket].handleRequest(all_servers[all_servers.size() - 1]); // just for test use the last server bloc
+					// fd_with_response_object[new_socket].handleRequest(fd_with_response_object[new_socket].get_request().setServer(all_servers)); // just for test use the last server bloc
+					fd_with_response_object[new_socket].handleRequest(v_of_request_object[new_socket].setServer(all_servers)); // just for test use the last server bloc
 					fd_with_response[new_socket] = strdup(fd_with_response_object[new_socket].get_respone().c_str()); //? that just return the head but we still need the body
 			
 					fd_with_send_size[new_socket] = 0;
@@ -129,6 +130,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 						FD_SET(new_socket, &_fd_set_read);
 					}
 					v_of_request_object[new_socket].clear();
+				fd_with_response_object[new_socket].get_request().clear();
 				}
 			}
 
