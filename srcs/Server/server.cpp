@@ -55,11 +55,16 @@ void start_servers(std::vector<Server_block> &all_servers){
 					throw "Error in fcntl() function";
 				}
 				valread = read(new_socket, buffer, BUFFER);
-				std::string s = buffer;
+				std::string s;
+				if (valread > 0)
+					s = std::string(buffer, valread);
+				else
+					s = buffer;
 				// std::cout << s;
 				
 				v_of_request_object[new_socket].Parse(s);
 				
+				// if (1 == -1){
 				if (v_of_request_object[new_socket].isRequestCompleted() && valread != -1){ // tst valread !!!
 					std::cout << "--------------------------------------------------------------------" << std::endl;
 					v_of_request_object[new_socket].printData();
@@ -94,12 +99,14 @@ void start_servers(std::vector<Server_block> &all_servers){
 
 
 				if (valread <= 0){ //? after finish sending all responce
+
 					// std::cout << "****************************************************" << std::endl;
 					// std::cout << "finish sendiing data for" << v_of_request_object[new_socket].getRequestTarget() << std::endl;
 					// std::cout << "finish sendiing " << fd_with_response_object[new_socket].get_size_sended() << " of " << fd_with_response_object[new_socket].get_size_of_file() << std::endl;
 
 					close(fd_with_response_object[new_socket].get_fd());
 					unlink(fd_with_response_object[new_socket].get_file_path().c_str());
+
 					fd_with_response_object[new_socket].reset();
 					if (v_of_request_object[new_socket]._isKeepAlive() == false){ //correct this function the default is keep-alive not close
 					// if (1 == 1){ //correct this function the default is keep-alive not close
@@ -121,6 +128,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 						FD_CLR(new_socket, &_fd_set_write);
 						FD_SET(new_socket, &_fd_set_read);
 					}
+					////////////////
 					v_of_request_object[new_socket].clear();
 					fd_with_response_object[new_socket].get_request().clear();
 				}

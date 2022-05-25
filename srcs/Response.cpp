@@ -290,7 +290,6 @@ void Response::handleRequest(Server_block server) {
 	Location_block location = getLocation(server);
 	_path = server.root + _path;
 	// std::cout << "check for index file__0 " <<  _path  << std::endl;
-	std::cout << "heeeereee" << _request.getRequestMethod() << std::endl;
 	if (_file_not_found){
 		
 		notFound();
@@ -390,8 +389,16 @@ void Response::handleGetRequest()
 //? check if there is uplode_store if not 
 	
 void Response::handlePostRequest(Server_block server, Location_block location){
-	int index =_request.getRequestTarget().find("upload/");
-	std::string name_to_save = _request.getRequestTarget().substr(index + 6, _request.getRequestTarget().size());
+
+	if (location.upload_store == ""){ //? return forbiden function
+	}
+
+	//? if it's  request for cgi
+		//? if there is cgi 
+		//? if there is not cgi
+
+	int index =_request.getRequestTarget().find(location.path);
+	std::string name_to_save ;
 	if (!location.upload_store.empty()){
 		std::string ext;
 		std::string file_name;
@@ -403,35 +410,25 @@ void Response::handlePostRequest(Server_block server, Location_block location){
 			t = time(NULL);
 			file_path = server.root + location.upload_store + "/" + std::to_string(t);
 		}
-		else
+		else{
+			name_to_save = _request.getRequestTarget().substr(index + location.path.size(), _request.getRequestTarget().size());
 			file_path = server.root + location.upload_store + "/" + name_to_save;
-		std::cout << file_path << std::endl;
-		int fd = open(file_path.c_str(), O_CREAT, 0777);
-		int fd2 = open(_request.getBody().c_str(), O_RDONLY);
-		char buff[1001] = {0};
-		int reading = 0;
-		std::string body;
-		while((reading = read(fd2, buff, 1000))){
-			body.append(buff, reading);
-			bzero(buff, 1000);
 		}
-		std::cout << "//////////////////////" << _request.getBody() << std::endl;
-		std::cout << body ;
-		std::cout << "//////////////////////\n";
-		write(fd, body.c_str(), body.size());
-		close(fd);
-		close(fd2);
+		int ret = rename(_request.getBody().c_str(), file_path.c_str());
+		std::cout << "return of rename is " << ret << std::endl;
+		std::cout << _request.getBody().c_str() << std::endl;
+		std::cout << file_path  << std::endl;
+		time_t rawtime;
+		time(&rawtime);
+		_response += "HTTP/1.1 201 created\r\n";
+		_response += "Date: " + std::string(ctime(&rawtime));
+		_response += "\r\nServer: webserver";
+		_response += "\r\nContent-Length: 0";
+		_response +=  "\r\nConnection: keep-alive";
+		_response +=  "\r\nAccept-Ranges: bytes\r\n\r\n";
+		create_file();
 	}
 	
-	time_t rawtime;
-	time(&rawtime);
-	_response += "HTTP/1.1 201 created\r\n";
-	_response += "Date: " + std::string(ctime(&rawtime));
-	_response += "\r\nServer: webserver";
-	_response += "\r\nContent-Length: 0";
-	_response +=  "\r\nConnection: keep-alive";
-	_response +=  "\r\nAccept-Ranges: bytes\r\n\r\n";
-	create_file();
 }
 
 static void deleteDirectoryFiles(DIR * dir, const std::string & path){
@@ -439,7 +436,6 @@ static void deleteDirectoryFiles(DIR * dir, const std::string & path){
 	struct stat st;
 	std::string filepath;
 	DIR * dirp;
-	
 	while ((entry = readdir(dir))) {
 
 		filepath = path + entry->d_name;
