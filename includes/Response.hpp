@@ -14,6 +14,8 @@
 #include "Parsing.hpp"
 #include "MimeTypes.hpp"
 #include <algorithm>
+#include <stdio.h>
+
 
 class Response
 {

@@ -186,7 +186,6 @@ std::string Response::get_file_path(){
 
 void Response::create_file()
 {
-
 	struct timeval tp;
 	gettimeofday(&tp, NULL);
 	long int us = tp.tv_sec * 1000000 + tp.tv_usec;
@@ -294,7 +293,7 @@ void Response::auto_index(Location_block location)
 		_response += "Content-Type: text/html\r\n";	
 		_response += "Content-Disposition: attachement; filename='file'\r\n";
 		_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n\n";
-		int fd = open(_path.c_str(), O_RDONLY);
+		int fd = open(_path.c_str(), O_RDONLY | O_NONBLOCK);
 		fcntl(fd, F_SETFL, O_NONBLOCK);
 		char buff[s.st_size];
 		read(fd, buff, s.st_size);
@@ -342,7 +341,6 @@ void Response::handleRequest(Server_block server) {
 			is_autoindex = 1;
 			auto_index(location);
 			return ;
-
 		}
 		else{
 			if (_path.size() && _path[_path.size() - 1] != '/')
@@ -444,7 +442,9 @@ void Response::handlePostRequest(Server_block server, Location_block location){
 			name_to_save = _request.getRequestTarget().substr(index + location.path.size(), _request.getRequestTarget().size());
 			file_path = server.root + location.upload_store + "/" + name_to_save;
 		}
-		int ret = rename(_request.getBody().c_str(), file_path.c_str());
+		// int ret = std::rename(_request.getBody().c_str(), file_path.c_str());
+		std::string mv = "mv " + _request.getBody() + " " + file_path;
+		int ret = system(mv.c_str());
 		std::cout << "return of rename is " << ret << std::endl;
 		std::cout << _request.getBody().c_str() << std::endl;
 		std::cout << file_path  << std::endl;
