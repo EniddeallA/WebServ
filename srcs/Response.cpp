@@ -311,8 +311,9 @@ void Response::handleRequest(Server_block server) {
 	Location_block location = getLocation(server);
 	_path = server.root + _path;
 	// std::cout << "check for index file__0 " <<  _path  << std::endl;
-	if (location.return_path.size())
+	if (location.return_path != "0" && location.return_path.size())
 	{
+		std::cout << location.return_path.size() << std::endl;
 		int statuscode = std::stoi(location.return_code);
 		set_redirection(statuscode, location.return_path);
 		create_file();
