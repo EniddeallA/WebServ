@@ -407,8 +407,17 @@ void Response::handlePostRequest(Server_block server, Location_block location)
 			file_path = server.root + location.upload_store + "/" + name_to_save;
 		std::cout << file_path << std::endl;
 		int fd = open(file_path.c_str(), O_CREAT, 0777);
-		write(fd, _request.getBody().c_str(), _request.getBody().size());
+		int fd2 = open(_request.getBody().c_str(), O_RDONLY);
+		char buff[1001] = {0};
+		int reading = 0;
+		std::string body;
+		while((reading = read(fd2, buff, 1000))){
+			body.append(buff, reading);
+			bzero(buff, 1000);
+		}
+		write(fd, body.c_str(), body.size());
 		close(fd);
+		close(fd2);
 	}
 	
 	time_t rawtime;
