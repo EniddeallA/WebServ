@@ -181,7 +181,7 @@ void Response::create_file()
 	_size_sended = 0;
 }
 
-Location_block Response::getLocation(Server_block server)
+Location_block Response::getLocation(Server_block &server)
 {
     // if they are return function there
     // std::vector<std::string> splited_path = split(path, "/");
@@ -190,7 +190,7 @@ Location_block Response::getLocation(Server_block server)
 	std::string path = _request.getRequestTarget();
 	std::string save = "";
 	std::string concate  = "";
-    Location_block l_block;
+    // Location_block l_block;
     int i = 0;
     int count = 0;
     while (i < path.size()){
@@ -199,17 +199,24 @@ Location_block Response::getLocation(Server_block server)
         i++;
     }
     for (int r = 0; r < count + 1; r++){
+		std::cout << "check 44\n";
         for (int i = 0; i < server.all_locations.size(); i++){
-            l_block = server.all_locations[i];
-            if (l_block.path == path){ // gennerate file to uplade
+			std::cout << "check 46   " << i << std::endl;
+            // l_block = server.all_locations[i];
+			std::cout << "check 406\n";
+            if (server.all_locations[i].path == path){ // gennerate file to uplade
 				_path = save;
-                if (l_block.return_path.size()){ //send responce
+			std::cout << "check 408\n";
+                if (server.all_locations[i].return_path.size()){ //send responce
+					std::cout << "check 409\n";
                     //std::cout << "--------------------------------Return function---------------\n";
                     //std::cout << "Return code is " << l_block.return_code << "  to path" << l_block.return_path << std::endl;
                     //std::cout << "--------------------------------Return function---------------\n";
                 }
-				return l_block;
+				std::cout << "check 410\n";
+				return server.all_locations[i];
             }
+			std::cout << "check 47\n";
          }
 		 concate = "";
 		 char c;
@@ -226,9 +233,12 @@ Location_block Response::getLocation(Server_block server)
 			concate = '/' + concate;
 		}
 		save = concate + save;
+		std::cout << "check 48\n";
     }
 	// if not_found;
 	_file_not_found = 1;
+	std::cout << "check 45\n";
+	Location_block l_block;
 	return l_block;
 }
 
@@ -286,8 +296,10 @@ void Response::auto_index(Location_block location)
 		notFound();
 }
 
-void Response::handleRequest(Server_block server) {
+void Response::handleRequest(Server_block &server) {
+	std::cout << "check 2.5" << std::endl;
 	Location_block location = getLocation(server);
+	std::cout << "check 3.5" << std::endl;
 	_path = server.root + _path;
 	// std::cout << "check for index file__0 " <<  _path  << std::endl;
 	if (_file_not_found){
@@ -388,7 +400,7 @@ void Response::handleGetRequest()
 
 //? check if there is uplode_store if not 
 	
-void Response::handlePostRequest(Server_block server, Location_block location){
+void Response::handlePostRequest(Server_block &server, Location_block &location){
 
 	if (location.upload_store == ""){ //? return forbiden function
 	}
@@ -397,7 +409,9 @@ void Response::handlePostRequest(Server_block server, Location_block location){
 		//? if there is cgi 
 		//? if there is not cgi
 
+	std::cout <<"handle post req_0" << std::endl;
 	int index =_request.getRequestTarget().find(location.path);
+	std::cout <<"handle post req " << std::endl;
 	std::string name_to_save ;
 	if (!location.upload_store.empty()){
 		std::string ext;
@@ -412,10 +426,12 @@ void Response::handlePostRequest(Server_block server, Location_block location){
 		}
 		else{
 			name_to_save = _request.getRequestTarget().substr(index + location.path.size(), _request.getRequestTarget().size());
-			file_path = server.root + location.upload_store + "/" + name_to_save;
+			file_path = server.root + location.upload_store  + name_to_save;
 		}
-		int ret = rename(_request.getBody().c_str(), file_path.c_str());
-		std::cout << "return of rename is " << ret << std::endl;
+		// int ret = rename(_request.getBody().c_str(), file_path.c_str());
+		std::string mv = "mv " + _request.getBody() + " " + file_path;
+		int ret = system(mv.c_str());
+		std::cout << "return of move is " << ret << std::endl;
 		std::cout << _request.getBody().c_str() << std::endl;
 		std::cout << file_path  << std::endl;
 		time_t rawtime;

@@ -64,10 +64,10 @@ class Response
 		void ok(size_t bodysize);
 
 		void auto_index(Location_block location);
-		Location_block getLocation(Server_block server);
-		void handleRequest(Server_block server);
+		Location_block getLocation(Server_block &server);
+		void handleRequest(Server_block &server);
 		void handleGetRequest();
-		void handlePostRequest(Server_block server, Location_block location);
+		void handlePostRequest(Server_block &server, Location_block &location);
 		void handleDeleteRequest();
 };
 

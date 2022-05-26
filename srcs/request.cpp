@@ -59,8 +59,11 @@ Request::~Request() {
 
 void Request::Parse(std::string &req)
 {
-	if (_requestEnd == true)
+	if (_requestEnd == true){
+		std::cout << "_request is end in parse start\n";
+
 		return ;
+	}
 	try {
 		req = _str.append(req);
 		size_t BOH = _str.find("\r\n"), EOH = _str.find("\r\n\r\n");
@@ -77,6 +80,7 @@ void Request::Parse(std::string &req)
 		if (_requestMethod == "GET" && _headersEnd == true)
 		{
 			_requestEnd = true;
+			std::cout << "is get request\n";
 			/** WARNING
 			 * get a data from server block
 			*/
@@ -88,7 +92,8 @@ void Request::Parse(std::string &req)
 		*/
 		parseBody(req);
 		if (_requestEnd  /* is request Completed ?*/ )
-		{
+		{	
+			std::cout << "_request is end in parse\n";
 			_bodyFile.close();
 			/** WARNING
 			 * get data from server block
@@ -98,6 +103,8 @@ void Request::Parse(std::string &req)
 		}
 	}
 	catch (const char * message) {
+		std::cout << "catch _request is end in parse" << message << std::endl;
+
 		errorHandler();
 		/** WARNING 
 		 * unlink _bodyFile
@@ -212,6 +219,8 @@ void	Request::parseBody(std::string &req) {
 		_bodyFile << req;
 		if (_bodySize == _contentLength) {
 			_requestEnd = true;
+			std::cout << "request is end___7" << std::endl;
+			
 			return ;
 		}
 		else if (_contentLength < _bodySize) {
@@ -220,18 +229,18 @@ void	Request::parseBody(std::string &req) {
 		}
 	} 
 	else if (_isTE == true) {
-		std::cerr << "TE not ready yet\n[*] Use CL instead for now\n";
+		// std::cerr << "TE not ready yet\n[*] Use CL instead for now\n";
 		toChuncked(req);
 	}
 	else{
+		std::cout << "request is end___5" << std::endl;
+
 		_requestEnd = true;
 	}
 	_str = "";
 }
 
 void 		Request::toChuncked(std::string &req) {
-	if (req.empty())
-		return ;
 	if (isRequestCompleted() == true && req.empty() == false) {
 		/** WARNING
 		 * CHECK WITH TEAM
@@ -241,42 +250,38 @@ void 		Request::toChuncked(std::string &req) {
 	/** WARNING
 	 *  MUST RE-WORK ON DECODING
 	*/
+	// std::cout << "request is to_chunked" << std::endl;
+
 	# define CHUNK_SIZE 0
 	# define CHUNK_BODY 1
 	int status = CHUNK_SIZE;
 	size_t size = 0;
-	while ((end = req.find("\r\n")) != std::string::npos) {
-		/** DECODE CHUNKED
-		 * https://en.wikipedia.org/wiki/Chunked_transfer_encoding
-		*/
-		if (status == CHUNK_SIZE) {
-			std::string hex = req.substr(0, end);
-			if (is_hex_notation(hex) == false) {
-				std::cout << "HEX IS " << hex << std::endl;
-				_error = BAD_REQUEST;
-				throw "Error on body parsing ";
-			}
-			size = to_hex(hex);
-			req.erase(0, end + 2);
-			status = CHUNK_BODY;
-		} 
-		else if (status == CHUNK_BODY) {
-			if (size == 0) {
-				_requestEnd =true;
-				return ;
-				/** WARNING 
-				 * HANDLER , CHECK LAST LINE IF EMPTY
-				*/
 
-			}
-			std::string line =  req.substr(0, end);
-			if (line.length() != size) {
-				_error = BAD_REQUEST;
-				throw "Error on body parsing lenght error";
+	all_string_req += req;
+	if ((end = all_string_req.find("\r\n0\r\n\r\n")) != std::string::npos){ //? check all_string
+		end = all_string_req.find("\r\n");
+		while (end != std::string::npos) {
+			if (status == CHUNK_SIZE) {
+				std::string hex = all_string_req.substr(0, end);
+				if (is_hex_notation(hex) == false) {
+					_error = BAD_REQUEST;
+					throw "Error on body parsing ";
+				}
+				size = to_hex(hex);				
+				all_string_req.erase(0, end + 2);
+				std::string s = all_string_req.substr(0, size);
+				_bodyFile <<  s;
+				all_string_req.erase(0, size + 2);
+				end = all_string_req.find("\r\n");;
 			} 
-			status = CHUNK_SIZE;
-			req.erase(0, end + 2);
-			size = 0;
+		
+			if (all_string_req.find("0\r\n\r\n") == 0){
+				std::cout << "finish \n";
+				_requestEnd = true;
+				all_string_req.clear();
+				return;
+			}
+			end = all_string_req.find("\r\n");
 		}
 	}
 }
@@ -294,9 +299,9 @@ void		Request::printData( void ) {
 			<< "Error :: [" << _error << "]\n"
 			<< "Port :: [" << _port << "]\n";
 	std::cout << "=================================\n";
-	for (t_headers::iterator it = _headers.begin(); it != _headers.end(); ++it) {
+	// for (t_headers::iterator it = _headers.begin(); it != _headers.end(); ++it) {
 		//std:: cout << "[" << (it)->first << "] :: [" << (it)->second << "]\n";
-	}
+	// }
 }
 
 std::string	Request::_bodyToFile() {
@@ -305,7 +310,7 @@ std::string	Request::_bodyToFile() {
 	std::stringstream iss;
 
 	// iss << "/tmp/websev_body_" << i ;
-	iss << "/tmp/tmp_file__89" + std::to_string(i);
+	iss << "/Users/kbenlyaz/Desktop/tmp/tmp_file__89" + std::to_string(i);
 	return iss.str();
 }
 
@@ -343,8 +348,10 @@ void		Request::clear( void ){
 	_port.clear();
 }
 
-Server_block	Request::setServer( std::vector<Server_block> const serv_confs ) {
+Server_block	Request::setServer( std::vector<Server_block> const &serv_confs ) {
 	// printData();
+	std::cout << "check 3.5" << std::endl;
+
 	std::vector< Server_block > blocks;
 	for (size_t i = 0; i < serv_confs.size(); i++ ) {
 		for (size_t j = 0; j < serv_confs[i].name.size() ; j++) {
@@ -353,16 +360,29 @@ Server_block	Request::setServer( std::vector<Server_block> const serv_confs ) {
 			}
 		}
 	}
+
+	std::cout << "check 355" << std::endl;
 	if (blocks.size() == 1) {
+		std::cout << "check 356" << std::endl;
 		return blocks[0];
-	} else if (blocks.size() == 0) {
-		blocks = serv_confs;
+	} 
+	else if (blocks.size() == 0) {
+		for (size_t i = 0; i < serv_confs.size(); i++) {
+			if (_port == serv_confs[i].port) {
+				return serv_confs[i];
+			}
+		}
+		std::cout << "check 4.5" << serv_confs.size() << std::endl;
+		return serv_confs[0];
 	}
 	for (size_t i = 0; i < blocks.size(); i++) {
+		std::cout << "check 359" << std::endl;
 		if (_port == blocks[i].port) {
+			std::cout << "check 360" << std::endl;
 			return blocks[i];
 		}
 	}
+	std::cout << "check 4.5" << std::endl;
 	return blocks[0];
 }
 

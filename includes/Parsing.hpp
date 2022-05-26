@@ -54,6 +54,12 @@ struct Location_block
     std::string							max_body_size;
 	long								max_body_size_in_kb;
 	std::string							index_file;
+	// Location_block operator=(Location_block block){
+
+	// }
+
+
+	
 };
 
 struct Server_block{

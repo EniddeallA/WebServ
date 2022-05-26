@@ -65,7 +65,7 @@ class Request{
         size_t          getContentLength() const { return _contentLength; }
         std::string     getContentType() { return ((_headers.find("Content-Type") != _headers.end()) ? _headers["Content-Type"] : ""); }
 		t_headers 		getHeaders( void ) const;
-		Server_block 	setServer( std::vector<Server_block > const serv_confs );
+		Server_block 	setServer( std::vector<Server_block > const &serv_confs );
 		
 
 
@@ -77,6 +77,8 @@ class Request{
 		void toChuncked(std::string &req);
 		void preBody( void );
 		void setLocation( void );
+		std::string all_string_req;
+		int first_head;
 		
 		
 	private:
