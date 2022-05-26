@@ -198,7 +198,6 @@ void Response::create_file()
 	out.close();
 	_fd = open(filepath.c_str(), O_RDONLY);
 	fcntl(_fd, F_SETFL, O_NONBLOCK); // LEARN MORE ABOUT fcntl
-
 	_size_sended = 0;
 }
 
@@ -296,6 +295,7 @@ void Response::auto_index(Location_block location)
 		_response += "Content-Disposition: attachement; filename='file'\r\n";
 		_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n\n";
 		int fd = open(_path.c_str(), O_RDONLY);
+		fcntl(fd, F_SETFL, O_NONBLOCK);
 		char buff[s.st_size];
 		read(fd, buff, s.st_size);
 		_response += buff;
@@ -383,6 +383,7 @@ void Response::handleRequest(Server_block server) {
 			stat ("./error_pages/404.html", &fileStat);
 
 			int fd = open("./error_pages/404.html", O_RDONLY);
+			fcntl(fd, F_SETFL, O_NONBLOCK);
 			char buff[fileStat.st_size];
 			read(fd, buff, fileStat.st_size);
 
@@ -401,6 +402,7 @@ void Response::handleGetRequest()
 	time_t rawtime;
 	stat (_path.c_str(), &fileStat);
 	int fd = open(_path.c_str(), O_RDONLY);
+	fcntl(fd, F_SETFL, O_NONBLOCK);
 	// char buff[fileStat.st_size];
 	char buff[1001] = {0};
 	this->ok(fileStat.st_size);
