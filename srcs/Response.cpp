@@ -70,14 +70,35 @@ void Response::set_error_header(int statuscode, std::string msg, std::string pat
 	struct stat s;
 
 	time(&rawtime);
-	char tmp[256];
-    getcwd(tmp, 256);
-
 	_response = "HTTP/1.1 " + std::to_string(statuscode) + msg + "\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response.erase(--_response.end());
 	_response += "\r\n";
 	_response += "Server: webserver\r\n";
+	stat(path.c_str(), &s);
+	int fd = open(path.c_str(), O_RDONLY);
+	char buff[s.st_size];
+	read(fd, buff, s.st_size);
+	close(fd);
+	_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n";
+	_response += "Connection: close\r\n\r\n";
+	_response += buff;
+	_response += "\r\n\r\n";
+}
+
+void Response::set_redirection(int statuscode, std::string path)
+{
+	time_t rawtime;
+	struct stat s;
+
+	time(&rawtime);
+	std::string msg = HttpStatus::reasonPhrase(HttpStatus::statusCode(statuscode));
+	_response = "HTTP/1.1 " + std::to_string(statuscode) + msg + "\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\n";
+	_response += "Server: webserver\r\n";
+	_response += "Location: "+ path +"\r\n";
 	stat(path.c_str(), &s);
 	int fd = open(path.c_str(), O_RDONLY);
 	char buff[s.st_size];
@@ -290,10 +311,16 @@ void Response::handleRequest(Server_block server) {
 	Location_block location = getLocation(server);
 	_path = server.root + _path;
 	// std::cout << "check for index file__0 " <<  _path  << std::endl;
+	if (location.return_path.size())
+	{
+		int statuscode = std::stoi(location.return_code);
+		set_redirection(statuscode, location.return_path);
+		create_file();
+		return;
+	}
 	if (_file_not_found){
 		
 		notFound();
-	
 		create_file();
 		return;
 	}
@@ -428,7 +455,7 @@ void Response::handlePostRequest(Server_block server, Location_block location){
 		_response +=  "\r\nAccept-Ranges: bytes\r\n\r\n";
 		create_file();
 	}
-	
+
 }
 
 static void deleteDirectoryFiles(DIR * dir, const std::string & path){
