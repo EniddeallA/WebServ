@@ -60,7 +60,6 @@ Request::~Request() {
 void Request::Parse(std::string &req)
 {
 	if (_requestEnd == true){
-		std::cout << "_request is end in parse start\n";
 
 		return ;
 	}
@@ -80,7 +79,6 @@ void Request::Parse(std::string &req)
 		if (_requestMethod == "GET" && _headersEnd == true)
 		{
 			_requestEnd = true;
-			std::cout << "is get request\n";
 			/** WARNING
 			 * get a data from server block
 			*/
@@ -93,7 +91,6 @@ void Request::Parse(std::string &req)
 		parseBody(req);
 		if (_requestEnd  /* is request Completed ?*/ )
 		{	
-			std::cout << "_request is end in parse\n";
 			_bodyFile.close();
 			/** WARNING
 			 * get data from server block
@@ -210,7 +207,6 @@ void	Request::parseBody(std::string &req) {
 		_bodyFile.open(_bodyName.c_str(), std::ofstream::out | std::ofstream::trunc);
 		// if (_bodyFile.fail() == false){
 		if (_bodyFile.fail() == true){
-			std::cout << _bodyName << "name of body" << std::endl;
 			throw "Error while opening file stream [body]";
 		}
 	}
@@ -218,9 +214,7 @@ void	Request::parseBody(std::string &req) {
 		_bodySize += req.size();
 		_bodyFile << req;
 		if (_bodySize == _contentLength) {
-			_requestEnd = true;
-			std::cout << "request is end___7" << std::endl;
-			
+			_requestEnd = true;			
 			return ;
 		}
 		else if (_contentLength < _bodySize) {
@@ -233,8 +227,6 @@ void	Request::parseBody(std::string &req) {
 		toChuncked(req);
 	}
 	else{
-		std::cout << "request is end___5" << std::endl;
-
 		_requestEnd = true;
 	}
 	_str = "";
@@ -276,7 +268,6 @@ void 		Request::toChuncked(std::string &req) {
 			} 
 		
 			if (all_string_req.find("0\r\n\r\n") == 0){
-				std::cout << "finish \n";
 				_requestEnd = true;
 				all_string_req.clear();
 				return;
@@ -349,9 +340,6 @@ void		Request::clear( void ){
 }
 
 Server_block	Request::setServer( std::vector<Server_block> const &serv_confs ) {
-	// printData();
-	std::cout << "check 3.5" << std::endl;
-
 	std::vector< Server_block > blocks;
 	for (size_t i = 0; i < serv_confs.size(); i++ ) {
 		for (size_t j = 0; j < serv_confs[i].name.size() ; j++) {
@@ -360,10 +348,7 @@ Server_block	Request::setServer( std::vector<Server_block> const &serv_confs ) {
 			}
 		}
 	}
-
-	std::cout << "check 355" << std::endl;
 	if (blocks.size() == 1) {
-		std::cout << "check 356" << std::endl;
 		return blocks[0];
 	} 
 	else if (blocks.size() == 0) {
@@ -372,17 +357,13 @@ Server_block	Request::setServer( std::vector<Server_block> const &serv_confs ) {
 				return serv_confs[i];
 			}
 		}
-		std::cout << "check 4.5" << serv_confs.size() << std::endl;
 		return serv_confs[0];
 	}
 	for (size_t i = 0; i < blocks.size(); i++) {
-		std::cout << "check 359" << std::endl;
 		if (_port == blocks[i].port) {
-			std::cout << "check 360" << std::endl;
 			return blocks[i];
 		}
 	}
-	std::cout << "check 4.5" << std::endl;
 	return blocks[0];
 }
 

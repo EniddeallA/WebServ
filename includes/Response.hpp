@@ -14,6 +14,8 @@
 #include "Parsing.hpp"
 #include "MimeTypes.hpp"
 #include <algorithm>
+#include <stdio.h>
+
 
 class Response
 {
@@ -53,6 +55,7 @@ class Response
 		void create_file();
 		
 		void set_error_header(int statuscode, std::string msg, std::string path);
+		void set_redirection(int statuscode, std::string path);
 		// void setHeader(size_t status_code, std::string const &message, size_t bodysize);
 		void unallowedMethod();
 		void badRequest();
@@ -65,7 +68,7 @@ class Response
 
 		void auto_index(Location_block location);
 		Location_block getLocation(Server_block &server);
-		void handleRequest(Server_block &server);
+		void handleRequest(Server_block server);
 		void handleGetRequest();
 		void handlePostRequest(Server_block &server, Location_block &location);
 		void handleDeleteRequest();

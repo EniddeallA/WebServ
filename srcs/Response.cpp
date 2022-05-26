@@ -70,14 +70,35 @@ void Response::set_error_header(int statuscode, std::string msg, std::string pat
 	struct stat s;
 
 	time(&rawtime);
-	char tmp[256];
-    getcwd(tmp, 256);
-
 	_response = "HTTP/1.1 " + std::to_string(statuscode) + msg + "\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response.erase(--_response.end());
 	_response += "\r\n";
 	_response += "Server: webserver\r\n";
+	stat(path.c_str(), &s);
+	int fd = open(path.c_str(), O_RDONLY);
+	char buff[s.st_size];
+	read(fd, buff, s.st_size);
+	close(fd);
+	_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n";
+	_response += "Connection: close\r\n\r\n";
+	_response += buff;
+	_response += "\r\n\r\n";
+}
+
+void Response::set_redirection(int statuscode, std::string path)
+{
+	time_t rawtime;
+	struct stat s;
+
+	time(&rawtime);
+	std::string msg = HttpStatus::reasonPhrase(HttpStatus::statusCode(statuscode));
+	_response = "HTTP/1.1 " + std::to_string(statuscode) + msg + "\r\n";
+	_response += "Date: " + std::string(ctime(&rawtime));
+	_response.erase(--_response.end());
+	_response += "\r\n";
+	_response += "Server: webserver\r\n";
+	_response += "Location: "+ path +"\r\n";
 	stat(path.c_str(), &s);
 	int fd = open(path.c_str(), O_RDONLY);
 	char buff[s.st_size];
@@ -165,7 +186,6 @@ std::string Response::get_file_path(){
 
 void Response::create_file()
 {
-
 	struct timeval tp;
 	gettimeofday(&tp, NULL);
 	long int us = tp.tv_sec * 1000000 + tp.tv_usec;
@@ -177,7 +197,6 @@ void Response::create_file()
 	out.close();
 	_fd = open(filepath.c_str(), O_RDONLY);
 	fcntl(_fd, F_SETFL, O_NONBLOCK); // LEARN MORE ABOUT fcntl
-
 	_size_sended = 0;
 }
 
@@ -199,24 +218,16 @@ Location_block Response::getLocation(Server_block &server)
         i++;
     }
     for (int r = 0; r < count + 1; r++){
-		std::cout << "check 44\n";
         for (int i = 0; i < server.all_locations.size(); i++){
-			std::cout << "check 46   " << i << std::endl;
-            // l_block = server.all_locations[i];
-			std::cout << "check 406\n";
             if (server.all_locations[i].path == path){ // gennerate file to uplade
 				_path = save;
-			std::cout << "check 408\n";
                 if (server.all_locations[i].return_path.size()){ //send responce
-					std::cout << "check 409\n";
                     //std::cout << "--------------------------------Return function---------------\n";
                     //std::cout << "Return code is " << l_block.return_code << "  to path" << l_block.return_path << std::endl;
                     //std::cout << "--------------------------------Return function---------------\n";
                 }
-				std::cout << "check 410\n";
 				return server.all_locations[i];
             }
-			std::cout << "check 47\n";
          }
 		 concate = "";
 		 char c;
@@ -233,11 +244,9 @@ Location_block Response::getLocation(Server_block &server)
 			concate = '/' + concate;
 		}
 		save = concate + save;
-		std::cout << "check 48\n";
     }
 	// if not_found;
 	_file_not_found = 1;
-	std::cout << "check 45\n";
 	Location_block l_block;
 	return l_block;
 }
@@ -284,7 +293,8 @@ void Response::auto_index(Location_block location)
 		_response += "Content-Type: text/html\r\n";	
 		_response += "Content-Disposition: attachement; filename='file'\r\n";
 		_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n\n";
-		int fd = open(_path.c_str(), O_RDONLY);
+		int fd = open(_path.c_str(), O_RDONLY | O_NONBLOCK);
+		fcntl(fd, F_SETFL, O_NONBLOCK);
 		char buff[s.st_size];
 		read(fd, buff, s.st_size);
 		_response += buff;
@@ -296,16 +306,20 @@ void Response::auto_index(Location_block location)
 		notFound();
 }
 
-void Response::handleRequest(Server_block &server) {
-	std::cout << "check 2.5" << std::endl;
+void Response::handleRequest(Server_block server) {
 	Location_block location = getLocation(server);
-	std::cout << "check 3.5" << std::endl;
 	_path = server.root + _path;
 	// std::cout << "check for index file__0 " <<  _path  << std::endl;
+	if (location.return_path != "0" && location.return_path.size())
+	{
+		int statuscode = std::stoi(location.return_code);
+		set_redirection(statuscode, location.return_path);
+		create_file();
+		return;
+	}
 	if (_file_not_found){
 		
 		notFound();
-	
 		create_file();
 		return;
 	}
@@ -326,7 +340,6 @@ void Response::handleRequest(Server_block &server) {
 			is_autoindex = 1;
 			auto_index(location);
 			return ;
-
 		}
 		else{
 			if (_path.size() && _path[_path.size() - 1] != '/')
@@ -367,6 +380,7 @@ void Response::handleRequest(Server_block &server) {
 			stat ("./error_pages/404.html", &fileStat);
 
 			int fd = open("./error_pages/404.html", O_RDONLY);
+			fcntl(fd, F_SETFL, O_NONBLOCK);
 			char buff[fileStat.st_size];
 			read(fd, buff, fileStat.st_size);
 
@@ -385,6 +399,7 @@ void Response::handleGetRequest()
 	time_t rawtime;
 	stat (_path.c_str(), &fileStat);
 	int fd = open(_path.c_str(), O_RDONLY);
+	fcntl(fd, F_SETFL, O_NONBLOCK);
 	// char buff[fileStat.st_size];
 	char buff[1001] = {0};
 	this->ok(fileStat.st_size);
@@ -409,9 +424,7 @@ void Response::handlePostRequest(Server_block &server, Location_block &location)
 		//? if there is cgi 
 		//? if there is not cgi
 
-	std::cout <<"handle post req_0" << std::endl;
 	int index =_request.getRequestTarget().find(location.path);
-	std::cout <<"handle post req " << std::endl;
 	std::string name_to_save ;
 	if (!location.upload_store.empty()){
 		std::string ext;
@@ -428,12 +441,9 @@ void Response::handlePostRequest(Server_block &server, Location_block &location)
 			name_to_save = _request.getRequestTarget().substr(index + location.path.size(), _request.getRequestTarget().size());
 			file_path = server.root + location.upload_store  + name_to_save;
 		}
-		// int ret = rename(_request.getBody().c_str(), file_path.c_str());
+		// int ret = std::rename(_request.getBody().c_str(), file_path.c_str());
 		std::string mv = "mv " + _request.getBody() + " " + file_path;
 		int ret = system(mv.c_str());
-		std::cout << "return of move is " << ret << std::endl;
-		std::cout << _request.getBody().c_str() << std::endl;
-		std::cout << file_path  << std::endl;
 		time_t rawtime;
 		time(&rawtime);
 		_response += "HTTP/1.1 201 created\r\n";
@@ -444,7 +454,7 @@ void Response::handlePostRequest(Server_block &server, Location_block &location)
 		_response +=  "\r\nAccept-Ranges: bytes\r\n\r\n";
 		create_file();
 	}
-	
+
 }
 
 static void deleteDirectoryFiles(DIR * dir, const std::string & path){
