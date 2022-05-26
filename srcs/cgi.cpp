@@ -145,7 +145,7 @@ void run_cgi(std::string path, std::vector<std::string> params, std::string &out
 		output += s;
 		//std::cout << output;
 		close(fd);
-		unlink(file_name.c_str());
+		// unlink(file_name.c_str());
 	}
 }
 
@@ -213,14 +213,14 @@ void if_cgi_is_finish(std::vector<cgi_object> &vec_of_cgi){
 			//std::cout << obj.file_name << " is finish " << std::endl;
 			vec_of_cgi.erase(vec_of_cgi.begin() + i);
 			// send responce 
-			unlink(obj.file_name.c_str());
+			// unlink(obj.file_name.c_str());
 			return ;
 		}
 		else if (now - obj.start_time > CGI_TIME_OUT){// check timeout
 			//std::cout << obj.file_name << " is timed out " << std::endl;
 			vec_of_cgi.erase(vec_of_cgi.begin() + i);
 			// send responce 
-			unlink(obj.file_name.c_str());
+			// unlink(obj.file_name.c_str());
 			return ;
 
 		}

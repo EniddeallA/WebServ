@@ -1,11 +1,12 @@
 #include "../includes/request.hpp"
 
 Request::Request() : _error(0), _requestMethod(""), _requestTarget(""), _requestEnd(false),
-	_requestQuery(""), _bodyName(""), _str(""), _hasBody(false), _keepAlive(true), _headersEnd(false),
+	_requestQuery(""), _str(""), _hasBody(false), _keepAlive(true), _headersEnd(false),
 	_bodySize(0), _contentLength(0), _isCL(false), _isTE(false), _serverFound(false) {
 		_allowedMethods.push_back("GET");
 		_allowedMethods.push_back("POST");
 		_allowedMethods.push_back("DELETE");
+		_bodyName.clear();
 }
 
 Request::Request(Request const &src) {
@@ -193,13 +194,15 @@ void	Request::parseBody(std::string &req) {
 	 * Handling Errors before moving to body
 	*/
 	if (req.empty() == true){
-		_requestEnd = true;
-		return ;
 	}
+		// _requestEnd = true;
+		// return ;
+	// }
 	if (_bodyName.empty()) {
 		_bodyName = _bodyToFile();
-		_bodyFile.open(_bodyName.c_str());
-		if (_bodyFile.good() == false){
+		_bodyFile.open(_bodyName.c_str(), std::ofstream::out | std::ofstream::trunc);
+		// if (_bodyFile.fail() == false){
+		if (_bodyFile.fail() == true){
 			std::cout << _bodyName << "name of body" << std::endl;
 			throw "Error while opening file stream [body]";
 		}
@@ -220,8 +223,9 @@ void	Request::parseBody(std::string &req) {
 		std::cerr << "TE not ready yet\n[*] Use CL instead for now\n";
 		toChuncked(req);
 	}
-	else
+	else{
 		_requestEnd = true;
+	}
 	_str = "";
 }
 
@@ -300,7 +304,8 @@ std::string	Request::_bodyToFile() {
 	int i = (rand() % 5000);
 	std::stringstream iss;
 
-	iss << "/tmp/websev_body_" << i ;
+	// iss << "/tmp/websev_body_" << i ;
+	iss << "/tmp/tmp_file__89" + std::to_string(i);
 	return iss.str();
 }
 
@@ -323,6 +328,7 @@ void		Request::clear( void ){
 	_requestTarget.clear();
 	_str.clear();
 	_headers.clear();
+	_bodyName.clear();
 	if (_bodyName.empty() == false) {
 		std::remove(_bodyName.c_str());
 	}
