@@ -10,6 +10,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 	int number_of_servers = all_servers.size();
 	std::vector<Request>v_of_request_object(MAX_REQUEST, Request());
 	int fd_max = 0;
+	int fd_min = INT32_MAX;
 	char buffer[BUFFER] = {0};
 	for (int i = 0; i < number_of_servers; i++){ // start all servers
 		int port = atoi(all_servers[i].port.c_str());
@@ -18,6 +19,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 		start_server(all_servers[i]);
 		fcntl(all_servers[i].server_fd, F_SETFL, O_NONBLOCK); // LEARN MORE ABOUT fcntl
 		fd_max = std::max(all_servers[i].server_fd, fd_max);
+		fd_min = std::min(all_servers[i].server_fd, fd_min);
 		fds.push_back(all_servers[i].server_fd); // THIS vector is for get max fd
 		FD_SET(all_servers[i].server_fd, &_fd_set_read);
 	}
@@ -34,17 +36,17 @@ void start_servers(std::vector<Server_block> &all_servers){
 		_fd_set_read_temp = _fd_set_read;
 		_fd_set_write_temp = _fd_set_write;
 		// std::cout << "before_select" << std::endl;
-		int selected = select(fd_max +1, &_fd_set_read_temp, &_fd_set_write_temp, NULL,NULL); //check timeout
+		int selected = select(fd_max + 1, &_fd_set_read_temp, &_fd_set_write_temp, NULL,NULL); //check timeout
 		// std::cout << "after_select" << std::endl;
 		if (selected < 0){
 			throw ("Error in select function");
 		}
 		for (int i = 0; i < fd_max + 1; i++){
 			if (FD_ISSET(i, &_fd_set_read_temp)){
-
-				socklen_t addrlen = sizeof(all_servers[i - 3].s_address); // - 3 because fd start with 3 after 0 and 1 and 2
+				//! i have change 3 with the fd_min 
+				socklen_t addrlen = sizeof(all_servers[i -fd_min].s_address); // -fd_min because fd start with 3 after 0 and 1 and 2 
 				if (i <= max_server_fd){ //! check if it's new connection or not
-					if ((new_socket = accept(i, (struct sockaddr *) &(all_servers[i - 3].s_address), &addrlen)) == -1)
+					if ((new_socket = accept(i, (struct sockaddr *) &(all_servers[i -fd_min].s_address), &addrlen)) == -1)
 						throw "Error in accepting socket";
 					if (std::find(fds.begin(), fds.end(), new_socket) == fds.end()){
 						FD_SET(new_socket, &_fd_set_read);
@@ -77,12 +79,15 @@ void start_servers(std::vector<Server_block> &all_servers){
 					v_of_request_object[new_socket].printData();
 					fd_with_response_object[new_socket] = Response(v_of_request_object[new_socket]);
 					fd_with_response_object[new_socket].handleRequest(v_of_request_object[new_socket].setServer(all_servers)); // just for test use the last server bloc
+					// std::cout << "break by while\n";
+					// while(1);
 					// fd_with_response_object[new_socket].handleRequest(all_servers[0]); // just for test use the last server bloc
 					// fd_with_response[new_socket] = strdup(fd_with_response_object[new_socket].get_respone().c_str()); //? that just return the head but we still need the body
 			
 					fd_with_send_size[new_socket] = 0;
 					FD_CLR(new_socket, &_fd_set_read);
 					FD_SET(new_socket, &_fd_set_write);
+
 				}
 			}
 

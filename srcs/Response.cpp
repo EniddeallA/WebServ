@@ -78,11 +78,11 @@ void Response::set_error_header(int statuscode, std::string msg, std::string pat
 	stat(path.c_str(), &s);
 	int fd = open(path.c_str(), O_RDONLY);
 	char buff[s.st_size];
-	read(fd, buff, s.st_size);
+	int r_d = read(fd, buff, s.st_size);
 	close(fd);
 	_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n";
 	_response += "Connection: close\r\n\r\n";
-	_response += buff;
+	_response += std::string(buff, r_d);
 	_response += "\r\n\r\n";
 }
 
@@ -167,7 +167,6 @@ void Response::ok(size_t bodysize)
 		struct stat s;
 		stat(_path.c_str(), &s);
 		const char *check_type = MimeTypes::getType(_path.c_str());
-		// std::cout <<"path is 00 "<< is_autoindex  << _path << " check type " << check_type << std::endl;
 		if (((s.st_mode & S_IFREG)) && check_type == NULL){
 			std::string path_name = _path.substr(_path.find_last_of('/') + 1, _path.size());
 			_response += "Content-Disposition: attachement; filename=" + path_name + "\r\n";
@@ -245,7 +244,6 @@ Location_block Response::getLocation(Server_block &server)
 		}
 		save = concate + save;
     }
-	// if not_found;
 	_file_not_found = 1;
 	Location_block l_block;
 	return l_block;
@@ -308,9 +306,8 @@ void Response::auto_index(Location_block location)
 
 void Response::handleRequest(Server_block server) {
 	Location_block location = getLocation(server);
-	_path = server.root + _path;
-	// std::cout << "check for index file__0 " <<  _path  << std::endl;
-	if (location.return_path != "0" && location.return_path.size())
+	_path = location.root + _path;
+	if (location.return_path != "" && location.return_path.size())
 	{
 		int statuscode = std::stoi(location.return_code);
 		set_redirection(statuscode, location.return_path);
@@ -334,11 +331,12 @@ void Response::handleRequest(Server_block server) {
 		std::string index_file = _path + "/" + location.index_file;;
 
 		stat(index_file.c_str(), &s2);
-		// std::cout << "check for index file " <<  index_file   << " " <<(s2.st_mode & S_IFREG) << std::endl;
-
-		if (location.auto_index == "on" && (location.index_file == ""  || (s2.st_mode & S_IFREG) == 0)){
+		//! check if method is get and is allowed the run the auto_index
+		if (location.auto_index == "on" && (location.index_file == ""  || (s2.st_mode & S_IFREG) == 0) && _request.getRequestMethod() == "GET" &&
+					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "GET") != location.allowed_funct.end()){
 			is_autoindex = 1;
 			auto_index(location);
+			delete file;
 			return ;
 		}
 		else{
@@ -347,14 +345,19 @@ void Response::handleRequest(Server_block server) {
 			else
 				_path +=  location.index_file;
 		}
+		delete file;
 	}
 	stat(_path.c_str(), &s);
 	if((s.st_mode & S_IFREG) &&  _request.getRequestMethod() != "POST")
-	{		
+	{
 			_is_request_handled = true;
 			if (_request.getRequestMethod() == "GET" &&
-					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "GET") != location.allowed_funct.end())
-				this->handleGetRequest();
+					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "GET") != location.allowed_funct.end()){
+
+					this->handleGetRequest();
+				
+					}
+
 			// else if (_request.getRequestMethod() == "POST" &&
 			// 		std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
 			// 	this->handlePostRequest();
@@ -374,7 +377,7 @@ void Response::handleRequest(Server_block server) {
 		if (std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
 			this->handlePostRequest(server, location);
 	}
-	else{
+	else{		
 			struct stat fileStat;
 			_body.open("./error_pages/404.html");
 			stat ("./error_pages/404.html", &fileStat);
@@ -382,19 +385,20 @@ void Response::handleRequest(Server_block server) {
 			int fd = open("./error_pages/404.html", O_RDONLY);
 			fcntl(fd, F_SETFL, O_NONBLOCK);
 			char buff[fileStat.st_size];
-			read(fd, buff, fileStat.st_size);
-
+			int rd = read(fd, buff, fileStat.st_size);
 			notFound();
-			_response += buff;
+			_response += std::string(buff, rd);
 			close(fd);
 			_body.close();
 			create_file();
 			return;
 	}
+
 }
 
 void Response::handleGetRequest()
 {
+
 	struct stat fileStat;
 	time_t rawtime;
 	stat (_path.c_str(), &fileStat);
@@ -410,19 +414,32 @@ void Response::handleGetRequest()
 	}
 	close(fd);
 	create_file();
+
+				
 }
 
 
 //? check if there is uplode_store if not 
 	
 void Response::handlePostRequest(Server_block &server, Location_block &location){
-
 	if (location.upload_store == ""){ //? return forbiden function
-	}
+		if (1 == 11){ //? check for cgi  if there is and support extention		{
 
-	//? if it's  request for cgi
-		//? if there is cgi 
-		//? if there is not cgi
+		}
+		else{ //? if th
+			 //! check for error page in locaction , check with creeper
+			time_t rawtime;
+			time(&rawtime);
+			_response += "HTTP/1.1 409 Conflict\r\n";
+			_response += "Date: " + std::string(ctime(&rawtime));
+			_response += "\r\nServer: webserver";
+			_response += "\r\nContent-Length: 0";
+			_response +=  "\r\nConnection: close";
+			_response +=  "\r\nAccept-Ranges: bytes\r\n\r\n";
+			create_file();
+			return;
+		}
+	}
 
 	int index =_request.getRequestTarget().find(location.path);
 	std::string name_to_save ;
@@ -435,26 +452,28 @@ void Response::handlePostRequest(Server_block &server, Location_block &location)
 		if (index == -1){
 			time_t t;
 			t = time(NULL);
-			file_path = server.root + location.upload_store + "/" + std::to_string(t);
+			file_path = location.root + location.upload_store + "/" + std::to_string(t);
 		}
 		else{
 			name_to_save = _request.getRequestTarget().substr(index + location.path.size(), _request.getRequestTarget().size());
-			file_path = server.root + location.upload_store  + name_to_save;
+			file_path = location.root + location.upload_store  + name_to_save;
 		}
 		// int ret = std::rename(_request.getBody().c_str(), file_path.c_str());
 		std::string mv = "mv " + _request.getBody() + " " + file_path;
 		int ret = system(mv.c_str());
 		time_t rawtime;
 		time(&rawtime);
-		_response += "HTTP/1.1 201 created\r\n";
+		if (ret != -1)
+			_response += "HTTP/1.1 201 created\r\n"; 
+		else //! check for error page in locaction , check with creeper
+			_response += "HTTP/1.1 409 Conflict\r\n";
 		_response += "Date: " + std::string(ctime(&rawtime));
 		_response += "\r\nServer: webserver";
 		_response += "\r\nContent-Length: 0";
-		_response +=  "\r\nConnection: keep-alive";
+		_response +=  "\r\nConnection: close";
 		_response +=  "\r\nAccept-Ranges: bytes\r\n\r\n";
 		create_file();
 	}
-
 }
 
 static void deleteDirectoryFiles(DIR * dir, const std::string & path){
