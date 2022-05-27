@@ -22,6 +22,7 @@ class Response
 	private:
 		HttpStatus::statusCode _statuscode;
 		Request	_request;
+		Location_block _location;
 		std::string _response;
 		int _fd;
 		fd_set _set;
@@ -63,8 +64,10 @@ class Response
 		void time_out();
 		void notFound();
 		void forbidden();
+		void payloadTooLarge();
 		void ok(size_t bodysize);
 
+		int check_max_body_size();
 		void auto_index(Location_block location);
 		Location_block getLocation(Server_block &server);
 		void handleRequest(Server_block server);

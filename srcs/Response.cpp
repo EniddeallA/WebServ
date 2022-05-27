@@ -102,11 +102,11 @@ void Response::set_redirection(int statuscode, std::string path)
 	stat(path.c_str(), &s);
 	int fd = open(path.c_str(), O_RDONLY);
 	char buff[s.st_size];
-	read(fd, buff, s.st_size);
+	int reading = read(fd, buff, s.st_size);
 	close(fd);
 	_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n";
 	_response += "Connection: close\r\n\r\n";
-	_response += buff;
+	_response +=  std::string(buff, reading);
 	_response += "\r\n\r\n";
 }
 
@@ -152,6 +152,11 @@ void Response::internalError()
 	set_error_header(500, "Internal Server Error", "./error_pages/500.html");
 }
 
+void Response::payloadTooLarge()
+{
+	set_error_header(413, "Payload Too Large", "./error_pages/413.html");
+}
+
 void Response::time_out()
 {
 	set_error_header(504, "Gateway Time-out", "./error_pages/504.html");
@@ -183,6 +188,18 @@ std::string Response::get_file_path(){
 	return _filepath;
 }
 
+int Response::check_max_body_size()
+{
+	long long locationsize = stod(_location.max_body_size) * 1000000;
+	std::cout << locationsize << std::endl;
+	if (_response.size() <= locationsize)
+	{
+		std::cout << _response.size() << " " << locationsize << std::endl;
+		return (1);
+	}
+	return (0);
+}
+
 void Response::create_file()
 {
 	struct timeval tp;
@@ -192,6 +209,11 @@ void Response::create_file()
 	std::string filepath = "/tmp/autoindex_" + file_name;
 	std::ofstream out(filepath);
 	_filepath = filepath;
+	// if (!check_max_body_size())
+	// {
+	// 	this->payloadTooLarge();
+	// 	std::cout << _response << std::endl;
+	// }
 	out << _response;
 	out.close();
 	_fd = open(filepath.c_str(), O_RDONLY);
@@ -306,6 +328,7 @@ void Response::auto_index(Location_block location)
 
 void Response::handleRequest(Server_block server) {
 	Location_block location = getLocation(server);
+	_location = location;
 	_path = location.root + _path;
 	if (location.return_path != "" && location.return_path.size())
 	{
@@ -339,7 +362,7 @@ void Response::handleRequest(Server_block server) {
 			delete file;
 			return ;
 		}
-		else{
+		else if (_request.getRequestMethod() != "DELETE"){
 			if (_path.size() && _path[_path.size() - 1] != '/')
 				_path += "/" + location.index_file;
 			else
@@ -371,36 +394,39 @@ void Response::handleRequest(Server_block server) {
 				unallowedMethod();
 				_body.close();
 				create_file();
-				return;
 				_is_request_handled = false;
+				return;
 			}
 	}
 	else if ( _request.getRequestMethod() == "POST"){
 		if (std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
 			this->handlePostRequest(server, location);
 	}
+	else if ( _request.getRequestMethod() == "DELETE"){
+		if (std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "DELETE") != location.allowed_funct.end())
+			this->handleDeleteRequest();
+	}
 	else{		
-			struct stat fileStat;
-			_body.open("./error_pages/404.html");
-			stat ("./error_pages/404.html", &fileStat);
+		struct stat fileStat;
+		_body.open("./error_pages/404.html");
+		stat ("./error_pages/404.html", &fileStat);
 
-			int fd = open("./error_pages/404.html", O_RDONLY);
-			fcntl(fd, F_SETFL, O_NONBLOCK);
-			char buff[fileStat.st_size];
-			int rd = read(fd, buff, fileStat.st_size);
-			notFound();
-			_response += std::string(buff, rd);
-			close(fd);
-			_body.close();
-			create_file();
-			return;
+		int fd = open("./error_pages/404.html", O_RDONLY);
+		fcntl(fd, F_SETFL, O_NONBLOCK);
+		char buff[fileStat.st_size];
+		int rd = read(fd, buff, fileStat.st_size);
+		notFound();
+		_response += std::string(buff, rd);
+		close(fd);
+		_body.close();
+		create_file();
+		return;
 	}
 
 }
 
 void Response::handleGetRequest()
 {
-
 	struct stat fileStat;
 	time_t rawtime;
 	stat (_path.c_str(), &fileStat);
@@ -415,9 +441,7 @@ void Response::handleGetRequest()
 		bzero(buff, 1000);
 	}
 	close(fd);
-	create_file();
-
-				
+	create_file();				
 }
 
 
@@ -511,6 +535,7 @@ void Response::handleDeleteRequest()
 	DIR * dirp = NULL;
 
 	errno = 0;
+	std::cout << "4\n";
 	if (lstat(_path.c_str(), &st) == -1)
 		this->notFound();
 	if (st.st_mode & S_IFDIR) {
@@ -520,11 +545,17 @@ void Response::handleDeleteRequest()
 	else if (st.st_mode & S_IFREG)
 		unlink(_path.c_str());
 	if (errno == ENOTDIR)
+	{
+		std::cout << "3\n";
 		this->notFound();
+	}
     else if (errno == EACCES)
-		this->forbidden();
-    else if (errno == EEXIST)
-		this->unallowedMethod();
+		{
+			std::cout << "2\n";
+			this->forbidden();}
+    else if (errno == EEXIST){
+		std::cout << "1\n";
+		this->unallowedMethod();}
     else
 		this->ok(0);
 	create_file();
