@@ -116,7 +116,6 @@ void Request::parseHeaders(std::string headers)
 	for (size_t i = 0; i < vec.size(); i++) {
 		vec[i].erase(vec[i].find('\r'));
 		vec2 = splinter2(vec[i], ':');
-		std::cout << vec2[0] << std::endl;
 		if (lowercase(vec2[0]) == "host" && _host.empty() == true) {
 			vec2[1] = trim(vec2[1]);
 			if (vec2[1].find(':') != std::string::npos) {
@@ -301,7 +300,7 @@ std::string	Request::_bodyToFile() {
 	std::stringstream iss;
 
 	// iss << "/tmp/websev_body_" << i ;
-	iss << "/Users/kbenlyaz/Desktop/tmp/tmp_file__89" + std::to_string(i);
+	iss << "/tmp/tmp_file__89" + std::to_string(i);
 	return iss.str();
 }
 

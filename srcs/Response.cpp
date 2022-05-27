@@ -362,8 +362,10 @@ void Response::handleRequest(Server_block server) {
 			// 		std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
 			// 	this->handlePostRequest();
 			else if (_request.getRequestMethod() == "DELETE" &&
-					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "DELETE") != location.allowed_funct.end())
+					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "DELETE") != location.allowed_funct.end()){
+				std::cout << "I'm here to delete\n\n";
 				this->handleDeleteRequest();
+			}
 			else 
 			{
 				unallowedMethod();
@@ -517,7 +519,7 @@ void Response::handleDeleteRequest()
 	DIR * dirp = NULL;
 
 	errno = 0;
-	if (lstat(_request.getBody().c_str(), &st) == -1) {
+	if (lstat(_path.c_str(), &st) == -1) {
 		if (errno == ENOTDIR) {
 			throw StatusCodeException(HttpStatus::conflict);
 		} else {
@@ -525,32 +527,29 @@ void Response::handleDeleteRequest()
 		}
 	}
 
-	if (S_ISDIR(st.st_mode)) {
-		if (_request.getRequestTarget().at(_request.getRequestTarget().length() - 1) != '/') {
-			throw StatusCodeException(HttpStatus::conflict);
-		} else {
-			if ((dirp = opendir(_request.getBody().c_str()))) {
-				deleteDirectoryFiles(dirp, _request.getBody());
-			}
+	if (st.st_mode & S_IFDIR) {
+		if ((dirp = opendir(_path.c_str()))) {
+			deleteDirectoryFiles(dirp, _path);
 		}
-	} else {
-		remove(_request.getBody().c_str());
+	} else if (st.st_mode & S_IFREG) {
+		unlink(_path.c_str());
 	}
-
-	if (errno) {
-		perror("");
-	}
-	if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG) {
-		throw StatusCodeException(HttpStatus::notFound);
-    } else if (errno == EACCES || errno == EPERM) {
-		throw StatusCodeException(HttpStatus::forbidden);
-    } else if (errno == EEXIST) {
-		throw StatusCodeException(HttpStatus::methodNotAllowed);
-    } else if (errno == ENOSPC) {
-		throw StatusCodeException(HttpStatus::insufficientStorage);
-    } else if (errno) {
-		throw StatusCodeException(HttpStatus::internalServerError);
-    } else {
-		throw StatusCodeException(HttpStatus::noContent);
-	}
+	exit(0);
+	// WRITE RESPONSE
+	// if (errno) {
+	// 	perror("");
+	// }
+	// if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG) {
+	// 	throw StatusCodeException(HttpStatus::notFound);
+    // } else if (errno == EACCES || errno == EPERM) {
+	// 	throw StatusCodeException(HttpStatus::forbidden);
+    // } else if (errno == EEXIST) {
+	// 	throw StatusCodeException(HttpStatus::methodNotAllowed);
+    // } else if (errno == ENOSPC) {
+	// 	throw StatusCodeException(HttpStatus::insufficientStorage);
+    // } else if (errno) {
+	// 	throw StatusCodeException(HttpStatus::internalServerError);
+    // } else {
+	// 	throw StatusCodeException(HttpStatus::noContent);
+	// }
 }
