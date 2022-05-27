@@ -130,43 +130,99 @@ std::string errorPage(std::string const &message)
 
 void Response::unallowedMethod()
 {
-	set_error_header(405, "Method Not Allowed", "./error_pages/405.html");
+	int fd;
+	if (_server.error_page.count(405))
+		if ((fd= open(_server.error_page[405].c_str(), O_RDONLY)) != -1)
+			set_error_header(405, "Method Not Allowed", _server.error_page[405]);
+		else
+			set_error_header(405, "Method Not Allowed", "./error_pages/405.html");
+	else
+		set_error_header(405, "Method Not Allowed", "./error_pages/405.html");
 }
 
 void Response::forbidden()
 {
-	set_error_header(403, "Forbidden", "./error_pages/403.html");
+	int fd;
+	if (_server.error_page.count(403))
+		if ((fd= open(_server.error_page[403].c_str(), O_RDONLY)) != -1)
+			set_error_header(403, "Forbidden", _server.error_page[403]);
+		else
+			set_error_header(403, "Forbidden", "./error_pages/403.html");
+	else
+		set_error_header(403, "Forbidden", "./error_pages/403.html");
 }
 
 void Response::badRequest()
 {
-	set_error_header(400, "Bad Request", "./error_pages/400.html");
+	int fd;
+	if (_server.error_page.count(400))
+		if ((fd= open(_server.error_page[400].c_str(), O_RDONLY)) != -1)
+			set_error_header(400, "Bad Request", _server.error_page[405]);
+		else
+			set_error_header(400, "Bad Request", "./error_pages/400.html");
+	else
+		set_error_header(400, "Bad Request", "./error_pages/400.html");
 }
 
 void Response::notFound()
 {
-	set_error_header(404, "Not Found", "./error_pages/404.html");
+	int fd;
+	if (_server.error_page.count(404))
+		if ((fd = open(_server.error_page[404].c_str(), O_RDONLY)) != -1)
+			set_error_header(404, "Not Found", _server.error_page[404]);
+		else
+			set_error_header(404, "Not Found", "./error_pages/404.html");
+	else
+		set_error_header(404, "Not Found", "./error_pages/404.html");
 }
 
 void Response::httpVersionNotSupported(std::string const &version)
 {
-	set_error_header(505, "HTTP Version Not Supported", "./error_pages/505.html");
+	int fd;
+	if (_server.error_page.count(505))
+		if ((fd= open(_server.error_page[505].c_str(), O_RDONLY)) != -1)
+			set_error_header(505, "HTTP Version Not Supported", _server.error_page[505]);
+		else
+			set_error_header(505, "HTTP Version Not Supported", "./error_pages/505.html");
+	else
+		set_error_header(505, "HTTP Version Not Supported", "./error_pages/505.html");
 }
 
 
 void Response::internalError()
 {
-	set_error_header(500, "Internal Server Error", "./error_pages/500.html");
+	int fd;
+	if (_server.error_page.count(500))
+		if ((fd= open(_server.error_page[500].c_str(), O_RDONLY)) != -1)
+			set_error_header(500, "Internal Server Error", _server.error_page[500]);
+		else
+			set_error_header(500, "Internal Server Error", "./error_pages/500.html");
+	else
+		set_error_header(500, "Internal Server Error", "./error_pages/500.html");
 }
 
 void Response::payloadTooLarge()
 {
-	set_error_header(413, "Payload Too Large", "./error_pages/413.html");
+	int fd;
+	if (_server.error_page.count(413))
+		if ((fd= open(_server.error_page[413].c_str(), O_RDONLY)) != -1)
+			set_error_header(413, "Payload Too Large", _server.error_page[413]);
+		else
+			set_error_header(413, "Payload Too Large", "./error_pages/413.html");
+	else
+		set_error_header(413, "Payload Too Large", "./error_pages/413.html");
 }
 
 void Response::time_out()
 {
-	set_error_header(504, "Gateway Time-out", "./error_pages/504.html");
+	int fd;
+	if (_server.error_page.count(504))
+		if ((fd= open(_server.error_page[504].c_str(), O_RDONLY)) != -1)
+			set_error_header(504, "Gateway Time-out", _server.error_page[504]);
+		else
+			set_error_header(504, "Gateway Time-out", "./error_pages/504.html");
+	else
+		set_error_header(504, "Gateway Time-out", "./error_pages/504.html");
 }
 
 void Response::ok(size_t bodysize)
@@ -247,11 +303,6 @@ Location_block Response::getLocation(Server_block &server)
         for (int i = 0; i < server.all_locations.size(); i++){
             if (server.all_locations[i].path == path){ // gennerate file to uplade
 				_path = save;
-                if (server.all_locations[i].return_path.size()){ //send responce
-                    //std::cout << "--------------------------------Return function---------------\n";
-                    //std::cout << "Return code is " << l_block.return_code << "  to path" << l_block.return_path << std::endl;
-                    //std::cout << "--------------------------------Return function---------------\n";
-                }
 				return server.all_locations[i];
             }
          }
@@ -334,6 +385,7 @@ void Response::auto_index(Location_block location)
 void Response::handleRequest(Server_block server) {
 	Location_block location = getLocation(server);
 	_location = location;
+	_server = server;
 	_path = location.root + _path;
 	if (_request.getBody().size() && location.max_body_size.size() && !check_max_body_size())
 	{
