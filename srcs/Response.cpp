@@ -539,6 +539,7 @@ void Response::handleDeleteRequest()
 	if (lstat(_path.c_str(), &st) == -1)
 		this->notFound();
 	if (st.st_mode & S_IFDIR) {
+		_path += (_path.back() != '/') ? "/" : "";
 		if ((dirp = opendir(_path.c_str())))
 			deleteDirectoryFiles(dirp, _path);
 	}
