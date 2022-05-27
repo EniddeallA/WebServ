@@ -407,10 +407,29 @@ void Response::handleRequest(Server_block server) {
 	else if ( _request.getRequestMethod() == "POST"){
 		if (std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
 			this->handlePostRequest(server, location);
+		else
+		{
+			this->unallowedMethod();
+			create_file();
+		}
 	}
 	else if ( _request.getRequestMethod() == "DELETE"){
 		if (std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "DELETE") != location.allowed_funct.end())
 			this->handleDeleteRequest();
+		else
+		{
+			this->unallowedMethod();
+			create_file();
+		}
+	}
+	else if ( _request.getRequestMethod() == "GET"){
+		if (std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "GET") != location.allowed_funct.end())
+			this->handleGetRequest();
+		else
+		{
+			this->unallowedMethod();
+			create_file();
+		}
 	}
 	else{		
 		struct stat fileStat;
