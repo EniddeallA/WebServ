@@ -36,6 +36,7 @@
 #include <sys/time.h>
 
 #define CGI_TIME_OUT 10000
+#define REQUEST_TIME_OUT 1000000
 
 typedef std::map<std::string, std::string>::iterator _itr;
 struct Location_block
@@ -81,6 +82,7 @@ struct Server_block{
 		long								max_body_size_in_kb;
 };
 
+long int 					get_current_time();
 std::vector<Server_block>	parsse_the_config_file(std::string);
 std::vector<Server_block> 	get_all_server_blocks(std::string);
 Location_block 				get_location_block(std::string);

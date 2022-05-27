@@ -28,19 +28,42 @@ void start_servers(std::vector<Server_block> &all_servers){
 	std::map<int, Response> fd_with_response_object;
 
 	std::map<int, int> fd_with_send_size;
+	std::map<int, long int> fd_with_time;
 	int max_server_fd = fd_max;
 	int  count_zero = 0;
 	std::string all_string = "";
+	struct timeval select_time;
+	select_time.tv_sec = 1;
+	select_time.tv_usec = 0;
 	while (1){
 		bzero(buffer, BUFFER);
 		_fd_set_read_temp = _fd_set_read;
 		_fd_set_write_temp = _fd_set_write;
 		// std::cout << "before_select" << std::endl;
-		int selected = select(fd_max + 1, &_fd_set_read_temp, &_fd_set_write_temp, NULL,NULL); //check timeout
-		// std::cout << "after_select" << std::endl;
-		if (selected < 0){
-			throw ("Error in select function");
+		int selected = select(fd_max + 1, &_fd_set_read_temp, &_fd_set_write_temp, NULL, &select_time); //? check timeout
+		//! check for time out ----------------------------*
+		for (int i = 0; i < fd_max + 1; i++){
+			long int now = get_current_time();
+			if (fd_with_time.count(i)){
+				if (now - fd_with_time[i] >= REQUEST_TIME_OUT){
+					v_of_request_object[i].clear();
+					fd_with_response_object[i].get_request().clear();
+					if (FD_ISSET(i, &_fd_set_read_temp)){
+						FD_CLR(i, &_fd_set_read);
+					}
+					else if (FD_ISSET(i, &_fd_set_write_temp)){
+						FD_CLR(i, &_fd_set_write);
+					}
+					fd_with_time.erase(i);
+				}
+			}
+
+			// if (FD_ISSET(i, &_fd_set_write_temp)
 		}
+		//!----------------------------------------------*
+		// if (selected < 0){
+		// 	throw ("Error in select function");
+		// }
 		for (int i = 0; i < fd_max + 1; i++){
 			if (FD_ISSET(i, &_fd_set_read_temp)){
 				//! i have change 3 with the fd_min 
@@ -65,6 +88,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 				std::string s;
 				if (valread > 0){
 					s = std::string(buffer, valread);
+					fd_with_time[new_socket] = get_current_time();
 				}
 				else{
 					s = buffer;
@@ -100,8 +124,11 @@ void start_servers(std::vector<Server_block> &all_servers){
 				// problem here
 				int sended = send(new_socket, buffer, valread, 0);
 				// end prob
-				if (sended > 0)
+				if (sended > 0){
+					fd_with_time[new_socket] = get_current_time();
+
 					fd_with_response_object[new_socket].update_size_sended(sended);
+				}
 
 				if (valread != sended && fd != -1 && valread > 0){
 					int defferent = valread - sended;

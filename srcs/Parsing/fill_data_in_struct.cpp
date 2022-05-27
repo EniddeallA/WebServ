@@ -148,4 +148,5 @@ void fill_data_in_struct(std::vector<Server_block> &all_servers){
 		check_duplicate_locations(all_servers[i].all_locations);
 	}
 	check_duplicate_server(all_servers);
+	//! check for missing data
 }

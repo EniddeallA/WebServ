@@ -305,21 +305,22 @@ void Response::auto_index(Location_block location)
 }
 
 void Response::handleRequest(Server_block server) {
+	 //* WORK ON CGI 
 	Location_block location = getLocation(server);
 	_path = location.root + _path;
-	if (location.return_path != "" && location.return_path.size())
+	if (location.return_path != "" && location.return_path.size()) //? for return
 	{
 		int statuscode = std::stoi(location.return_code);
 		set_redirection(statuscode, location.return_path);
 		create_file();
 		return;
 	}
-	if (_file_not_found){
+	// if (_file_not_found){
 		
-		notFound();
-		create_file();
-		return;
-	}
+	// 	notFound();
+	// 	create_file();
+	// 	return;
+	// }
 	struct stat s, s2;
 	stat(_path.c_str(), &s);
 	if(s.st_mode & S_IFDIR)
@@ -328,10 +329,9 @@ void Response::handleRequest(Server_block server) {
 		std::fstream * file = new std::fstream();
 
 		//? check if index file exist return index_file else if auto index exit  return it else 404
+		//? this is for index_file or auto_index
 		std::string index_file = _path + "/" + location.index_file;;
-
 		stat(index_file.c_str(), &s2);
-		//! check if method is get and is allowed the run the auto_index
 		if (location.auto_index == "on" && (location.index_file == ""  || (s2.st_mode & S_IFREG) == 0) && _request.getRequestMethod() == "GET" &&
 					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "GET") != location.allowed_funct.end()){
 			is_autoindex = 1;
@@ -353,14 +353,8 @@ void Response::handleRequest(Server_block server) {
 			_is_request_handled = true;
 			if (_request.getRequestMethod() == "GET" &&
 					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "GET") != location.allowed_funct.end()){
-
-					this->handleGetRequest();
-				
-					}
-
-			// else if (_request.getRequestMethod() == "POST" &&
-			// 		std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
-			// 	this->handlePostRequest();
+					this->handleGetRequest();		
+			}
 			else if (_request.getRequestMethod() == "DELETE" &&
 					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "DELETE") != location.allowed_funct.end())
 				this->handleDeleteRequest();
@@ -369,8 +363,8 @@ void Response::handleRequest(Server_block server) {
 				unallowedMethod();
 				_body.close();
 				create_file();
-				return;
 				_is_request_handled = false;
+				return;
 			}
 	}
 	else if ( _request.getRequestMethod() == "POST"){
