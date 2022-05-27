@@ -9,7 +9,7 @@ CPP_VERSION	=	#-std=c++98
 
 COMPILER	=	clang++
 
-FLAGS		=	-g #-fsanitize=address#-Wextra -Wall -Werror 
+FLAGS		=	-fsanitize=address#-Wextra -Wall -Werror 
 
 NAME		=	ft_server
 

@@ -13,6 +13,7 @@ void start_server(Server_block &server){
 	if ((server.server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 		throw "Fail in socket fd";
 	int one = 1;
+	std::cout << "server fd is " << server.server_fd << std::endl;
 	setsockopt(server.server_fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
 
 	bzero(&(server.s_address), sizeof(server.s_address));
