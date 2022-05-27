@@ -9,11 +9,11 @@
 #include <string.h>
 #include <cstring>
 #include "request.hpp"
-#include "StatusCodeException.hpp"
 #include "Utils.hpp"
 #include "Parsing.hpp"
 #include "MimeTypes.hpp"
 #include <algorithm>
+#include "StatusCode.hpp"
 #include <stdio.h>
 
 
@@ -56,7 +56,6 @@ class Response
 		
 		void set_error_header(int statuscode, std::string msg, std::string path);
 		void set_redirection(int statuscode, std::string path);
-		// void setHeader(size_t status_code, std::string const &message, size_t bodysize);
 		void unallowedMethod();
 		void badRequest();
 		void internalError();

@@ -362,8 +362,10 @@ void Response::handleRequest(Server_block server) {
 			// 		std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
 			// 	this->handlePostRequest();
 			else if (_request.getRequestMethod() == "DELETE" &&
-					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "DELETE") != location.allowed_funct.end())
+					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "DELETE") != location.allowed_funct.end()){
+				std::cout << "I'm here to delete\n\n";
 				this->handleDeleteRequest();
+			}
 			else 
 			{
 				unallowedMethod();
@@ -482,33 +484,25 @@ static void deleteDirectoryFiles(DIR * dir, const std::string & path){
 	std::string filepath;
 	DIR * dirp;
 	while ((entry = readdir(dir))) {
-
 		filepath = path + entry->d_name;
-
-		if (std::strcmp(entry->d_name, ".") == 0 || std::strcmp(entry->d_name, "..") == 0) {
+		if (std::strcmp(entry->d_name, ".") == 0 || std::strcmp(entry->d_name, "..") == 0)
 			continue;
-		}
-
-		if (stat(filepath.c_str(), &st) == -1) {
+		if (stat(filepath.c_str(), &st) == -1)
 			std::cerr << "stat(): " << filepath << ": " << strerror(errno) << std::endl;
-		}
-
 		if (S_ISDIR(st.st_mode)) {
 			filepath += "/";
-			if ((dirp = opendir(filepath.c_str()))) {
+			if ((dirp = opendir(filepath.c_str())))
 				deleteDirectoryFiles(dirp, filepath.c_str());
-			} else {
+			else
 				std::cerr << "opendir(): " << filepath.c_str() << ": " << strerror(errno) << std::endl;
-			}
-		} else {
-			if (remove(filepath.c_str()) == -1) {
+		} 
+		else {
+			if (remove(filepath.c_str()) == -1)
 				std::cerr << "remove() file: " << filepath.c_str() << ": " << strerror(errno) << std::endl;
-			}
 		}
 	}
-	if (remove(path.c_str()) == -1) {
+	if (remove(path.c_str()) == -1)
 		std::cerr << "remove() dir: " << path.c_str() << ": " << strerror(errno) << std::endl;
-	}
 }
 
 void Response::handleDeleteRequest()
@@ -517,40 +511,21 @@ void Response::handleDeleteRequest()
 	DIR * dirp = NULL;
 
 	errno = 0;
-	if (lstat(_request.getBody().c_str(), &st) == -1) {
-		if (errno == ENOTDIR) {
-			throw StatusCodeException(HttpStatus::conflict);
-		} else {
-			throw StatusCodeException(HttpStatus::notFound);
-		}
+	if (lstat(_path.c_str(), &st) == -1)
+		this->notFound();
+	if (st.st_mode & S_IFDIR) {
+		if ((dirp = opendir(_path.c_str())))
+			deleteDirectoryFiles(dirp, _path);
 	}
-
-	if (S_ISDIR(st.st_mode)) {
-		if (_request.getRequestTarget().at(_request.getRequestTarget().length() - 1) != '/') {
-			throw StatusCodeException(HttpStatus::conflict);
-		} else {
-			if ((dirp = opendir(_request.getBody().c_str()))) {
-				deleteDirectoryFiles(dirp, _request.getBody());
-			}
-		}
-	} else {
-		remove(_request.getBody().c_str());
-	}
-
-	if (errno) {
-		perror("");
-	}
-	if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG) {
-		throw StatusCodeException(HttpStatus::notFound);
-    } else if (errno == EACCES || errno == EPERM) {
-		throw StatusCodeException(HttpStatus::forbidden);
-    } else if (errno == EEXIST) {
-		throw StatusCodeException(HttpStatus::methodNotAllowed);
-    } else if (errno == ENOSPC) {
-		throw StatusCodeException(HttpStatus::insufficientStorage);
-    } else if (errno) {
-		throw StatusCodeException(HttpStatus::internalServerError);
-    } else {
-		throw StatusCodeException(HttpStatus::noContent);
-	}
+	else if (st.st_mode & S_IFREG)
+		unlink(_path.c_str());
+	if (errno == ENOTDIR)
+		this->notFound();
+    else if (errno == EACCES)
+		this->forbidden();
+    else if (errno == EEXIST)
+		this->unallowedMethod();
+    else
+		this->ok(0);
+	create_file();
 }
