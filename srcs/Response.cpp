@@ -103,8 +103,8 @@ void Response::set_redirection(int statuscode, std::string path)
 	_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n";
 	_response += "Connection: close\r\n\r\n";
 	int fd;
-	std::string return_path = path.substr(path.find(_location.root), path.size());
-	if ((fd = open(return_path.c_str(), O_RDONLY)) == -1)
+	path = _location.root + path;
+	if ((fd = open(path.c_str(), O_RDONLY)) == -1)
 	{
 		close(fd);
 		this->notFound();
@@ -198,8 +198,11 @@ std::string Response::get_file_path(){
 int Response::check_max_body_size()
 {
 	long long locationsize = stod(_location.max_body_size) * 1000000;
+	struct stat s;
+	stat(_request.getBody().c_str(), &s);
 	std::cout << locationsize << std::endl;
-	if (_response.size() <= locationsize)
+	std::cout << s.st_size << std::endl;
+	if (s.st_size <= locationsize)
 	{
 		std::cout << _response.size() << " " << locationsize << std::endl;
 		return (1);
@@ -216,11 +219,6 @@ void Response::create_file()
 	std::string filepath = "/tmp/autoindex_" + file_name;
 	std::ofstream out(filepath);
 	_filepath = filepath;
-	// if (!check_max_body_size())
-	// {
-	// 	this->payloadTooLarge();
-	// 	std::cout << _response << std::endl;
-	// }
 	out << _response;
 	out.close();
 	_fd = open(filepath.c_str(), O_RDONLY);
@@ -337,6 +335,13 @@ void Response::handleRequest(Server_block server) {
 	Location_block location = getLocation(server);
 	_location = location;
 	_path = location.root + _path;
+	if (_request.getBody().size() && location.max_body_size.size() && !check_max_body_size())
+	{
+		std::cout << _response << std::endl;
+		this->payloadTooLarge();
+		create_file();
+		return;
+	}
 	if (location.return_path.size())
 	{
 		int statuscode = std::stoi(location.return_code);
@@ -352,7 +357,8 @@ void Response::handleRequest(Server_block server) {
 	}
 	struct stat s, s2;
 	stat(_path.c_str(), &s);
-	if(s.st_mode & S_IFDIR)
+	// if(s.st_mode & S_IFDIR)
+	if(S_ISDIR(s.st_mode))
 	{
 
 		std::fstream * file = new std::fstream();
@@ -455,14 +461,20 @@ void Response::handleGetRequest()
 	struct stat fileStat;
 	time_t rawtime;
 	stat (_path.c_str(), &fileStat);
-	int fd = open(_path.c_str(), O_RDONLY);
+	int fd;
+	if ((fd = open(_path.c_str(), O_RDONLY)) == -1)
+	{
+		this->notFound();
+		create_file();
+		return;
+	}
 	fcntl(fd, F_SETFL, O_NONBLOCK);
 	// char buff[fileStat.st_size];
 	char buff[1001] = {0};
 	this->ok(fileStat.st_size);
 	int reading = 0;
 	while((reading = read(fd, buff, 1000))){
-		_response.append(buff, reading);
+		_response +=  std::string(buff, reading);
 		bzero(buff, 1000);
 	}
 	close(fd);
