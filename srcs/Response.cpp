@@ -70,7 +70,7 @@ void Response::set_error_header(int statuscode, std::string msg, std::string pat
 	struct stat s;
 
 	time(&rawtime);
-	_response = "HTTP/1.1 " + std::to_string(statuscode) + msg + "\r\n";
+	_response = "HTTP/1.1 " + std::to_string(statuscode) + " " + msg + "\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response.erase(--_response.end());
 	_response += "\r\n";
@@ -214,6 +214,7 @@ void Response::create_file()
 	// 	this->payloadTooLarge();
 	// 	std::cout << _response << std::endl;
 	// }
+	std::cout << _response << std::endl;
 	out << _response;
 	out.close();
 	_fd = open(filepath.c_str(), O_RDONLY);
@@ -386,7 +387,6 @@ void Response::handleRequest(Server_block server) {
 			// 	this->handlePostRequest();
 			else if (_request.getRequestMethod() == "DELETE" &&
 					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "DELETE") != location.allowed_funct.end()){
-				std::cout << "I'm here to delete\n\n";
 				this->handleDeleteRequest();
 			}
 			else 
@@ -535,29 +535,25 @@ void Response::handleDeleteRequest()
 	DIR * dirp = NULL;
 
 	errno = 0;
-	std::cout << "4\n";
 	if (lstat(_path.c_str(), &st) == -1)
-		this->notFound();
-	if (st.st_mode & S_IFDIR) {
-		_path += (_path.back() != '/') ? "/" : "";
-		if ((dirp = opendir(_path.c_str())))
-			deleteDirectoryFiles(dirp, _path);
-	}
-	else if (st.st_mode & S_IFREG)
-		unlink(_path.c_str());
-	if (errno == ENOTDIR)
 	{
-		std::cout << "3\n";
-		this->notFound();
+		if (errno == ENOTDIR || errno == ENOENT)
+			this->notFound();
+		else if (errno == EACCES)
+			this->forbidden();
+		else if (errno == EEXIST)
+			this->unallowedMethod();
 	}
-    else if (errno == EACCES)
-		{
-			std::cout << "2\n";
-			this->forbidden();}
-    else if (errno == EEXIST){
-		std::cout << "1\n";
-		this->unallowedMethod();}
     else
+	{
+		if (st.st_mode & S_IFDIR) {
+			_path += (_path.back() != '/') ? "/" : "";
+			if ((dirp = opendir(_path.c_str())))
+				deleteDirectoryFiles(dirp, _path);
+		}
+		else if (st.st_mode & S_IFREG)
+			unlink(_path.c_str());
 		this->ok(0);
+	}
 	create_file();
 }
