@@ -77,11 +77,10 @@ class Request{
 		void preBody( void );
 		void setLocation( void );
 		std::string all_string_req;
-		int first_head;
 		
 		
 	private:
-		int                         _error;
+		int                         _error , first_head;
 		std::string                 _requestMethod, _requestTarget, _requestQuery;
 		std::string                 _host, _bodyName, _str, _port;
 		bool                        _hasBody, _keepAlive;
@@ -91,8 +90,6 @@ class Request{
 		t_headers _headers;
 		std::ofstream               _bodyFile;
 		size_t                      _bodySize, _contentLength;
-		// Location_block				_location;
-		Server_block				_server;
 
 
 	private:

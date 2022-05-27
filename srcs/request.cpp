@@ -79,23 +79,12 @@ void Request::Parse(std::string &req)
 		if (_requestMethod == "GET" && _headersEnd == true)
 		{
 			_requestEnd = true;
-			/** WARNING
-			 * get a data from server block
-			*/
 			return;
 		}
-		/** WARNING
-		 * must check for serverBlock
-		 * Check with khalid 
-		*/
 		parseBody(req);
-		if (_requestEnd  /* is request Completed ?*/ )
+		if (_requestEnd)
 		{	
 			_bodyFile.close();
-			/** WARNING
-			 * get data from server block
-			 * check for body size and max size
-			*/
 			_requestEnd = true;
 		}
 	}
@@ -154,6 +143,10 @@ void Request::parseHeaders(std::string headers)
 
 void Request::parseFirstLine(std::vector<std::string> vec)
 {
+	/** INFO
+	 * check if it contains 3 elements
+	 * METHOD TARGET VERSION
+	*/
 	if (vec.size() != 3){
 		_error = BAD_REQUEST;
 		throw "Error while request parsing";
@@ -238,9 +231,6 @@ void 		Request::toChuncked(std::string &req) {
 		*/
 	}
 	size_t end = 0;
-	/** WARNING
-	 *  MUST RE-WORK ON DECODING
-	*/
 	// std::cout << "request is to_chunked" << std::endl;
 
 	# define CHUNK_SIZE 0
@@ -323,19 +313,20 @@ void		Request::clear( void ){
 	_requestTarget.clear();
 	_str.clear();
 	_headers.clear();
-	_bodyName.clear();
 	if (_bodyName.empty() == false) {
 		std::remove(_bodyName.c_str());
 	}
+	_bodyName.clear();
 	_host.clear();
 	_error = 0;
 	_requestEnd = false;
 	_hasBody = false; 
-	_keepAlive = false;
+	_keepAlive = true;
 	_headersEnd = false;
 	_bodySize = 0;
 	_contentLength = 0;
 	_port.clear();
+	_allowedMethods.clear();
 }
 
 Server_block	Request::setServer( std::vector<Server_block> const &serv_confs ) {
