@@ -91,8 +91,8 @@ void fill_location_data(Server_block server, Location_block &location, _itr begi
 		if (key == "return"){
 			if (split(value, " ").size() != 2)
 				throw "Return should have 2 variable";
-			location.return_code = split(value, "")[0];
-			location.return_path = split(value, "")[1];
+			location.return_code = split(value, " ")[0];
+			location.return_path = split(value, " ")[1];
 		}
 		if (key == "client_max_body_size")
 			location.max_body_size = value;	
