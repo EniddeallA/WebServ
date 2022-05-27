@@ -74,7 +74,7 @@ struct Server_block{
 		std::map<int, std::string>			error_page;
 		std::vector<std::string> 			name;
 		std::string							max_body_size;
-        std::string 						root;
+        // std::string 						root;
 		std::vector<Location_block> 		all_locations;
 		int 								server_fd;
 		struct sockaddr_in 					s_address;

@@ -46,8 +46,8 @@ void fill_server_data(Server_block &server, _itr begin, _itr end){
 			server.max_body_size = value;
 			// server.max_body_size_in_kb = convert_to_kb( )
 		}
-		else if(key == "root")
-			server.root = value;
+		// else if(key == "root")
+			// server.root = value;
 		begin++;
 	}
 	return;
@@ -60,7 +60,7 @@ void fill_location_data(Server_block server, Location_block &location, _itr begi
 	location.allowed_funct = server.allowed_funct;
 	location.allowed = server.allowed;
 	location.upload_store = server.upload_store;
-	location.root = server.root;
+	// location.root = server.root;
 	location.max_body_size = server.max_body_size;
 	while (begin != end){
 		key = begin->first;

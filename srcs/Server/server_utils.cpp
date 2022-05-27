@@ -1,6 +1,6 @@
 #include "../../includes/Parsing.hpp"
 
-// check if port is already open if it's dont open it again
+//? check if port is already open if it's dont open it again
 bool port_already_binded(std::vector<Server_block> &all_server, int index, int port){
 	for (int i = 0; i < index; i++){
 		if (atoi(all_server[i].port.c_str()) == port)
@@ -13,13 +13,10 @@ void start_server(Server_block &server){
 	if ((server.server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 		throw "Fail in socket fd";
 	int one = 1;
-	std::cout << "server fd is " << server.server_fd << std::endl;
 	setsockopt(server.server_fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
 
 	bzero(&(server.s_address), sizeof(server.s_address));
 	server.s_address.sin_family = AF_INET;
-	// if (inet_addr(server.ip.c_str()) == -1)
-	// 	throw "Error Adress not valide";
 	server.s_address.sin_addr.s_addr = inet_addr(server.ip.c_str());
 	int port = atoi(server.port.c_str());
 	server.s_address.sin_port = htons(port);
@@ -30,9 +27,9 @@ void start_server(Server_block &server){
 }
 
 
-//DEFAULT RESPONSE FUNCTION
+//? DEFAULT RESPONSE FUNCTION
 char *get_response(){
-	char * resp = (char *)"HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!";
+	char * resp = (char *)"HTTP/1.1 200 OK\nConten@sert-Type: text/plain\nContent-Length: 12\n\nHello world!";
 	return resp;
 }
 
