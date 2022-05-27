@@ -100,12 +100,19 @@ void Response::set_redirection(int statuscode, std::string path)
 	_response += "Server: webserver\r\n";
 	_response += "Location: "+ path +"\r\n";
 	stat(path.c_str(), &s);
-	int fd = open(path.c_str(), O_RDONLY);
+	_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n";
+	_response += "Connection: close\r\n\r\n";
+	int fd;
+	std::string return_path = path.substr(path.find(_location.root), path.size());
+	if ((fd = open(return_path.c_str(), O_RDONLY)) == -1)
+	{
+		close(fd);
+		this->notFound();
+		return;
+	}
 	char buff[s.st_size];
 	int reading = read(fd, buff, s.st_size);
 	close(fd);
-	_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n";
-	_response += "Connection: close\r\n\r\n";
 	_response +=  std::string(buff, reading);
 	_response += "\r\n\r\n";
 }
@@ -330,7 +337,7 @@ void Response::handleRequest(Server_block server) {
 	Location_block location = getLocation(server);
 	_location = location;
 	_path = location.root + _path;
-	if (location.return_path != "" && location.return_path.size())
+	if (location.return_path.size())
 	{
 		int statuscode = std::stoi(location.return_code);
 		set_redirection(statuscode, location.return_path);
