@@ -214,7 +214,6 @@ void Response::create_file()
 	// 	this->payloadTooLarge();
 	// 	std::cout << _response << std::endl;
 	// }
-	std::cout << _response << std::endl;
 	out << _response;
 	out.close();
 	_fd = open(filepath.c_str(), O_RDONLY);
