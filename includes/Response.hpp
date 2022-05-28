@@ -22,6 +22,7 @@ class Response
 	private:
 		HttpStatus::statusCode _statuscode;
 		Request	_request;
+		Location_block _location;
 		std::string _response;
 		int _fd;
 		fd_set _set;
@@ -33,6 +34,7 @@ class Response
 		int	_file_not_found;
 		long _size_of_file;
 		long _size_sended;
+		Server_block _server;
 
 	public:
 		Response(Request	request);
@@ -42,20 +44,20 @@ class Response
 		Response& operator=(const Response& other);
 		~Response();
 	
+		void reset();
 		std::string get_respone( void ) const;
 		int get_fd( void );
 		void close_fd( void);
-		void reset();
 		long get_size_of_file(){return _size_of_file;}
 		long get_size_sended(){return _size_sended;}
-		void update_size_sended(long send){_size_sended += send;}
 		Request get_request(){return _request;}
-
 		std::fstream& get_body( void );
-		void create_file();
+		void update_size_sended(long send){_size_sended += send;}
+
 		
 		void set_error_header(int statuscode, std::string msg, std::string path);
 		void set_redirection(int statuscode, std::string path);
+
 		void unallowedMethod();
 		void badRequest();
 		void internalError();
@@ -63,8 +65,11 @@ class Response
 		void time_out();
 		void notFound();
 		void forbidden();
+		void payloadTooLarge();
 		void ok(size_t bodysize);
 
+		void create_file();
+		int check_max_body_size();
 		void auto_index(Location_block location);
 		Location_block getLocation(Server_block &server);
 		void handleRequest(Server_block server);

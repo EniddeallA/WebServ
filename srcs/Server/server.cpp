@@ -146,7 +146,6 @@ void start_servers(std::vector<Server_block> &all_servers){
 
 					fd_with_response_object[new_socket].reset();
 					if (v_of_request_object[new_socket]._isKeepAlive() == false){ //correct this function the default is keep-alive not close
-					// if (1 == 1){ //correct this function the default is keep-alive not close
 						FD_CLR(new_socket, &_fd_set_write);
 						close(new_socket);
 						fd_max = fds[0];

@@ -71,7 +71,7 @@ void Response::set_error_header(int statuscode, std::string msg, std::string pat
 	struct stat s;
 
 	time(&rawtime);
-	_response = "HTTP/1.1 " + std::to_string(statuscode) + msg + "\r\n";
+	_response = "HTTP/1.1 " + std::to_string(statuscode) + " " + msg + "\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response.erase(--_response.end());
 	_response += "\r\n";
@@ -101,13 +101,20 @@ void Response::set_redirection(int statuscode, std::string path)
 	_response += "Server: webserver\r\n";
 	_response += "Location: "+ path +"\r\n";
 	stat(path.c_str(), &s);
-	int fd = open(path.c_str(), O_RDONLY);
+	_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n";
+	_response += "Connection: close\r\n\r\n";
+	int fd;
+	path = _location.root + path;
+	if ((fd = open(path.c_str(), O_RDONLY)) == -1)
+	{
+		close(fd);
+		this->notFound();
+		return;
+	}
 	char buff[s.st_size];
 	int reading = read(fd, buff, s.st_size);
 	close(fd);
-	_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n";
-	_response += "Connection: close\r\n\r\n";
-	_response += std::string(buff, reading);
+	_response +=  std::string(buff, reading);
 	_response += "\r\n\r\n";
 }
 
@@ -124,38 +131,99 @@ std::string errorPage(std::string const &message)
 
 void Response::unallowedMethod()
 {
-	set_error_header(405, "Method Not Allowed", "./error_pages/405.html");
+	int fd;
+	if (_server.error_page.count(405))
+		if ((fd= open(_server.error_page[405].c_str(), O_RDONLY)) != -1)
+			set_error_header(405, "Method Not Allowed", _server.error_page[405]);
+		else
+			set_error_header(405, "Method Not Allowed", "./error_pages/405.html");
+	else
+		set_error_header(405, "Method Not Allowed", "./error_pages/405.html");
 }
 
 void Response::forbidden()
 {
-	set_error_header(403, "Forbidden", "./error_pages/403.html");
+	int fd;
+	if (_server.error_page.count(403))
+		if ((fd= open(_server.error_page[403].c_str(), O_RDONLY)) != -1)
+			set_error_header(403, "Forbidden", _server.error_page[403]);
+		else
+			set_error_header(403, "Forbidden", "./error_pages/403.html");
+	else
+		set_error_header(403, "Forbidden", "./error_pages/403.html");
 }
 
 void Response::badRequest()
 {
-	set_error_header(400, "Bad Request", "./error_pages/400.html");
+	int fd;
+	if (_server.error_page.count(400))
+		if ((fd= open(_server.error_page[400].c_str(), O_RDONLY)) != -1)
+			set_error_header(400, "Bad Request", _server.error_page[405]);
+		else
+			set_error_header(400, "Bad Request", "./error_pages/400.html");
+	else
+		set_error_header(400, "Bad Request", "./error_pages/400.html");
 }
 
 void Response::notFound()
 {
-	set_error_header(404, "Not Found", "./error_pages/404.html");
+	int fd;
+	if (_server.error_page.count(404))
+		if ((fd = open(_server.error_page[404].c_str(), O_RDONLY)) != -1)
+			set_error_header(404, "Not Found", _server.error_page[404]);
+		else
+			set_error_header(404, "Not Found", "./error_pages/404.html");
+	else
+		set_error_header(404, "Not Found", "./error_pages/404.html");
 }
 
 void Response::httpVersionNotSupported(std::string const &version)
 {
-	set_error_header(505, "HTTP Version Not Supported", "./error_pages/505.html");
+	int fd;
+	if (_server.error_page.count(505))
+		if ((fd= open(_server.error_page[505].c_str(), O_RDONLY)) != -1)
+			set_error_header(505, "HTTP Version Not Supported", _server.error_page[505]);
+		else
+			set_error_header(505, "HTTP Version Not Supported", "./error_pages/505.html");
+	else
+		set_error_header(505, "HTTP Version Not Supported", "./error_pages/505.html");
 }
 
 
 void Response::internalError()
 {
-	set_error_header(500, "Internal Server Error", "./error_pages/500.html");
+	int fd;
+	if (_server.error_page.count(500))
+		if ((fd= open(_server.error_page[500].c_str(), O_RDONLY)) != -1)
+			set_error_header(500, "Internal Server Error", _server.error_page[500]);
+		else
+			set_error_header(500, "Internal Server Error", "./error_pages/500.html");
+	else
+		set_error_header(500, "Internal Server Error", "./error_pages/500.html");
+}
+
+void Response::payloadTooLarge()
+{
+	int fd;
+	if (_server.error_page.count(413))
+		if ((fd= open(_server.error_page[413].c_str(), O_RDONLY)) != -1)
+			set_error_header(413, "Payload Too Large", _server.error_page[413]);
+		else
+			set_error_header(413, "Payload Too Large", "./error_pages/413.html");
+	else
+		set_error_header(413, "Payload Too Large", "./error_pages/413.html");
 }
 
 void Response::time_out()
 {
-	set_error_header(504, "Gateway Time-out", "./error_pages/504.html");
+	int fd;
+	if (_server.error_page.count(504))
+		if ((fd= open(_server.error_page[504].c_str(), O_RDONLY)) != -1)
+			set_error_header(504, "Gateway Time-out", _server.error_page[504]);
+		else
+			set_error_header(504, "Gateway Time-out", "./error_pages/504.html");
+	else
+		set_error_header(504, "Gateway Time-out", "./error_pages/504.html");
 }
 
 void Response::ok(size_t bodysize)
@@ -182,6 +250,21 @@ void Response::ok(size_t bodysize)
 
 std::string Response::get_file_path(){
 	return _filepath;
+}
+
+int Response::check_max_body_size()
+{
+	long long locationsize = stod(_location.max_body_size) * 1000000;
+	struct stat s;
+	stat(_request.getBody().c_str(), &s);
+	std::cout << locationsize << std::endl;
+	std::cout << s.st_size << std::endl;
+	if (s.st_size <= locationsize)
+	{
+		std::cout << _response.size() << " " << locationsize << std::endl;
+		return (1);
+	}
+	return (0);
 }
 
 void Response::create_file()
@@ -221,11 +304,6 @@ Location_block Response::getLocation(Server_block &server)
         for (int i = 0; i < server.all_locations.size(); i++){
             if (server.all_locations[i].path == path){ // gennerate file to uplade
 				_path = save;
-                if (server.all_locations[i].return_path.size()){ //send responce
-                    //std::cout << "--------------------------------Return function---------------\n";
-                    //std::cout << "Return code is " << l_block.return_code << "  to path" << l_block.return_path << std::endl;
-                    //std::cout << "--------------------------------Return function---------------\n";
-                }
 				return server.all_locations[i];
             }
          }
@@ -490,7 +568,8 @@ std::string  cgi(Request request, Server_block server, std::string cgi_runner, s
 		dup2(fd_in, STDIN_FILENO);
 		dup2(fd_out, STDOUT_FILENO);
 		int exec = execve(vars[0], vars, meta_vars);
-		perror("Execve Fail"); //? remove it 
+		output += "500 FAIL\r\n";
+		return output;	
  	}
 	else{
 	
@@ -523,8 +602,17 @@ std::string  cgi(Request request, Server_block server, std::string cgi_runner, s
 void Response::handleRequest(Server_block server) {
 	 //* WORK ON CGI 
 	Location_block location = getLocation(server);
+	_location = location;
+	_server = server;
 	_path = location.root + _path;
-	if (location.return_path != "" && location.return_path.size()) //? for return
+	if (_request.getBody().size() && location.max_body_size.size() && !check_max_body_size())
+	{
+		std::cout << _response << std::endl;
+		this->payloadTooLarge();
+		create_file();
+		return;
+	}
+	if (location.return_path.size())
 	{
 		int statuscode = std::stoi(location.return_code);
 		set_redirection(statuscode, location.return_path);
@@ -534,7 +622,8 @@ void Response::handleRequest(Server_block server) {
 
 	struct stat s, s2;
 	stat(_path.c_str(), &s);
-	if(s.st_mode & S_IFDIR)
+	// if(s.st_mode & S_IFDIR)
+	if(S_ISDIR(s.st_mode))
 	{
 
 		std::fstream * file = new std::fstream();
@@ -550,7 +639,7 @@ void Response::handleRequest(Server_block server) {
 			delete file;
 			return ;
 		}
-		else{
+		else if (_request.getRequestMethod() != "DELETE"){
 			if (_path.size() && _path[_path.size() - 1] != '/')
 				_path += "/" + location.index_file;
 			else
@@ -568,7 +657,6 @@ void Response::handleRequest(Server_block server) {
 			}
 			else if (_request.getRequestMethod() == "DELETE" &&
 					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "DELETE") != location.allowed_funct.end()){
-				std::cout << "I'm here to delete\n\n";
 				this->handleDeleteRequest();
 			}
 			else 
@@ -583,22 +671,45 @@ void Response::handleRequest(Server_block server) {
 	else if ( _request.getRequestMethod() == "POST"){
 		if (std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "POST") != location.allowed_funct.end())
 			this->handlePostRequest(server, location);
+		else
+		{
+			this->unallowedMethod();
+			create_file();
+		}
+	}
+	else if ( _request.getRequestMethod() == "DELETE"){
+		if (std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "DELETE") != location.allowed_funct.end())
+			this->handleDeleteRequest();
+		else
+		{
+			this->unallowedMethod();
+			create_file();
+		}
+	}
+	else if ( _request.getRequestMethod() == "GET"){
+		if (std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "GET") != location.allowed_funct.end())
+			this->handleGetRequest(server, location);
+		else
+		{
+			this->unallowedMethod();
+			create_file();
+		}
 	}
 	else{		
-			struct stat fileStat;
-			_body.open("./error_pages/404.html");
-			stat ("./error_pages/404.html", &fileStat);
+		struct stat fileStat;
+		_body.open("./error_pages/404.html");
+		stat ("./error_pages/404.html", &fileStat);
 
-			int fd = open("./error_pages/404.html", O_RDONLY);
-			fcntl(fd, F_SETFL, O_NONBLOCK);
-			char buff[fileStat.st_size];
-			int rd = read(fd, buff, fileStat.st_size);
-			notFound();
-			_response += std::string(buff, rd);
-			close(fd);
-			_body.close();
-			create_file();
-			return;
+		int fd = open("./error_pages/404.html", O_RDONLY);
+		fcntl(fd, F_SETFL, O_NONBLOCK);
+		char buff[fileStat.st_size];
+		int rd = read(fd, buff, fileStat.st_size);
+		notFound();
+		_response += std::string(buff, rd);
+		close(fd);
+		_body.close();
+		create_file();
+		return;
 	}
 
 }
@@ -613,7 +724,9 @@ void Response::handleGetRequest(Server_block server, Location_block location)
 			std::cout <<  "path is in cgi " << _path << std::endl;
 			if (file_is_suported_from_cgi(location, _path)){ //! run cgi
 				std::string cgi_runner  = location.root + '/' + location.cgi_path;
-				if (1 == 1){//! check for file to execute if true run cgi	
+				int fd = open(_path.c_str(), O_RDONLY);
+				close(fd);
+				if (fd > 0){//! check for file to execute if true run cgi	
 					std::string cgi_output = cgi(_request, server, cgi_runner, _path, _request.getBody());
 					if (cgi_output.find("Status:", 0) == -1)
 						_response += "HTTP/1.1 200 Ok\r\n"; //! correct this just if there is not status code
@@ -646,20 +759,24 @@ void Response::handleGetRequest(Server_block server, Location_block location)
 	struct stat fileStat;
 	time_t rawtime;
 	stat (_path.c_str(), &fileStat);
-	int fd = open(_path.c_str(), O_RDONLY);
+	int fd;
+	if ((fd = open(_path.c_str(), O_RDONLY)) == -1)
+	{
+		this->notFound();
+		create_file();
+		return;
+	}
 	fcntl(fd, F_SETFL, O_NONBLOCK);
 	// char buff[fileStat.st_size];
 	char buff[1001] = {0};
 	this->ok(fileStat.st_size);
 	int reading = 0;
 	while((reading = read(fd, buff, 1000))){
-		_response += std::string(buff, reading);
+		_response +=  std::string(buff, reading);
 		bzero(buff, 1000);
 	}
 	close(fd);
-	create_file();
-
-				
+	create_file();				
 }
 
 
@@ -671,7 +788,9 @@ void Response::handlePostRequest(Server_block &server, Location_block &location)
 				std::cout <<  "path is in cgi " << _path << std::endl;
 				if (file_is_suported_from_cgi(location, _path)){ //! run cgi
 					std::string cgi_runner  = location.root + '/' + location.cgi_path;
-					if (1 == 1){//! check for file to execute if true run cgi	
+					int fd = open(_path.c_str(), O_RDONLY);
+					close(fd);
+					if (fd > 0){//! check for file to execute if true run cgi	
 						std::string cgi_output = cgi(_request, server, cgi_runner, _path, _request.getBody());
 						if (cgi_output.find("Status:", 0) == -1)
 							_response += "HTTP/1.1 200 Ok\r\n"; //! correct this just if there is not status code
@@ -785,20 +904,24 @@ void Response::handleDeleteRequest()
 
 	errno = 0;
 	if (lstat(_path.c_str(), &st) == -1)
-		this->notFound();
-	if (st.st_mode & S_IFDIR) {
-		if ((dirp = opendir(_path.c_str())))
-			deleteDirectoryFiles(dirp, _path);
+	{
+		if (errno == ENOTDIR || errno == ENOENT)
+			this->notFound();
+		else if (errno == EACCES)
+			this->forbidden();
+		else if (errno == EEXIST)
+			this->unallowedMethod();
 	}
-	else if (st.st_mode & S_IFREG)
-		unlink(_path.c_str());
-	if (errno == ENOTDIR)
-		this->notFound();
-    else if (errno == EACCES)
-		this->forbidden();
-    else if (errno == EEXIST)
-		this->unallowedMethod();
     else
+	{
+		if (st.st_mode & S_IFDIR) {
+			_path += (_path.back() != '/') ? "/" : "";
+			if ((dirp = opendir(_path.c_str())))
+				deleteDirectoryFiles(dirp, _path);
+		}
+		else if (st.st_mode & S_IFREG)
+			unlink(_path.c_str());
 		this->ok(0);
+	}
 	create_file();
 }
