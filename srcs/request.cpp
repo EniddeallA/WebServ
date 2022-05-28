@@ -194,7 +194,6 @@ void	Request::parseBody(std::string &req) {
 		// _requestEnd = true;
 		// return ;
 	// }
-	std::cout << "parse body\n";
 	if (_bodyName.empty()) {
 		_bodyName = _bodyToFile();
 		_bodyFile.open(_bodyName.c_str(), std::ofstream::out | std::ofstream::trunc);
@@ -237,7 +236,6 @@ void 		Request::toChuncked(std::string &req) {
 	# define CHUNK_SIZE 0
 	# define CHUNK_BODY 1
 	int status = CHUNK_SIZE;
-	std::cout << "chunked request\n";
 	size_t size = 0;
 
 	all_string_req += req;

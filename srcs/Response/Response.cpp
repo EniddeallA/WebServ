@@ -116,8 +116,6 @@ void Response::set_redirection(int statuscode, std::string path)
 		this->notFound();
 		return;
 	}
-	std::cout << "path is " << path << std::endl;
-	std::cout << "size is " << s.st_size << std::endl;
 	char buff[s.st_size];
 	int reading = read(fd, buff, s.st_size);
 	close(fd);
@@ -260,11 +258,8 @@ int Response::check_max_body_size()
 	long long locationsize = stod(_location.max_body_size) * 1000000;
 	struct stat s;
 	stat(_request.getBody().c_str(), &s);
-	std::cout << locationsize << std::endl;
-	std::cout << s.st_size << std::endl;
 	if (s.st_size <= locationsize)
 	{
-		std::cout << _response.size() << " " << locationsize << std::endl;
 		return (1);
 	}
 	return (0);
@@ -418,8 +413,6 @@ std::vector<std::string> make_meta_variables_for_cgi(Request request, Server_blo
 	std::string meta_variables = "";
 	std::string str;
 
-	std::cout << std::to_string(request.getContentLength()) << "\n";
-	std::cout << request.getContentType() << "\n";
 	// CONTENT_LENGTH size of the body
 	str = "CONTENT_LENGTH=" + std::to_string(request.getContentLength());
 	vec_of_string.push_back(str);
@@ -562,8 +555,6 @@ std::string  Response::cgi(Server_block server, std::string cgi_runner, std::str
 	vars[0] = (char*)cgi_runner.c_str();
 	vars[1] = (char*)script.c_str();
 	vars[2] = NULL;
-	std::cout << cgi_runner << std::endl;
-	std::cout << script << std::endl;
 	std::string output;
 	int pid = fork();	
 	if (pid == 0){
@@ -573,12 +564,10 @@ std::string  Response::cgi(Server_block server, std::string cgi_runner, std::str
 		dup2(fd_in, STDIN_FILENO);
 		dup2(fd_out, STDOUT_FILENO);
 		int exec = execve(vars[0], vars, meta_vars);
-		// output += "500 FAIL\r\n";
 		this->internalError();
 		return output;	
  	}
 	else{
-	
 		int status;
 		while(waitpid(pid, NULL, 0) > 0){
 		}
@@ -591,6 +580,13 @@ std::string  Response::cgi(Server_block server, std::string cgi_runner, std::str
 			output += std::string(s, readed);
 			size += readed;
 		}
+		int i = 0;
+		while(meta_vars[i]){
+			delete[] meta_vars[i++];
+		}
+		delete[] meta_vars;
+		delete[] vars;
+		delete[] s;
 		close(fd);
 		if (readed == -1)
 			return output;
@@ -599,7 +595,6 @@ std::string  Response::cgi(Server_block server, std::string cgi_runner, std::str
 	}
 	return output;
 } 
-//! start_servers segf
 
 //!---------------------------------------------------
 	
@@ -611,7 +606,6 @@ void Response::handleRequest(Server_block server) {
 	_path = location.root + _path;
 	if (_request.getBody().size() && location.max_body_size.size() && !check_max_body_size())
 	{
-		std::cout << _response << std::endl;
 		this->payloadTooLarge();
 		create_file();
 		return;
@@ -729,7 +723,6 @@ void Response::handleGetRequest(Server_block server, Location_block location)
 	//! there is cgi
 	//! check support file
 	if (location.cgi_ext.size() && location.cgi_path.size()){ 
-			std::cout <<  "path is in cgi " << _path << std::endl;
 			if (file_is_suported_from_cgi(location, _path)){ //! run cgi
 				std::string cgi_runner  = location.root + '/' + location.cgi_path;
 				int fd = open(_path.c_str(), O_RDONLY);
@@ -763,8 +756,8 @@ void Response::handleGetRequest(Server_block server, Location_block location)
 	time_t rawtime;
 	stat (_path.c_str(), &fileStat);
 	int fd  = open(_path.c_str(), O_RDONLY);
+
 	fcntl(fd, F_SETFL, O_NONBLOCK);
-	close(fd);
 	if (fd == -1)
 	{
 		this->notFound();
@@ -775,10 +768,11 @@ void Response::handleGetRequest(Server_block server, Location_block location)
 	char buff[1001] = {0};
 	this->ok(fileStat.st_size);
 	int reading = 0;
-	while((reading = read(fd, buff, 1000))){
+	while((reading = read(fd, buff, 1000)) > 0){
 		_response +=  std::string(buff, reading);
 		bzero(buff, 1000);
 	}
+	close(fd);
 	if (reading == -1)
 		this->notFound();
 	create_file();				
@@ -790,7 +784,6 @@ void Response::handlePostRequest(Server_block &server, Location_block &location)
 		//! there is cgi
 		//! check support file
 		if (location.cgi_ext.size() && location.cgi_path.size()){ 
-				std::cout <<  "path is in cgi " << _path << std::endl;
 				if (file_is_suported_from_cgi(location, _path)){ //! run cgi
 					std::string cgi_runner  = location.root + '/' + location.cgi_path;
 					int fd = open(_path.c_str(), O_RDONLY);
@@ -898,7 +891,6 @@ static void deleteDirectoryFiles(DIR * dir, const std::string & path){
 
 void Response::handleDeleteRequest()
 {
-	std::cout << "handle delete request\n";
 	struct stat st;
 	DIR * dirp = NULL;
 
