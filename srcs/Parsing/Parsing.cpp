@@ -69,7 +69,7 @@ std::vector<std::string> parse_the_server_block_by_location_keyword(std::string 
 	}
 	return locations;
 }
-
+//? find server key_word
 int find_serever_key_word(std::string data, int index){
 	int i = 0;
 	int length = data.length();

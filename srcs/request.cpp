@@ -1,8 +1,8 @@
 #include "../includes/request.hpp"
 
-Request::Request() : _error(0), _requestMethod(""), _requestTarget(""), _requestEnd(false),
-	_requestQuery(""), _str(""), _hasBody(false), _keepAlive(true), _headersEnd(false),
-	_bodySize(0), _contentLength(0), _isCL(false), _isTE(false), _serverFound(false) {
+Request::Request() : _error(0), _requestMethod(""), _requestTarget(""), _requestQuery(""),
+	 _str(""), _hasBody(false), _keepAlive(true), _headersEnd(false), _requestEnd(false),
+	_isCL(false), _isTE(false), _serverFound(false), _bodySize(0), _contentLength(0) {
 		_allowedMethods.push_back("GET");
 		_allowedMethods.push_back("POST");
 		_allowedMethods.push_back("DELETE");
@@ -63,39 +63,30 @@ void Request::Parse(std::string &req)
 
 		return ;
 	}
-	try {
-		req = _str.append(req);
-		size_t BOH = _str.find("\r\n"), EOH = _str.find("\r\n\r\n");
-		if (_headersEnd == false && EOH == std::string::npos)
-			return ;
-		else if (_headersEnd == false && EOH != std::string::npos)
-		{
-			parseFirstLine(splinter(_str.substr(0, BOH), ' '));
-			parseHeaders(_str.substr(BOH + 2, EOH - BOH));
-			req = _str.erase(0, EOH + 4);
-			_str = "";
-			_headersEnd = true;
-		}
-		if (_requestMethod == "GET" && _headersEnd == true)
-		{
-			_requestEnd = true;
-			return;
-		}
-		parseBody(req);
-		if (_requestEnd)
-		{	
-			_bodyFile.close();
-			_requestEnd = true;
-		}
+	req = _str.append(req);
+	size_t BOH = _str.find("\r\n"), EOH = _str.find("\r\n\r\n");
+	if (_headersEnd == false && EOH == std::string::npos)
+		return ;
+	else if (_headersEnd == false && EOH != std::string::npos)
+	{
+		parseFirstLine(splinter(_str.substr(0, BOH), ' '));
+		parseHeaders(_str.substr(BOH + 2, EOH - BOH));
+		req = _str.erase(0, EOH + 4);
+		_str = "";
+		_headersEnd = true;
 	}
-	catch (const char * message) {
-		std::cout << "catch _request is end in parse" << message << std::endl;
+	if (_requestMethod == "GET" && _headersEnd == true)
+	{
+		_requestEnd = true;
+		return;
+	}
+	parseBody(req);
+	if (_requestEnd)
+	{	
+		_bodyFile.close();
+		_requestEnd = true;
+	}
 
-		errorHandler();
-		/** WARNING 
-		 * unlink _bodyFile
-		*/
-	}
 };
 
 
@@ -120,14 +111,12 @@ void Request::parseHeaders(std::string headers)
 			vec2[1].erase(0, 1);
 			if (isSpace(vec2[1][0])){
 				_error = BAD_REQUEST;
-				throw "Error while request parsing";
 			}
 		}
 		vec2[0].erase(std::remove_if(vec2[0].begin(), vec2[0].end(), isSpace), vec2[0].end());
 		_headers[vec2[0]] = vec2[1];
 		if (vec2[0].find(" ") != std::string::npos) {
 			_error = BAD_REQUEST;
-			throw "Error while request parsing";
 		}
 		if (lowercase(vec2[0]) == "connection" && lowercase(vec2[1]) == "close")
 			_keepAlive = false;
@@ -149,27 +138,19 @@ void Request::parseFirstLine(std::vector<std::string> vec)
 	*/
 	if (vec.size() != 3){
 		_error = BAD_REQUEST;
-		throw "Error while request parsing";
 	}
 
 	if (vec[2] != HTTP_VERSION) {
 		_error = HTTP_VERSION_NOT_SUPPORTED;
-		throw "Error while request parsing";
 	}
 
 	_requestMethod = vec[0];
-	if (_requestMethod != "POST" && _requestMethod != "DELETE" && _requestMethod != "GET"){
-		_error = METHOD_NOT_ALLOWED;
-		throw "Error while request parsing";
-	}
-
 	size_t found = 0;
 	if ((found = vec[1].find("?")) != std::string::npos) {
 		_requestTarget = vec[1].substr(0, found);
 		_requestQuery = vec[1].substr(found + 1);
 		if (*(_requestTarget.begin()) != '/') {
 			_error = BAD_REQUEST;
-			throw "Error while request parsing";
 		}
 		return ; 
 	}
@@ -180,7 +161,6 @@ void Request::parseFirstLine(std::vector<std::string> vec)
 void	Request::preBody( void ) {
 	if (_headers.find("Host") == _headers.end() || _headers["Host"].empty() ) {
 		_error = BAD_REQUEST;
-		throw "Error while request parsing";
 	}
 	
 }
@@ -199,10 +179,14 @@ void	Request::parseBody(std::string &req) {
 		_bodyFile.open(_bodyName.c_str(), std::ofstream::out | std::ofstream::trunc);
 		// if (_bodyFile.fail() == false){
 		if (_bodyFile.fail() == true){
-			throw "Error while opening file stream [body]";
 		}
 	}
+	if (_isCL == false && _isTE == false && req.empty() == false){
+		_hasBody = true;
+		_error = BAD_REQUEST;
+	}
 	if (_isCL == true) {
+		_hasBody = true;
 		_bodySize += req.size();
 		_bodyFile << req;
 		if (_bodySize == _contentLength) {
@@ -211,11 +195,9 @@ void	Request::parseBody(std::string &req) {
 		}
 		else if (_contentLength < _bodySize) {
 			_error = BAD_REQUEST;
-			throw "Error on request body";
 		}
 	} 
 	else if (_isTE == true) {
-		// std::cerr << "TE not ready yet\n[*] Use CL instead for now\n";
 		toChuncked(req);
 	}
 	else{
@@ -231,7 +213,6 @@ void 		Request::toChuncked(std::string &req) {
 		*/
 	}
 	size_t end = 0;
-	// std::cout << "request is to_chunked" << std::endl;
 
 	# define CHUNK_SIZE 0
 	# define CHUNK_BODY 1
@@ -246,12 +227,12 @@ void 		Request::toChuncked(std::string &req) {
 	}
 	if ((end = all_string_req.find("\r\n0\r\n\r\n")) != std::string::npos){ //? check all_string
 		end = all_string_req.find("\r\n");
+		_hasBody = true;
 		while (end != std::string::npos) {
 			if (status == CHUNK_SIZE) {
 				std::string hex = all_string_req.substr(0, end);
 				if (is_hex_notation(hex) == false){
 					_error = BAD_REQUEST;
-					throw "Error on body parsing ";
 				}
 				size = to_hex(hex);				
 				all_string_req.erase(0, end + 2);
@@ -284,9 +265,6 @@ void		Request::printData( void ) {
 			<< "Error :: [" << _error << "]\n"
 			<< "Port :: [" << _port << "]\n";
 	std::cout << "=================================\n";
-	// for (t_headers::iterator it = _headers.begin(); it != _headers.end(); ++it) {
-		//std:: cout << "[" << (it)->first << "] :: [" << (it)->second << "]\n";
-	// }
 }
 
 std::string	Request::_bodyToFile() {
@@ -363,30 +341,6 @@ Server_block	Request::setServer( std::vector<Server_block> const &serv_confs ) {
 }
 
 
-// int Request::getError( void ) const
-// {
-// 	return _error;
-// }
-
-// std::string Request::getRequestMethod() const
-// {
-// 	return _requestMethod;
-// }
-
-// std::string Request::getRequestTarget() const
-// {
-// 	return _requestTarget;
-// }
-
-// std::string Request::getRequestQuery() const
-// {
-// 	return _requestQuery;
-// }
-
-// std::string Request::getHost( void ) const
-// {
-// 	return _host;
-// }
 
 t_headers Request::getHeaders( void ) const
 {
