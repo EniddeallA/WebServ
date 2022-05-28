@@ -1,5 +1,12 @@
 #include "../../includes/Parsing.hpp"
 
+long int get_current_time(){
+
+	struct timeval tp;
+	gettimeofday(&tp, NULL);
+	long int us = tp.tv_sec * 1000000 + tp.tv_usec;
+	return us;
+}
 std::vector<std::string> split (const std::string s, std::string delim){
 	std::vector<std::string> result;
 	size_t index = s.find(delim);

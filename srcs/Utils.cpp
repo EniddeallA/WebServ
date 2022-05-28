@@ -1,5 +1,5 @@
 #include "../includes/Utils.hpp"
-
+#include "../includes/Parsing.hpp"
 
 std::vector<std::string> splinter(const std::string& line, char del) {
     std::vector<std::string>    ret;
@@ -96,3 +96,4 @@ bool is_hex_notation(std::string const& s)
 {
   return s.find_first_not_of("0123456789abcdefABCDEF") == std::string::npos;
 }
+

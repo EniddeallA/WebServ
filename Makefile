@@ -22,7 +22,7 @@ run :
 	@$(COMPILER) $(CPP_VERSION) $(FLAGS) $(SRCS)  -o $(NAME)
 
 clean :
-	@rm -rf $(NAME)  *.dSYM .vscode a.out
+	@rm -rf $(NAME)  *.dSYM a.out 
 
 fclean : clean
 

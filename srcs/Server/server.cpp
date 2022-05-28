@@ -80,7 +80,6 @@ void start_servers(std::vector<Server_block> &all_servers){
 				else{
 					new_socket = i;
 				}
-
 				if (fcntl(new_socket, F_SETFL, O_NONBLOCK) == -1){
 					throw "Error in fcntl() function";
 				}
@@ -91,7 +90,8 @@ void start_servers(std::vector<Server_block> &all_servers){
 					fd_with_time[new_socket] = get_current_time();
 				}
 				else{
-					s = buffer;
+					// s = buffer;
+					s = "";
 				}
 				// std::cout << s;
 				
@@ -111,7 +111,6 @@ void start_servers(std::vector<Server_block> &all_servers){
 					fd_with_send_size[new_socket] = 0;
 					FD_CLR(new_socket, &_fd_set_read);
 					FD_SET(new_socket, &_fd_set_write);
-
 				}
 			}
 
@@ -129,7 +128,6 @@ void start_servers(std::vector<Server_block> &all_servers){
 
 					fd_with_response_object[new_socket].update_size_sended(sended);
 				}
-
 				if (valread != sended && fd != -1 && valread > 0){
 					int defferent = valread - sended;
 					if (defferent > 0)
@@ -139,7 +137,6 @@ void start_servers(std::vector<Server_block> &all_servers){
 
 
 				if (valread <= 0){ //? after finish sending all responce
-
 					// std::cout << "****************************************************" << std::endl;
 					// std::cout << "finish sendiing data for" << v_of_request_object[new_socket].getRequestTarget() << std::endl;
 					// std::cout << "finish sendiing " << fd_with_response_object[new_socket].get_size_sended() << " of " << fd_with_response_object[new_socket].get_size_of_file() << std::endl;
@@ -173,9 +170,6 @@ void start_servers(std::vector<Server_block> &all_servers){
 					fd_with_response_object[new_socket].get_request().clear();
 				}
 			}
-
-
-
 
 		}
 	}

@@ -1,5 +1,6 @@
 #include "../includes/Response.hpp"
 
+// #include "./cgi.cpp"
 Response::Response(Request	request):
 	// _request(request),
 	_fd(-1),
@@ -102,11 +103,11 @@ void Response::set_redirection(int statuscode, std::string path)
 	stat(path.c_str(), &s);
 	int fd = open(path.c_str(), O_RDONLY);
 	char buff[s.st_size];
-	read(fd, buff, s.st_size);
+	int reading = read(fd, buff, s.st_size);
 	close(fd);
 	_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n";
 	_response += "Connection: close\r\n\r\n";
-	_response += buff;
+	_response += std::string(buff, reading);
 	_response += "\r\n\r\n";
 }
 
@@ -304,6 +305,221 @@ void Response::auto_index(Location_block location)
 		notFound();
 }
 
+//!---------------------------------------------------
+
+
+bool file_is_suported_from_cgi(Location_block location, std::string path){
+    std::string ext = "";
+    int i =  path.size();
+    i--;
+    while (i >= 0){
+        if (path[i] == '.')     
+            break;
+        ext = path[i] + ext;
+        i--;
+    }
+	for (int i = 0; i < location.cgi_ext.size() ; i++){
+		if (ext == location.cgi_ext[i])
+			return true;
+
+	}
+    return false;
+    
+}
+
+
+std::vector<std::string> make_meta_variables_for_cgi(Request request, Server_block server, std::string script){
+	//prefer to return vector insted of tring
+	std::vector<std::string> vec_of_string;
+	std::string meta_variables = "";
+	std::string str;
+
+	std::cout << std::to_string(request.getContentLength()) << "\n";
+	std::cout << request.getContentType() << "\n";
+	// CONTENT_LENGTH size of the body
+	str = "CONTENT_LENGTH=" + std::to_string(request.getContentLength());
+	vec_of_string.push_back(str);
+
+	std::string path = "localhost:" + server.port + request.getRequestTarget() ;
+
+	//CONTENT_TYPE indicate the media type of the resource 
+	//should achraf add this function
+	str = "CONTENT_TYPE=" + request.getContentType();
+	vec_of_string.push_back(str);
+
+	// GATEWAY_INTERFACE  it's CGI/revision.
+	str = "GATEWAY_INTERFACE=CGI/1.1";
+	vec_of_string.push_back(str);
+	
+	//PATH_INFO is the path after the_cgi  The extra path information as given by the client. 
+	// str = "PATH_INFO=" + path;
+	str = "PATH_INFO=/";
+	vec_of_string.push_back(str);
+
+	//PATH_TRANSLATED  translate the path info by convert space and point and , to there value
+	// str = "PATH_TRANSLATED=" + path;
+	str = "PATH_TRANSLATED=/";
+	vec_of_string.push_back(str);
+
+	//QUERY_STRING   is the last data in the url after the question mark
+	str = "QUERY_STRING=" + request.getRequestQuery();
+	vec_of_string.push_back(str);
+
+	//REQUEST_METHOD   is the type of request
+	str = "REQUEST_METHOD=" + request.getRequestMethod();
+	vec_of_string.push_back(str);
+
+	//SCRIPT_NAME  is the name of the script to run
+	// str = "SCRIPT_NAME=" + request.getRequestTarget();
+
+	// str = "SCRIPT_NAME=" + script;
+	str = "SCRIPT_NAME=localhost" + server.port;
+	vec_of_string.push_back(str);
+	vec_of_string.push_back("SCRIPT_FILENAME=" + script);
+
+	
+	//SERVER_NAME the name of server that user target , i should get it from dollar
+
+	str = "SERVER_NAME=" + request.getHost();
+	vec_of_string.push_back(str);
+	
+	//SERVER_PORT the port of server that user target , i should get it from dollar
+	// str = "SCRIPT_PORT=" +  server.port;
+	// vec_of_string.push_back(str);
+	
+	//SERVER_PROTOCOL the version of http that the server support
+	str = "SERVER_PROTOCOL=HTTP/1.1";
+	vec_of_string.push_back(str);
+
+	//SERVER_SOFTWARE the version of http that the server support
+	str = "SERVER_SOFTWARE=FT_Web_SERVE";
+	vec_of_string.push_back(str);
+
+	str = "REDIRECT_STATUS=200";
+	vec_of_string.push_back(str);
+
+
+	str = "FCGI_ROLE=RESPONDER";
+	vec_of_string.push_back(str);
+
+	str = "REQUEST_SCHEME=http";
+	vec_of_string.push_back(str);
+
+	str = "PATH=" + std::string(std::getenv("PATH"));
+	vec_of_string.push_back(str);
+
+
+	vec_of_string.push_back("SCRIPT_FILENAME=" +  script);
+
+
+	vec_of_string.push_back("SERVER_PORT="+ server.port);
+	vec_of_string.push_back("REMOTE_ADDR=");
+	vec_of_string.push_back("HTTP_HOST=");
+
+
+vec_of_string.push_back("REQUEST_URI=REQ");
+vec_of_string.push_back("DOCUMENT_URI=" + script);
+
+/*REMOTE_HOST
+REMOTE_IDENT
+REMOTE_USER
+
+
+("REQUEST_URI=" + _reqResource);
+("DOCUMENT_URI=" + _resource);
+<!-- ("SCRIPT_NAME=" + _resource); -->
+("SCRIPT_FILENAME=" + _hostPath);
+<!-- ("PATH_TRANSLATED=" + _hostPath); -->
+<!-- ("QUERY_STRING=" + _queryString); -->
+<!-- ("SERVER_NAME=" + _hostName); -->
+<!-- ("REQUEST_METHOD=" + get_method(_reqMethod)); -->
+("DOCUMENT_ROOT=" + _root);
+<!-- ("GETAWAY_INTERFACE=CGI/1.1"); -->
+<!-- ("SERVER_PROTOCOL=HTTP/1.1"); -->
+<!-- ("REDIRECT_STATUS=200"); -->
+<!-- ("FCGI_ROLE=RESPONDER"); -->
+<!-- ("REQUEST_SCHEME=http"); -->
+<!-- ("SERVER_SOFTWARE=webserv/1.1 " + getOsName()); -->
+("SERVER_PORT=" + getServerPort(_reqCMservers));
+<!-- ("PATH=" + std::string(std::getenv("PATH"))); -->
+
+const std::pair<std::string, int> &remoteInfo = _req.GetClientInfo();
+
+
+envHeaders.push_back("REMOTE_ADDR=" + remoteInfo.first);
+envHeaders.push_back("REMOTE_PORT=" + to_string(remoteInfo.second));
+addRequestHeaders(envHeaders);
+*/
+
+	return vec_of_string;
+}
+
+
+
+char **vector_to_char(std::vector<std::string> params){
+	char **out = new char*[params.size() + 1];
+	for (size_t i = 0; i < params.size(); i++){
+		out[i] = strdup(params[i].c_str());
+	}
+	out[params.size()] = NULL;
+
+	return out;
+}
+
+std::string  cgi(Request request, Server_block server, std::string cgi_runner, std::string script, std::string body_file){
+	std::vector<std::string> vec_of_meta_vars = make_meta_variables_for_cgi(request, server, script);
+	char **meta_vars = vector_to_char(vec_of_meta_vars);
+	long int now = get_current_time();
+	std::stringstream ss;
+	ss << now;
+	std::string file_name =  ss.str();
+
+	char **vars = new char*[3];
+	vars[0] = (char*)cgi_runner.c_str();
+	vars[1] = (char*)script.c_str();
+	vars[2] = NULL;
+	std::cout << cgi_runner << std::endl;
+	std::cout << script << std::endl;
+	std::string output;
+	int pid = fork();	
+	if (pid == 0){
+		int fd_out = criet_and_open_file(file_name);
+		int fd_in = open(body_file.c_str(), O_RDONLY);
+		// if (fd_in >)
+		std::cout << "==" << body_file.c_str() << std::endl;
+		dup2(fd_in, STDIN_FILENO);
+		dup2(fd_out, STDOUT_FILENO);
+		int exec = execve(vars[0], vars, meta_vars);
+		perror("Execve Fail"); //? remove it 
+ 	}
+	else{
+	
+		int status;
+		while(waitpid(pid, NULL, 0) > 0){
+		}
+		int fd = open(file_name.c_str(), O_RDONLY);
+		fcntl(fd, F_SETFL, O_NONBLOCK);
+		char *s = new char[1000];
+		int readed = 0;
+		size_t size = 0;
+		while((readed = read(fd, s, 1000)) > 0){
+			output += std::string(s, readed);
+			size += readed;
+		}
+		close(fd);
+		unlink(file_name.c_str());
+		std::cout << "----------------CGI OUTPUT--------------------\n";
+		std::cout << output;
+		std::cout << "----------------CGI OUTPUT+++++++++++++++++++++++\n";
+
+		return output;
+	}
+	return output;
+} 
+//! start_servers segf
+
+//!---------------------------------------------------
+	
 void Response::handleRequest(Server_block server) {
 	 //* WORK ON CGI 
 	Location_block location = getLocation(server);
@@ -315,12 +531,7 @@ void Response::handleRequest(Server_block server) {
 		create_file();
 		return;
 	}
-	// if (_file_not_found){
-		
-	// 	notFound();
-	// 	create_file();
-	// 	return;
-	// }
+
 	struct stat s, s2;
 	stat(_path.c_str(), &s);
 	if(s.st_mode & S_IFDIR)
@@ -353,11 +564,13 @@ void Response::handleRequest(Server_block server) {
 			_is_request_handled = true;
 			if (_request.getRequestMethod() == "GET" &&
 					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "GET") != location.allowed_funct.end()){
-					this->handleGetRequest();		
+					this->handleGetRequest(server, location);		
 			}
 			else if (_request.getRequestMethod() == "DELETE" &&
-					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "DELETE") != location.allowed_funct.end())
+					std::find(location.allowed_funct.begin(), location.allowed_funct.end(), "DELETE") != location.allowed_funct.end()){
+				std::cout << "I'm here to delete\n\n";
 				this->handleDeleteRequest();
+			}
 			else 
 			{
 				unallowedMethod();
@@ -390,9 +603,46 @@ void Response::handleRequest(Server_block server) {
 
 }
 
-void Response::handleGetRequest()
+void Response::handleGetRequest(Server_block server, Location_block location)
 {
+	//?------------------------------------------------------------------------------------
 
+	//! there is cgi
+	//! check support file
+	if (location.cgi_ext.size() && location.cgi_path.size()){ 
+			std::cout <<  "path is in cgi " << _path << std::endl;
+			if (file_is_suported_from_cgi(location, _path)){ //! run cgi
+				std::string cgi_runner  = location.root + '/' + location.cgi_path;
+				if (1 == 1){//! check for file to execute if true run cgi	
+					std::string cgi_output = cgi(_request, server, cgi_runner, _path, _request.getBody());
+					if (cgi_output.find("Status:", 0) == -1)
+						_response += "HTTP/1.1 200 Ok\r\n"; //! correct this just if there is not status code
+					else{
+							int start = cgi_output.find("Status", 0);
+							int end = cgi_output.find("\r\n", start);
+							std::string status_code = cgi_output.substr(start + 7, end);
+						_response += "HTTP/1.1 " + status_code + "\r\n"; //! correct this just if there is not status code
+
+					}
+					_response += cgi_output;
+					create_file();
+					return;
+				}
+				else{			//!  404
+					time_t rawtime;
+					time(&rawtime);
+					_response += "HTTP/1.1 404 Not Found\r\n";
+					_response += "Date: " + std::string(ctime(&rawtime));
+					_response += "\r\nServer: webserver";
+					_response += "\r\nContent-Length: 0";
+					_response +=  "\r\nConnection: close";
+					_response +=  "\r\nAccept-Ranges: bytes\r\n\r\n";
+					create_file();
+					return;
+				}
+			}
+	}
+	//?------------------------------------------------------------------------------------
 	struct stat fileStat;
 	time_t rawtime;
 	stat (_path.c_str(), &fileStat);
@@ -403,7 +653,7 @@ void Response::handleGetRequest()
 	this->ok(fileStat.st_size);
 	int reading = 0;
 	while((reading = read(fd, buff, 1000))){
-		_response.append(buff, reading);
+		_response += std::string(buff, reading);
 		bzero(buff, 1000);
 	}
 	close(fd);
@@ -413,11 +663,42 @@ void Response::handleGetRequest()
 }
 
 
-//? check if there is uplode_store if not 
-	
 void Response::handlePostRequest(Server_block &server, Location_block &location){
 	if (location.upload_store == ""){ //? return forbiden function
-		if (1 == 11){ //? check for cgi  if there is and support extention		{
+		//! there is cgi
+		//! check support file
+		if (location.cgi_ext.size() && location.cgi_path.size()){ 
+				std::cout <<  "path is in cgi " << _path << std::endl;
+				if (file_is_suported_from_cgi(location, _path)){ //! run cgi
+					std::string cgi_runner  = location.root + '/' + location.cgi_path;
+					if (1 == 1){//! check for file to execute if true run cgi	
+						std::string cgi_output = cgi(_request, server, cgi_runner, _path, _request.getBody());
+						if (cgi_output.find("Status:", 0) == -1)
+							_response += "HTTP/1.1 200 Ok\r\n"; //! correct this just if there is not status code
+						else{
+							int start = cgi_output.find("Status", 0);
+							int end = cgi_output.find("\r\n", start);
+							std::string status_code = cgi_output.substr(start + 7, end);
+							_response += "HTTP/1.1 " + status_code + "\r\n"; //! correct this just if there is not status code
+						}
+						_response += cgi_output;
+						create_file();
+						return;
+					}
+					else{			//!  404
+						time_t rawtime;
+						time(&rawtime);
+						_response += "HTTP/1.1 404 Not Found\r\n";
+						_response += "Date: " + std::string(ctime(&rawtime));
+						_response += "\r\nServer: webserver";
+						_response += "\r\nContent-Length: 0";
+						_response +=  "\r\nConnection: close";
+						_response +=  "\r\nAccept-Ranges: bytes\r\n\r\n";
+						create_file();
+						return;
+					}
+
+				}
 
 		}
 		else{ //? if th
@@ -476,33 +757,25 @@ static void deleteDirectoryFiles(DIR * dir, const std::string & path){
 	std::string filepath;
 	DIR * dirp;
 	while ((entry = readdir(dir))) {
-
 		filepath = path + entry->d_name;
-
-		if (std::strcmp(entry->d_name, ".") == 0 || std::strcmp(entry->d_name, "..") == 0) {
+		if (std::strcmp(entry->d_name, ".") == 0 || std::strcmp(entry->d_name, "..") == 0)
 			continue;
-		}
-
-		if (stat(filepath.c_str(), &st) == -1) {
+		if (stat(filepath.c_str(), &st) == -1)
 			std::cerr << "stat(): " << filepath << ": " << strerror(errno) << std::endl;
-		}
-
 		if (S_ISDIR(st.st_mode)) {
 			filepath += "/";
-			if ((dirp = opendir(filepath.c_str()))) {
+			if ((dirp = opendir(filepath.c_str())))
 				deleteDirectoryFiles(dirp, filepath.c_str());
-			} else {
+			else
 				std::cerr << "opendir(): " << filepath.c_str() << ": " << strerror(errno) << std::endl;
-			}
-		} else {
-			if (remove(filepath.c_str()) == -1) {
+		} 
+		else {
+			if (remove(filepath.c_str()) == -1)
 				std::cerr << "remove() file: " << filepath.c_str() << ": " << strerror(errno) << std::endl;
-			}
 		}
 	}
-	if (remove(path.c_str()) == -1) {
+	if (remove(path.c_str()) == -1)
 		std::cerr << "remove() dir: " << path.c_str() << ": " << strerror(errno) << std::endl;
-	}
 }
 
 void Response::handleDeleteRequest()
@@ -511,40 +784,21 @@ void Response::handleDeleteRequest()
 	DIR * dirp = NULL;
 
 	errno = 0;
-	if (lstat(_request.getBody().c_str(), &st) == -1) {
-		if (errno == ENOTDIR) {
-			throw StatusCodeException(HttpStatus::conflict);
-		} else {
-			throw StatusCodeException(HttpStatus::notFound);
-		}
+	if (lstat(_path.c_str(), &st) == -1)
+		this->notFound();
+	if (st.st_mode & S_IFDIR) {
+		if ((dirp = opendir(_path.c_str())))
+			deleteDirectoryFiles(dirp, _path);
 	}
-
-	if (S_ISDIR(st.st_mode)) {
-		if (_request.getRequestTarget().at(_request.getRequestTarget().length() - 1) != '/') {
-			throw StatusCodeException(HttpStatus::conflict);
-		} else {
-			if ((dirp = opendir(_request.getBody().c_str()))) {
-				deleteDirectoryFiles(dirp, _request.getBody());
-			}
-		}
-	} else {
-		remove(_request.getBody().c_str());
-	}
-
-	if (errno) {
-		perror("");
-	}
-	if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG) {
-		throw StatusCodeException(HttpStatus::notFound);
-    } else if (errno == EACCES || errno == EPERM) {
-		throw StatusCodeException(HttpStatus::forbidden);
-    } else if (errno == EEXIST) {
-		throw StatusCodeException(HttpStatus::methodNotAllowed);
-    } else if (errno == ENOSPC) {
-		throw StatusCodeException(HttpStatus::insufficientStorage);
-    } else if (errno) {
-		throw StatusCodeException(HttpStatus::internalServerError);
-    } else {
-		throw StatusCodeException(HttpStatus::noContent);
-	}
+	else if (st.st_mode & S_IFREG)
+		unlink(_path.c_str());
+	if (errno == ENOTDIR)
+		this->notFound();
+    else if (errno == EACCES)
+		this->forbidden();
+    else if (errno == EEXIST)
+		this->unallowedMethod();
+    else
+		this->ok(0);
+	create_file();
 }

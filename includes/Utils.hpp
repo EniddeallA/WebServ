@@ -30,5 +30,5 @@ std::string				 time_last_modification(struct stat buffer);
 std::string              lowercase(std::string src);
 std::string				 trim(const std::string& line);
 bool					 is_hex_notation(std::string const& s);
-
+// bool 					file_is_suported_from_cgi(Location_block, std::string path);
 #endif
