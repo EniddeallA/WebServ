@@ -30,7 +30,6 @@ void start_servers(std::vector<Server_block> &all_servers){
 	std::map<int, int> fd_with_send_size;
 	std::map<int, long int> fd_with_time;
 	int max_server_fd = fd_max;
-	int  count_zero = 0;
 	std::string all_string = "";
 	struct timeval select_time;
 	select_time.tv_sec = 1;
@@ -39,8 +38,8 @@ void start_servers(std::vector<Server_block> &all_servers){
 		bzero(buffer, BUFFER);
 		_fd_set_read_temp = _fd_set_read;
 		_fd_set_write_temp = _fd_set_write;
-		// std::cout << "before_select" << std::endl;
-		int selected = select(fd_max + 1, &_fd_set_read_temp, &_fd_set_write_temp, NULL, &select_time); //? check timeout
+		int selected;
+		selected = select(fd_max + 1, &_fd_set_read_temp, &_fd_set_write_temp, NULL, &select_time); //? check timeout
 		//! check for time out ----------------------------*
 		for (int i = 0; i < fd_max + 1; i++){
 			long int now = get_current_time();

@@ -20,10 +20,10 @@ std::vector<std::string> splinter(const std::string& line, char del) {
     return ret;
 }
 
-std::vector<std::string> splinter2(const std::string& line, char del) {
+std::vector<std::string> splinter2(const std::string& line , char del) {
     std::vector<std::string>    ret;
     std::string                 tmp;
-    size_t     i = 0, start = line.find(':'), end = 0;
+    size_t     start = line.find(del);
     
     ret.push_back(line.substr(0, start));
     ret.push_back(line.substr(start + 1, line.length() - start));
@@ -70,7 +70,7 @@ std::string	time_last_modification(struct stat buffer)
 std::string              lowercase(std::string src) {
     std::string ret = "";
 
-    for (int i = 0; i < src.length(); i++) {
+    for (unsigned long i = 0; i < src.length(); i++) {
         if (src[i] >= 'A' && src[i] <= 'Z') {
             ret += char(src[i] + 32);
         } else {

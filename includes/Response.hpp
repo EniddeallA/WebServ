@@ -25,7 +25,6 @@ class Response
 		Location_block _location;
 		std::string _response;
 		int _fd;
-		fd_set _set;
 		bool _is_request_handled;
 		std::fstream _body;
 		std::string _path;
@@ -61,7 +60,7 @@ class Response
 		void unallowedMethod();
 		void badRequest();
 		void internalError();
-		void httpVersionNotSupported(std::string const &version);
+		void httpVersionNotSupported();
 		void time_out();
 		void notFound();
 		void forbidden();
@@ -70,7 +69,7 @@ class Response
 
 		void create_file();
 		int check_max_body_size();
-		void auto_index(Location_block location);
+		void auto_index();
 		Location_block getLocation(Server_block &server);
 		void handleRequest(Server_block server);
 		void handleGetRequest(Server_block server, Location_block location);
