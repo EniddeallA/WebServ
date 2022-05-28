@@ -861,7 +861,7 @@ void Response::handlePostRequest(Server_block &server, Location_block &location)
 		else //! check for error page in locaction , check with creeper
 			_response += "HTTP/1.1 409 Conflict\r\n";
 		_response += "Date: " + std::string(ctime(&rawtime));
-		_response += "\r\nServer: webserver";
+		_response += "Server: webserver";
 		_response += "\r\nContent-Length: 0";
 		_response +=  "\r\nConnection: close";
 		_response +=  "\r\nAccept-Ranges: bytes\r\n\r\n";

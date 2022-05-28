@@ -39,7 +39,6 @@ void start_servers(std::vector<Server_block> &all_servers){
 		bzero(buffer, BUFFER);
 		_fd_set_read_temp = _fd_set_read;
 		_fd_set_write_temp = _fd_set_write;
-		// std::cout << "before_select" << std::endl;
 		int selected = select(fd_max + 1, &_fd_set_read_temp, &_fd_set_write_temp, NULL, &select_time); //? check timeout
 		//! check for time out ----------------------------*
 		for (int i = 0; i < fd_max + 1; i++){

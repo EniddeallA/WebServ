@@ -216,6 +216,7 @@ void	Request::parseBody(std::string &req) {
 		}
 	} 
 	else if (_isTE == true) {
+		// std::cerr << "TE not ready yet\n[*] Use CL instead for now\n";
 		toChuncked(req);
 	}
 	else{
@@ -296,7 +297,7 @@ std::string	Request::_bodyToFile() {
 	std::stringstream iss;
 
 	// iss << "/tmp/websev_body_" << i ;
-	iss << "/tmp/tmp_file__89" + std::to_string(i);
+	iss << "./tmp_file__89" + std::to_string(i);
 	return iss.str();
 }
 
