@@ -35,7 +35,7 @@
 #include <algorithm>
 #include <sys/time.h>
 
-#define CGI_TIME_OUT 10000
+#define CGI_TIME_OUT 2000000
 #define REQUEST_TIME_OUT 1000000
 
 typedef std::map<std::string, std::string>::iterator _itr;

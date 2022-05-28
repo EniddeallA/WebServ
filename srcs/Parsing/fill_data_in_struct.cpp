@@ -1,5 +1,6 @@
 #include "../../includes/Parsing.hpp"
 
+//? insert data in server_block
 void fill_server_data(Server_block &server, _itr begin, _itr end){
 	std::string key = begin->first;
 	std::string value = begin->second;		
@@ -11,7 +12,7 @@ void fill_server_data(Server_block &server, _itr begin, _itr end){
 			if (data.size() == 2){
 				server.ip = split(value, ":")[0];
 				server.port = split(value, ":")[1];
-				//check if port is digits
+				//?	check if port is digits
 				if (syntax_of_port_is_correct(server.port) == false)
 					throw "Port argument should be just digit charachters";
 			}
@@ -44,10 +45,7 @@ void fill_server_data(Server_block &server, _itr begin, _itr end){
 		}
 		else if(key == "client_max_body_size"){
 			server.max_body_size = value;
-			// server.max_body_size_in_kb = convert_to_kb( )
 		}
-		// else if(key == "root")
-			// server.root = value;
 		begin++;
 	}
 	return;
@@ -56,11 +54,10 @@ void fill_server_data(Server_block &server, _itr begin, _itr end){
 void fill_location_data(Server_block server, Location_block &location, _itr begin, _itr end){
 	std::string key = begin->first;
 	std::string value = begin->second;
-	// fill the data that can be in location and server bloc in location
+	//? fill the data that can be in location and server bloc in location
 	location.allowed_funct = server.allowed_funct;
 	location.allowed = server.allowed;
 	location.upload_store = server.upload_store;
-	// location.root = server.root;
 	location.max_body_size = server.max_body_size;
 	while (begin != end){
 		key = begin->first;
@@ -101,7 +98,7 @@ void fill_location_data(Server_block server, Location_block &location, _itr begi
 	}
 
 }
-
+	//? duplicate server_names , and just if there is duplicate port 
 bool check_server_name_duplicate(std::vector<std::string> server_1, std::vector<std::string> server_2){
 	for (size_t i = 0; i < server_1.size(); i++){
 		for (size_t j = 0; j < server_2.size(); j++){
@@ -111,7 +108,7 @@ bool check_server_name_duplicate(std::vector<std::string> server_1, std::vector<
 	}
 	return true;
 }
-
+//? check duplicate ports
 void check_duplicate_server(std::vector<Server_block> &all_servers){
 	for (size_t i = 0; i < all_servers.size(); i++){
 		for (size_t j = i + 1; j < all_servers.size(); j++){
@@ -122,7 +119,7 @@ void check_duplicate_server(std::vector<Server_block> &all_servers){
 	}
 	
 }
-
+//? check duplicate locations names
 void check_duplicate_locations(std::vector<Location_block> &all_locations){
 	for (size_t i = 0; i < all_locations.size(); i++){
 		for (size_t j = i + 1; j < all_locations.size(); j++){
@@ -133,7 +130,7 @@ void check_duplicate_locations(std::vector<Location_block> &all_locations){
 	}
 	
 }
-
+//? check if there is any missing data
 void check_for_server_missing_data(Server_block server){
 	if (server.port.size() == 0)
 		throw "missing port arg";
@@ -141,11 +138,9 @@ void check_for_server_missing_data(Server_block server){
 		throw "missing ip arg";
 	if (server.all_locations.size() == 0)
 		throw "missing locations arg";
-
 }
 
-
-
+//? check if there is any missing data in location 
 void check_for_location_missing_data(Location_block location){
 	if (location.path.size() == 0)
 		throw "missing location path arg";
@@ -153,6 +148,7 @@ void check_for_location_missing_data(Location_block location){
 		throw "missing ip arg";
 }
 
+//? fill data in struct location and server
 void fill_data_in_struct(std::vector<Server_block> &all_servers){
 	int size = all_servers.size();
 	for (int i = 0; i < size; i++){
@@ -167,7 +163,11 @@ void fill_data_in_struct(std::vector<Server_block> &all_servers){
 			check_for_location_missing_data(all_servers[i].all_locations[j]);
 		}
 		check_duplicate_locations(all_servers[i].all_locations);
+		if (all_servers[i].all_locations.size() == 0)
+			throw "missing of location in server block";
+			
 	}
 	check_duplicate_server(all_servers);
-	//! check for missing data
+	if (all_servers.size() == 0)
+		throw "missing of servers";
 }

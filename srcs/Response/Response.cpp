@@ -1,12 +1,9 @@
 #include "../../includes/Response.hpp"
 
-// #include "./cgi.cpp"
 Response::Response(Request	request):
-	// _request(request),
 	_fd(-1),
 	is_autoindex(0),
-	_size_sended(0)
-{
+	_size_sended(0){
 	_request = request;
 }
 
@@ -59,11 +56,6 @@ int Response::get_fd( void )
 void Response::close_fd( void ){
 	close(_fd);
 }
-/*
-	*To do:
-		- Accurate response status codes {90%}
-		- GET POST DELETE {90%}
-*/
 
 void Response::set_error_header(int statuscode, std::string msg, std::string path)
 {
@@ -168,7 +160,6 @@ void Response::badRequest()
 		set_error_header(400, "Bad Request", _server.error_page[405]);
 	else
 		set_error_header(400, "Bad Request", "./error_pages/400.html");
-	
 }
 
 void Response::notFound()
@@ -218,13 +209,20 @@ void Response::payloadTooLarge()
 
 void Response::time_out()
 {
-	int fd = open(_server.error_page[504].c_str(), O_RDONLY);
-	fcntl(fd, F_SETFL, O_NONBLOCK);
+	int fd = -1;
+	if (_server.error_page.count(504))
+		fd = open(_server.error_page[504].c_str(), O_RDONLY);
+	if (fd != -1)
+		fcntl(fd, F_SETFL, O_NONBLOCK);
 	close(fd);
-	if (_server.error_page.count(504) && fd != -1)
+	if (_server.error_page.count(504) && fd != -1){
+
 		set_error_header(504, "Gateway Time-out", _server.error_page[504]);
-	else
+	}
+	else{
+
 		set_error_header(504, "Gateway Time-out", "./error_pages/504.html");
+	}
 }
 
 void Response::ok(size_t bodysize)
@@ -263,6 +261,7 @@ int Response::check_max_body_size()
 	return (0);
 }
 
+//? we use current time to criet file
 void Response::create_file()
 {
 	struct timeval tp;
@@ -275,20 +274,17 @@ void Response::create_file()
 	out << _response;
 	out.close();
 	_fd = open(filepath.c_str(), O_RDONLY);
-	fcntl(_fd, F_SETFL, O_NONBLOCK); // LEARN MORE ABOUT fcntl
+	fcntl(_fd, F_SETFL, O_NONBLOCK);
 	_size_sended = 0;
 }
 
+//? get what location user is targitting from server
 Location_block Response::getLocation(Server_block &server)
 {
-    // if they are return function there
-    // std::vector<std::string> splited_path = split(path, "/");
-	//_request.printData();
 	_file_not_found = 0;
 	std::string path = _request.getRequestTarget();
 	std::string save = "";
 	std::string concate  = "";
-    // Location_block l_block;
     unsigned long i = 0;
     int count = 0;
     while (i < path.size()){
@@ -298,7 +294,7 @@ Location_block Response::getLocation(Server_block &server)
     }
     for (int r = 0; r < count + 1; r++){
         for (unsigned long i = 0; i < server.all_locations.size(); i++){
-            if (server.all_locations[i].path == path){ // gennerate file to uplade
+            if (server.all_locations[i].path == path){
 				_path = save;
 				return server.all_locations[i];
             }
@@ -326,7 +322,6 @@ Location_block Response::getLocation(Server_block &server)
 
 void Response::auto_index()
 {
-
 	is_autoindex = 1;
 	DIR *dir; struct dirent *diread;
     std::vector<std::string> files;
@@ -350,7 +345,6 @@ void Response::auto_index()
 			body += std::string("<a href='" + to_go + files[i] + "'>") + files[i] + std::string("</a></br>\r\n");
 		}
 		body += std::string("</ul>\r\n</body>\r\n</html>\r\n");
-
 		this->ok(body.size());
 		_response += body;
 		create_file();
@@ -382,9 +376,7 @@ void Response::auto_index()
 		notFound();
 }
 
-//!---------------------------------------------------
-
-
+//? check if the file that the user whant is supported by the cgi
 bool file_is_suported_from_cgi(Location_block location, std::string path){
     std::string ext = "";
     int i =  path.size();
@@ -403,143 +395,65 @@ bool file_is_suported_from_cgi(Location_block location, std::string path){
     
 }
 
-
+//? set all variables neded by cgi 
 std::vector<std::string> make_meta_variables_for_cgi(Request request, Server_block server, std::string script){
-	//prefer to return vector insted of tring
 	std::vector<std::string> vec_of_string;
 	std::string meta_variables = "";
 	std::string str;
 
-	// CONTENT_LENGTH size of the body
 	str = "CONTENT_LENGTH=" + std::to_string(request.getContentLength());
 	vec_of_string.push_back(str);
-
 	std::string path = "localhost:" + server.port + request.getRequestTarget() ;
-
-	//CONTENT_TYPE indicate the media type of the resource 
-	//should achraf add this function
 	str = "CONTENT_TYPE=" + request.getContentType();
 	vec_of_string.push_back(str);
-
-	// GATEWAY_INTERFACE  it's CGI/revision.
 	str = "GATEWAY_INTERFACE=CGI/1.1";
 	vec_of_string.push_back(str);
-	
-	//PATH_INFO is the path after the_cgi  The extra path information as given by the client. 
-	// str = "PATH_INFO=" + path;
 	str = "PATH_INFO=/";
 	vec_of_string.push_back(str);
-
-	//PATH_TRANSLATED  translate the path info by convert space and point and , to there value
-	// str = "PATH_TRANSLATED=" + path;
 	str = "PATH_TRANSLATED=/";
 	vec_of_string.push_back(str);
-
-	//QUERY_STRING   is the last data in the url after the question mark
 	str = "QUERY_STRING=" + request.getRequestQuery();
 	vec_of_string.push_back(str);
-
-	//REQUEST_METHOD   is the type of request
 	str = "REQUEST_METHOD=" + request.getRequestMethod();
 	vec_of_string.push_back(str);
-
-	//SCRIPT_NAME  is the name of the script to run
-	// str = "SCRIPT_NAME=" + request.getRequestTarget();
-
-	// str = "SCRIPT_NAME=" + script;
-	str = "SCRIPT_NAME=localhost" + server.port;
+	str = "SCRIPT_NAME=localhost:" + server.port;
 	vec_of_string.push_back(str);
 	vec_of_string.push_back("SCRIPT_FILENAME=" + script);
-
-	
-	//SERVER_NAME the name of server that user target , i should get it from dollar
-
 	str = "SERVER_NAME=" + request.getHost();
 	vec_of_string.push_back(str);
-	
-	//SERVER_PORT the port of server that user target , i should get it from dollar
-	// str = "SCRIPT_PORT=" +  server.port;
-	// vec_of_string.push_back(str);
-	
-	//SERVER_PROTOCOL the version of http that the server support
 	str = "SERVER_PROTOCOL=HTTP/1.1";
 	vec_of_string.push_back(str);
-
-	//SERVER_SOFTWARE the version of http that the server support
 	str = "SERVER_SOFTWARE=FT_Web_SERVE";
 	vec_of_string.push_back(str);
-
 	str = "REDIRECT_STATUS=200";
 	vec_of_string.push_back(str);
-
-
 	str = "FCGI_ROLE=RESPONDER";
 	vec_of_string.push_back(str);
-
 	str = "REQUEST_SCHEME=http";
 	vec_of_string.push_back(str);
-
 	str = "PATH=" + std::string(std::getenv("PATH"));
 	vec_of_string.push_back(str);
-
-
 	vec_of_string.push_back("SCRIPT_FILENAME=" +  script);
-
-
 	vec_of_string.push_back("SERVER_PORT="+ server.port);
 	vec_of_string.push_back("REMOTE_ADDR=");
 	vec_of_string.push_back("HTTP_HOST=");
-
-
-vec_of_string.push_back("REQUEST_URI=REQ");
-vec_of_string.push_back("DOCUMENT_URI=" + script);
-
-/*REMOTE_HOST
-REMOTE_IDENT
-REMOTE_USER
-
-
-("REQUEST_URI=" + _reqResource);
-("DOCUMENT_URI=" + _resource);
-<!-- ("SCRIPT_NAME=" + _resource); -->
-("SCRIPT_FILENAME=" + _hostPath);
-<!-- ("PATH_TRANSLATED=" + _hostPath); -->
-<!-- ("QUERY_STRING=" + _queryString); -->
-<!-- ("SERVER_NAME=" + _hostName); -->
-<!-- ("REQUEST_METHOD=" + get_method(_reqMethod)); -->
-("DOCUMENT_ROOT=" + _root);
-<!-- ("GETAWAY_INTERFACE=CGI/1.1"); -->
-<!-- ("SERVER_PROTOCOL=HTTP/1.1"); -->
-<!-- ("REDIRECT_STATUS=200"); -->
-<!-- ("FCGI_ROLE=RESPONDER"); -->
-<!-- ("REQUEST_SCHEME=http"); -->
-<!-- ("SERVER_SOFTWARE=webserv/1.1 " + getOsName()); -->
-("SERVER_PORT=" + getServerPort(_reqCMservers));
-<!-- ("PATH=" + std::string(std::getenv("PATH"))); -->
-
-const std::pair<std::string, int> &remoteInfo = _req.GetClientInfo();
-
-
-envHeaders.push_back("REMOTE_ADDR=" + remoteInfo.first);
-envHeaders.push_back("REMOTE_PORT=" + to_string(remoteInfo.second));
-addRequestHeaders(envHeaders);
-*/
-
+	vec_of_string.push_back("REQUEST_URI=REQ");
+	vec_of_string.push_back("DOCUMENT_URI=" + script);
 	return vec_of_string;
 }
 
 
-
+//? convert vector to char**
 char **vector_to_char(std::vector<std::string> params){
 	char **out = new char*[params.size() + 1];
 	for (size_t i = 0; i < params.size(); i++){
 		out[i] = strdup(params[i].c_str());
 	}
 	out[params.size()] = NULL;
-
 	return out;
 }
 
+//? fork to run the cgi
 std::string  Response::cgi(Server_block server, std::string cgi_runner, std::string script, std::string body_file){
 	std::vector<std::string> vec_of_meta_vars = make_meta_variables_for_cgi(_request, server, script);
 	char **meta_vars = vector_to_char(vec_of_meta_vars);
@@ -547,7 +461,6 @@ std::string  Response::cgi(Server_block server, std::string cgi_runner, std::str
 	std::stringstream ss;
 	ss << now;
 	std::string file_name =  ss.str();
-
 	char **vars = new char*[3];
 	vars[0] = (char*)cgi_runner.c_str();
 	vars[1] = (char*)script.c_str();
@@ -561,12 +474,25 @@ std::string  Response::cgi(Server_block server, std::string cgi_runner, std::str
 		dup2(fd_in, STDIN_FILENO);
 		dup2(fd_out, STDOUT_FILENO);
 		int exec;
-		exec = execve(vars[0], vars, meta_vars);
+		exec  = execve(vars[0], vars, meta_vars);
 		this->internalError();
 		return output;	
  	}
 	else{
-		while(waitpid(pid, NULL, 0) > 0){
+		long start = get_current_time();
+		while(waitpid(pid, NULL, WNOHANG) == 0){
+			long end = get_current_time();
+			if (end - start > CGI_TIME_OUT){
+				this->time_out();
+				create_file();
+				int i = 0;
+				while(meta_vars[i]){
+					delete[] meta_vars[i++];
+				}
+				delete[] meta_vars;
+				delete[] vars;
+				return "";
+			}
 		}
 		int fd = open(file_name.c_str(), O_RDONLY);
 		fcntl(fd, F_SETFL, O_NONBLOCK);
@@ -577,6 +503,13 @@ std::string  Response::cgi(Server_block server, std::string cgi_runner, std::str
 			output += std::string(s, readed);
 			size += readed;
 		}
+		int i = 0;
+		while(meta_vars[i]){
+			delete[] meta_vars[i++];
+		}
+		delete[] meta_vars;
+		delete[] vars;
+		delete[] s;
 		close(fd);
 		if (readed == -1)
 			return output;
@@ -591,12 +524,22 @@ void Response::handleRequest(Server_block server) {
 	_location = location;
 	_server = server;
 	_path = location.root + _path;
-	if (_request.getRequestMethod() != "GET" && _request.getRequestMethod() != "POST" && _request.getRequestMethod() != "DELETE")
-	{
-		this->unallowedMethod();
+	if (_request.getHost().size() ==0 ){
+		this->badRequest();
 		create_file();
 		return;
 	}
+	if (_request.is_chunked() == false && _request.get_has_body() && _request.getContentLength() == 0){
+		this->badRequest();
+		create_file();
+		return;
+	}
+	if (_request.getRequestMethod() != "GET" && _request.getRequestMethod() != "POST" && _request.getRequestMethod() != "DELETE")
+    {
+        this->unallowedMethod();
+        create_file();
+        return;
+    }
 	if (_request.getBody().size() && location.max_body_size.size() && !check_max_body_size())
 	{
 		this->payloadTooLarge();
@@ -612,10 +555,8 @@ void Response::handleRequest(Server_block server) {
 	}
 	struct stat s, s2;
 	stat(_path.c_str(), &s);
-	// if(s.st_mode & S_IFDIR)
 	if(S_ISDIR(s.st_mode))
 	{
-
 		std::fstream * file = new std::fstream();
 
 		//? check if index file exist return index_file else if auto index exit  return it else 404
@@ -711,9 +652,7 @@ void Response::handleRequest(Server_block server) {
 
 void Response::handleGetRequest(Server_block server, Location_block location)
 {
-	//?------------------------------------------------------------------------------------
-	//! there is cgi
-	//! check support file
+	//?------------------------------------------------------------------------------------	CGI
 	if (location.cgi_ext.size() && location.cgi_path.size()){ 
 			if (file_is_suported_from_cgi(location, _path)){ //! run cgi
 				std::string cgi_runner  = location.root + '/' + location.cgi_path;
@@ -722,15 +661,20 @@ void Response::handleGetRequest(Server_block server, Location_block location)
 				close(fd);
 				if (fd > 0){//! check for file to execute if true run cgi	
 					std::string cgi_output = cgi(server, cgi_runner, _path, _request.getBody());
+					if (cgi_output.size() == 0)
+						return;
 					if ((int)cgi_output.find("Status:", 0) == -1)
-						_response += "HTTP/1.1 200 Ok\r\n"; //! correct this just if there is not status code
+						_response += "HTTP/1.1 200 Ok\r\n";
 					else{
 							int start = cgi_output.find("Status", 0);
 							int end = cgi_output.find("\r\n", start);
 							std::string status_code = cgi_output.substr(start + 7, end);
-						_response += "HTTP/1.1 " + status_code + "\r\n"; //! correct this just if there is not status code
+						_response += "HTTP/1.1 " + status_code + "\r\n";
 
 					}
+					int index = cgi_output.find("\r\n\r\n", 0);
+					int size = cgi_output.size() - index;
+					_response += "Content-Length: " + std::to_string(size - 5) + "\r\n";
 					_response += cgi_output;
 					create_file();
 					return;
@@ -747,6 +691,7 @@ void Response::handleGetRequest(Server_block server, Location_block location)
 	struct stat fileStat;
 	stat (_path.c_str(), &fileStat);
 	int fd  = open(_path.c_str(), O_RDONLY);
+
 	fcntl(fd, F_SETFL, O_NONBLOCK);
 	if (fd == -1)
 	{
@@ -754,7 +699,6 @@ void Response::handleGetRequest(Server_block server, Location_block location)
 		create_file();
 		return;
 	}
-	// char buff[fileStat.st_size];
 	char buff[1001] = {0};
 	this->ok(fileStat.st_size);
 	int reading = 0;
@@ -762,6 +706,7 @@ void Response::handleGetRequest(Server_block server, Location_block location)
 		_response +=  std::string(buff, reading);
 		bzero(buff, 1000);
 	}
+	close(fd);
 	if (reading == -1)
 		this->notFound();
 	close(fd);
@@ -771,38 +716,41 @@ void Response::handleGetRequest(Server_block server, Location_block location)
 
 void Response::handlePostRequest(Server_block &server, Location_block &location){
 	if (location.upload_store == ""){ //? return forbiden function
-		//! there is cgi
-		//! check support file
 		if (location.cgi_ext.size() && location.cgi_path.size()){ 
-				if (file_is_suported_from_cgi(location, _path)){ //! run cgi
+				if (file_is_suported_from_cgi(location, _path)){ 
 					std::string cgi_runner  = location.root + '/' + location.cgi_path;
 					int fd = open(_path.c_str(), O_RDONLY);
 					fcntl(fd, F_SETFL, O_NONBLOCK);
 					close(fd);
-					if (fd > 0){//! check for file to execute if true run cgi	
+					if (fd > 0){	
 						std::string cgi_output = cgi(server, cgi_runner, _path, _request.getBody());
+						if (cgi_output.size() == 0)
+							return;
 						if ((int)cgi_output.find("Status:", 0) == -1)
-							_response += "HTTP/1.1 200 Ok\r\n"; //! correct this just if there is not status code
+							_response += "HTTP/1.1 200 Ok\r\n";
 						else{
 							int start = cgi_output.find("Status", 0);
 							int end = cgi_output.find("\r\n", start);
 							std::string status_code = cgi_output.substr(start + 7, end);
-							_response += "HTTP/1.1 " + status_code + "\r\n"; //! correct this just if there is not status code
+							_response += "HTTP/1.1 " + status_code + "\r\n";
 						}
+						int index = cgi_output.find("\r\n\r\n", 0);
+						int size = cgi_output.size() - index;
+						_response += "Content-Length: " + std::to_string(size - 5) + "\r\n";
 						_response += cgi_output;
+						_response += "\r\n\r\n";
 						create_file();
 						return;
 					}
-					else{			//!  404
+					else{ //? file to run not found 404
 						notFound();
 						create_file();
 						return;
 					}
-
 				}
 
 		}
-		else{ //? if th
+		else{ 
 			 //! check for error page in locaction , check with creeper
 			time_t rawtime;
 			time(&rawtime);
@@ -816,7 +764,6 @@ void Response::handlePostRequest(Server_block &server, Location_block &location)
 			return;
 		}
 	}
-
 	int index =_request.getRequestTarget().find(location.path);
 	std::string name_to_save ;
 	if (!location.upload_store.empty()){
@@ -834,17 +781,16 @@ void Response::handlePostRequest(Server_block &server, Location_block &location)
 			name_to_save = _request.getRequestTarget().substr(index + location.path.size(), _request.getRequestTarget().size());
 			file_path = location.root + location.upload_store  + name_to_save;
 		}
-		// int ret = std::rename(_request.getBody().c_str(), file_path.c_str());
-		std::string mv = "mv " + _request.getBody() + " " + file_path;
+		std::string mv = "mv " + _request.getBody() + " " + file_path; //? move the file from tmp and save it in the upload directory in the server
 		int ret = system(mv.c_str());
 		time_t rawtime;
 		time(&rawtime);
 		if (ret != -1)
 			_response += "HTTP/1.1 201 created\r\n"; 
-		else //! check for error page in locaction , check with creeper
+		else
 			_response += "HTTP/1.1 409 Conflict\r\n";
 		_response += "Date: " + std::string(ctime(&rawtime));
-		_response += "\r\nServer: webserver";
+		_response += "Server: webserver";
 		_response += "\r\nContent-Length: 0";
 		_response +=  "\r\nConnection: close";
 		_response +=  "\r\nAccept-Ranges: bytes\r\n\r\n";

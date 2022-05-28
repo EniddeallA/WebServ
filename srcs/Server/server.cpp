@@ -1,10 +1,12 @@
 #include "../../includes/Parsing.hpp"
 #include "../../includes/Response.hpp"
+
+//? criet and lunch servers 
+//! cgi time-out
 void start_servers(std::vector<Server_block> &all_servers){
 	fd_set 	_fd_set_read, _fd_set_read_temp, _fd_set_write, _fd_set_write_temp;
 
 	initial_fd_set(_fd_set_read, _fd_set_read_temp, _fd_set_write, _fd_set_write_temp);
-	std::map<int, std::string> not_sended_yet;
 	std::vector<int> fds;
 	int new_socket, valread;
 	int number_of_servers = all_servers.size();
@@ -27,10 +29,8 @@ void start_servers(std::vector<Server_block> &all_servers){
 	std::map<int, char*> fd_with_response;
 	std::map<int, Response> fd_with_response_object;
 
-	std::map<int, int> fd_with_send_size;
 	std::map<int, long int> fd_with_time;
 	int max_server_fd = fd_max;
-	std::string all_string = "";
 	struct timeval select_time;
 	select_time.tv_sec = 1;
 	select_time.tv_usec = 0;
@@ -40,7 +40,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 		_fd_set_write_temp = _fd_set_write;
 		int selected;
 		selected = select(fd_max + 1, &_fd_set_read_temp, &_fd_set_write_temp, NULL, &select_time); //? check timeout
-		//! check for time out ----------------------------*
+		//? check for time out ----------------------------*
 		for (int i = 0; i < fd_max + 1; i++){
 			long int now = get_current_time();
 			if (fd_with_time.count(i)){
@@ -56,20 +56,14 @@ void start_servers(std::vector<Server_block> &all_servers){
 					fd_with_time.erase(i);
 				}
 			}
-
-			// if (FD_ISSET(i, &_fd_set_write_temp)
 		}
-		//!----------------------------------------------*
-		// if (selected < 0){
-		// 	throw ("Error in select function");
-		// }
+		//?----------------------------------------------*
 		for (int i = 0; i < fd_max + 1; i++){
 			if (FD_ISSET(i, &_fd_set_read_temp)){
-				//! i have change 3 with the fd_min 
-				socklen_t addrlen = sizeof(all_servers[i -fd_min].s_address); // -fd_min because fd start with 3 after 0 and 1 and 2 
+				socklen_t addrlen = sizeof(all_servers[i -fd_min].s_address); //? -fd_min because fd start with 3 after 0 and 1 and 2 
 				if (i <= max_server_fd){ //! check if it's new connection or not
 					if ((new_socket = accept(i, (struct sockaddr *) &(all_servers[i -fd_min].s_address), &addrlen)) == -1)
-						throw "Error in accepting socket";
+						continue;
 					if (std::find(fds.begin(), fds.end(), new_socket) == fds.end()){
 						FD_SET(new_socket, &_fd_set_read);
 						fds.push_back(new_socket);
@@ -80,7 +74,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 					new_socket = i;
 				}
 				if (fcntl(new_socket, F_SETFL, O_NONBLOCK) == -1){
-					throw "Error in fcntl() function";
+					continue;
 				}
 				valread = read(new_socket, buffer, BUFFER);
 				std::string s;
@@ -91,7 +85,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 				else if (valread == 0){
 					s = "";
 				}
-				else{ //! remove client
+				else{ //? remove client in error
 					v_of_request_object[new_socket].clear();
 					fd_with_response_object[new_socket].get_request().clear();
 					if (FD_ISSET(new_socket, &_fd_set_read_temp)){
@@ -103,21 +97,18 @@ void start_servers(std::vector<Server_block> &all_servers){
 					fd_with_time.erase(i);
 					continue;
 				}
-				
+				//? start parssing the file
 				v_of_request_object[new_socket].Parse(s);
-				
 				if (v_of_request_object[new_socket].isRequestCompleted() && valread != -1){
 					fd_with_response_object[new_socket] = Response(v_of_request_object[new_socket]);
 					fd_with_response_object[new_socket].handleRequest(v_of_request_object[new_socket].setServer(all_servers));
-
-					fd_with_send_size[new_socket] = 0;
 					FD_CLR(new_socket, &_fd_set_read);
 					FD_SET(new_socket, &_fd_set_write);
 				}
 			}
 
-			if (FD_ISSET(i, &_fd_set_write_temp)){ //CHECK FOR WRITTING FD_SET
-			//? for first time save leth and size of the file;
+			if (FD_ISSET(i, &_fd_set_write_temp)){
+			//? for first time save length and size of the file;
 				new_socket = i;
 				bzero(buffer, BUFFER);
 				int fd = fd_with_response_object[new_socket].get_fd(); //! implement fcntl to all fds!!!!!
@@ -142,7 +133,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 					fd_with_time.erase(i);
 					continue;
 				}
-
+				//? move the pointer of the file to send all the file 
 				if (valread != sended && fd != -1 && valread > 0){
 					int defferent = valread - sended;
 					if (defferent > 0)
@@ -183,3 +174,6 @@ void start_servers(std::vector<Server_block> &all_servers){
 		}
 	}
 }
+
+
+//! if unchunked and missing of content lentgh  ----> 400

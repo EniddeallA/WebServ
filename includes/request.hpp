@@ -65,8 +65,8 @@ class Request{
         std::string     getContentType() { return ((_headers.find("Content-Type") != _headers.end()) ? _headers["Content-Type"] : ""); }
 		t_headers 		getHeaders( void ) const;
 		Server_block 	setServer( std::vector<Server_block > const &serv_confs );
-		
-
+		bool			is_chunked(){return _isTE;}
+		bool			get_has_body(){return  _hasBody;}
 
 
 	private:
