@@ -194,6 +194,7 @@ void	Request::parseBody(std::string &req) {
 		// _requestEnd = true;
 		// return ;
 	// }
+	std::cout << "parse body\n";
 	if (_bodyName.empty()) {
 		_bodyName = _bodyToFile();
 		_bodyFile.open(_bodyName.c_str(), std::ofstream::out | std::ofstream::trunc);
@@ -215,7 +216,6 @@ void	Request::parseBody(std::string &req) {
 		}
 	} 
 	else if (_isTE == true) {
-		// std::cerr << "TE not ready yet\n[*] Use CL instead for now\n";
 		toChuncked(req);
 	}
 	else{
@@ -236,15 +236,21 @@ void 		Request::toChuncked(std::string &req) {
 	# define CHUNK_SIZE 0
 	# define CHUNK_BODY 1
 	int status = CHUNK_SIZE;
+	std::cout << "chunked request\n";
 	size_t size = 0;
 
 	all_string_req += req;
+	if(all_string_req.find("0\r\n\r\n") == 0){
+		_requestEnd = true;
+		all_string_req.clear();
+			return;
+	}
 	if ((end = all_string_req.find("\r\n0\r\n\r\n")) != std::string::npos){ //? check all_string
 		end = all_string_req.find("\r\n");
 		while (end != std::string::npos) {
 			if (status == CHUNK_SIZE) {
 				std::string hex = all_string_req.substr(0, end);
-				if (is_hex_notation(hex) == false) {
+				if (is_hex_notation(hex) == false){
 					_error = BAD_REQUEST;
 					throw "Error on body parsing ";
 				}

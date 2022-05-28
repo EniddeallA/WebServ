@@ -1,4 +1,4 @@
-#include "../includes/Response.hpp"
+#include "../../includes/Response.hpp"
 
 // #include "./cgi.cpp"
 Response::Response(Request	request):
@@ -69,22 +69,24 @@ void Response::set_error_header(int statuscode, std::string msg, std::string pat
 {
 	time_t rawtime;
 	struct stat s;
-
+	stat(path.c_str(), &s);
 	time(&rawtime);
 	_response = "HTTP/1.1 " + std::to_string(statuscode) + " " + msg + "\r\n";
 	_response += "Date: " + std::string(ctime(&rawtime));
 	_response.erase(--_response.end());
 	_response += "\r\n";
 	_response += "Server: webserver\r\n";
-	stat(path.c_str(), &s);
-	int fd = open(path.c_str(), O_RDONLY);
-	char buff[s.st_size];
-	int r_d = read(fd, buff, s.st_size);
-	close(fd);
 	_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n";
 	_response += "Connection: close\r\n\r\n";
-	_response += std::string(buff, r_d);
+	int fd = open(path.c_str(), O_RDONLY);
+	char buff[s.st_size];
+	int r_d = read(fd, buff, s.st_size);	
+	if (r_d >= 0)
+		_response += std::string(buff, r_d);
+	close(fd);
 	_response += "\r\n\r\n";
+	if (r_d == -1)
+		return;
 }
 
 void Response::set_redirection(int statuscode, std::string path)
@@ -105,17 +107,23 @@ void Response::set_redirection(int statuscode, std::string path)
 	_response += "Connection: close\r\n\r\n";
 	int fd;
 	path = _location.root + path;
+	stat(path.c_str(), &s);
 	if ((fd = open(path.c_str(), O_RDONLY)) == -1)
 	{
 		close(fd);
 		this->notFound();
 		return;
 	}
+	std::cout << "path is " << path << std::endl;
+	std::cout << "size is " << s.st_size << std::endl;
 	char buff[s.st_size];
 	int reading = read(fd, buff, s.st_size);
 	close(fd);
-	_response +=  std::string(buff, reading);
+	if (reading >= 0)
+		_response +=  std::string(buff, reading);
 	_response += "\r\n\r\n";
+	if (reading == -1)
+		return;
 }
 
 std::string errorPage(std::string const &message)
@@ -167,14 +175,13 @@ void Response::badRequest()
 
 void Response::notFound()
 {
-	int fd;
-	if (_server.error_page.count(404))
-		if ((fd = open(_server.error_page[404].c_str(), O_RDONLY)) != -1)
+	int fd = open(_server.error_page[404].c_str(), O_RDONLY);
+	close(fd);
+	std::cout << "error page is : " << _server.error_page[404].c_str()  << "   " << open(_server.error_page[404].c_str(), O_RDONLY) << std::endl;
+	if (_server.error_page.count(404) && fd != -1)
 			set_error_header(404, "Not Found", _server.error_page[404]);
 		else
 			set_error_header(404, "Not Found", "./error_pages/404.html");
-	else
-		set_error_header(404, "Not Found", "./error_pages/404.html");
 }
 
 void Response::httpVersionNotSupported(std::string const &version)
@@ -373,11 +380,14 @@ void Response::auto_index(Location_block location)
 		int fd = open(_path.c_str(), O_RDONLY | O_NONBLOCK);
 		fcntl(fd, F_SETFL, O_NONBLOCK);
 		char buff[s.st_size];
-		read(fd, buff, s.st_size);
-		_response += buff;
-		_response += "\r\n\r\n";
+		int reading = read(fd, buff, s.st_size);
+		if (reading >= 0)
+			_response += buff;
 		close(fd);
+		_response += "\r\n\r\n";
 		create_file();
+		if (reading == -1)
+			return;
     }
 	else
 		notFound();
@@ -563,8 +573,6 @@ std::string  cgi(Request request, Server_block server, std::string cgi_runner, s
 	if (pid == 0){
 		int fd_out = criet_and_open_file(file_name);
 		int fd_in = open(body_file.c_str(), O_RDONLY);
-		// if (fd_in >)
-		std::cout << "==" << body_file.c_str() << std::endl;
 		dup2(fd_in, STDIN_FILENO);
 		dup2(fd_out, STDOUT_FILENO);
 		int exec = execve(vars[0], vars, meta_vars);
@@ -586,11 +594,9 @@ std::string  cgi(Request request, Server_block server, std::string cgi_runner, s
 			size += readed;
 		}
 		close(fd);
+		if (readed == -1)
+			return output;
 		unlink(file_name.c_str());
-		std::cout << "----------------CGI OUTPUT--------------------\n";
-		std::cout << output;
-		std::cout << "----------------CGI OUTPUT+++++++++++++++++++++++\n";
-
 		return output;
 	}
 	return output;
@@ -705,10 +711,15 @@ void Response::handleRequest(Server_block server) {
 		char buff[fileStat.st_size];
 		int rd = read(fd, buff, fileStat.st_size);
 		notFound();
-		_response += std::string(buff, rd);
-		close(fd);
+		if (rd >= 0)
+			_response += std::string(buff, rd);
+		
 		_body.close();
 		create_file();
+		if (fd == -1)
+			return;
+		close(fd);
+		
 		return;
 	}
 
@@ -717,7 +728,6 @@ void Response::handleRequest(Server_block server) {
 void Response::handleGetRequest(Server_block server, Location_block location)
 {
 	//?------------------------------------------------------------------------------------
-
 	//! there is cgi
 	//! check support file
 	if (location.cgi_ext.size() && location.cgi_path.size()){ 
@@ -742,20 +752,14 @@ void Response::handleGetRequest(Server_block server, Location_block location)
 					return;
 				}
 				else{			//!  404
-					time_t rawtime;
-					time(&rawtime);
-					_response += "HTTP/1.1 404 Not Found\r\n";
-					_response += "Date: " + std::string(ctime(&rawtime));
-					_response += "\r\nServer: webserver";
-					_response += "\r\nContent-Length: 0";
-					_response +=  "\r\nConnection: close";
-					_response +=  "\r\nAccept-Ranges: bytes\r\n\r\n";
+					notFound();
 					create_file();
 					return;
 				}
 			}
 	}
 	//?------------------------------------------------------------------------------------
+
 	struct stat fileStat;
 	time_t rawtime;
 	stat (_path.c_str(), &fileStat);
@@ -771,12 +775,14 @@ void Response::handleGetRequest(Server_block server, Location_block location)
 	char buff[1001] = {0};
 	this->ok(fileStat.st_size);
 	int reading = 0;
-	while((reading = read(fd, buff, 1000))){
+	while((reading = read(fd, buff, 1000)) > 0){
 		_response +=  std::string(buff, reading);
 		bzero(buff, 1000);
 	}
-	close(fd);
 	create_file();				
+	close(fd);
+	if (reading == -1)
+		return;
 }
 
 
@@ -805,14 +811,7 @@ void Response::handlePostRequest(Server_block &server, Location_block &location)
 						return;
 					}
 					else{			//!  404
-						time_t rawtime;
-						time(&rawtime);
-						_response += "HTTP/1.1 404 Not Found\r\n";
-						_response += "Date: " + std::string(ctime(&rawtime));
-						_response += "\r\nServer: webserver";
-						_response += "\r\nContent-Length: 0";
-						_response +=  "\r\nConnection: close";
-						_response +=  "\r\nAccept-Ranges: bytes\r\n\r\n";
+						notFound();
 						create_file();
 						return;
 					}
@@ -899,6 +898,7 @@ static void deleteDirectoryFiles(DIR * dir, const std::string & path){
 
 void Response::handleDeleteRequest()
 {
+	std::cout << "handle delete request\n";
 	struct stat st;
 	DIR * dirp = NULL;
 

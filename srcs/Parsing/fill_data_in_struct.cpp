@@ -134,16 +134,37 @@ void check_duplicate_locations(std::vector<Location_block> &all_locations){
 	
 }
 
+void check_for_server_missing_data(Server_block server){
+	if (server.port.size() == 0)
+		throw "missing port arg";
+	if (server.ip.size() == 0)
+		throw "missing ip arg";
+	if (server.all_locations.size() == 0)
+		throw "missing locations arg";
+
+}
+
+
+
+void check_for_location_missing_data(Location_block location){
+	if (location.path.size() == 0)
+		throw "missing location path arg";
+	if (location.root.size() == 0)
+		throw "missing ip arg";
+}
+
 void fill_data_in_struct(std::vector<Server_block> &all_servers){
 	int size = all_servers.size();
 	for (int i = 0; i < size; i++){
 		_itr begin(all_servers[i].server_data.begin());
 		_itr end(all_servers[i].server_data.end());
 		fill_server_data(all_servers[i], begin, end);
+		check_for_server_missing_data(all_servers[i]);
 		for (size_t j = 0; j < all_servers[i].all_locations.size(); ++j) {
 			_itr _begin(all_servers[i].all_locations[j].location_data.begin());
 			_itr _end(all_servers[i].all_locations[j].location_data.end());
 			fill_location_data(all_servers[i], all_servers[i].all_locations[j], _begin, _end);
+			check_for_location_missing_data(all_servers[i].all_locations[j]);
 		}
 		check_duplicate_locations(all_servers[i].all_locations);
 	}

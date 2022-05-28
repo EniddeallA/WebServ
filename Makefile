@@ -1,7 +1,7 @@
 
-SRCS		=	main.cpp srcs/Response.cpp srcs/Utils.cpp srcs/cgi.cpp srcs/request.cpp \
+SRCS		=	main.cpp srcs/Response/Response.cpp srcs/Utils.cpp srcs/request.cpp \
 				srcs/Parsing/Parsing.cpp srcs/Parsing/fill_data_in_struct.cpp srcs/Parsing/utils.cpp \
-				 srcs/Server/server.cpp srcs/Server/server_utils.cpp srcs/responce_file.cpp srcs/MimeTypes.cpp
+				 srcs/Server/server.cpp srcs/Server/server_utils.cpp srcs/Response/MimeTypes.cpp
 
 
    

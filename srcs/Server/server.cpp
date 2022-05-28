@@ -17,7 +17,7 @@ void start_servers(std::vector<Server_block> &all_servers){
 		if (port_already_binded(all_servers, i, port))
 			continue;
 		start_server(all_servers[i]);
-		fcntl(all_servers[i].server_fd, F_SETFL, O_NONBLOCK); // LEARN MORE ABOUT fcntl
+		fcntl(all_servers[i].server_fd, F_SETFL, O_NONBLOCK);
 		fd_max = std::max(all_servers[i].server_fd, fd_max);
 		fd_min = std::min(all_servers[i].server_fd, fd_min);
 		fds.push_back(all_servers[i].server_fd); // THIS vector is for get max fd
@@ -89,25 +89,28 @@ void start_servers(std::vector<Server_block> &all_servers){
 					s = std::string(buffer, valread);
 					fd_with_time[new_socket] = get_current_time();
 				}
-				else{
-					// s = buffer;
+				else if (valread == 0){
 					s = "";
 				}
-				// std::cout << s;
+				else{ //! remove client
+					v_of_request_object[new_socket].clear();
+					fd_with_response_object[new_socket].get_request().clear();
+					if (FD_ISSET(new_socket, &_fd_set_read_temp)){
+						FD_CLR(new_socket, &_fd_set_read);
+					}
+					else if (FD_ISSET(new_socket, &_fd_set_write_temp)){
+						FD_CLR(new_socket, &_fd_set_write);
+					}
+					fd_with_time.erase(i);
+					continue;
+				}
 				
 				v_of_request_object[new_socket].Parse(s);
 				
-				// if (1 == -1){
-				if (v_of_request_object[new_socket].isRequestCompleted() && valread != -1){ // tst valread !!!
-					std::cout << "--------------------------------------------------------------------" << std::endl;
-					v_of_request_object[new_socket].printData();
+				if (v_of_request_object[new_socket].isRequestCompleted() && valread != -1){
 					fd_with_response_object[new_socket] = Response(v_of_request_object[new_socket]);
-					fd_with_response_object[new_socket].handleRequest(v_of_request_object[new_socket].setServer(all_servers)); // just for test use the last server bloc
-					// std::cout << "break by while\n";
-					// while(1);
-					// fd_with_response_object[new_socket].handleRequest(all_servers[0]); // just for test use the last server bloc
-					// fd_with_response[new_socket] = strdup(fd_with_response_object[new_socket].get_respone().c_str()); //? that just return the head but we still need the body
-			
+					fd_with_response_object[new_socket].handleRequest(v_of_request_object[new_socket].setServer(all_servers));
+
 					fd_with_send_size[new_socket] = 0;
 					FD_CLR(new_socket, &_fd_set_read);
 					FD_SET(new_socket, &_fd_set_write);
@@ -120,14 +123,27 @@ void start_servers(std::vector<Server_block> &all_servers){
 				bzero(buffer, BUFFER);
 				int fd = fd_with_response_object[new_socket].get_fd(); //! implement fcntl to all fds!!!!!
 				valread =  read(fd, buffer, BUFFER);
-				// problem here
-				int sended = send(new_socket, buffer, valread, 0);
-				// end prob
+				int sended = 0;
+				if (valread != -1)
+					sended = send(new_socket, buffer, valread, 0); //! should remove client in errore
 				if (sended > 0){
 					fd_with_time[new_socket] = get_current_time();
-
 					fd_with_response_object[new_socket].update_size_sended(sended);
 				}
+				//? remove client in error in sendig
+				if (sended  == -1 ){
+					v_of_request_object[new_socket].clear();
+					fd_with_response_object[new_socket].get_request().clear();
+					if (FD_ISSET(new_socket, &_fd_set_read_temp)){
+						FD_CLR(new_socket, &_fd_set_read);
+					}
+					else if (FD_ISSET(new_socket, &_fd_set_write_temp)){
+						FD_CLR(new_socket, &_fd_set_write);
+					}
+					fd_with_time.erase(i);
+					continue;
+				}
+
 				if (valread != sended && fd != -1 && valread > 0){
 					int defferent = valread - sended;
 					if (defferent > 0)
@@ -136,16 +152,12 @@ void start_servers(std::vector<Server_block> &all_servers){
 
 
 
-				if (valread <= 0){ //? after finish sending all responce
-					// std::cout << "****************************************************" << std::endl;
-					// std::cout << "finish sendiing data for" << v_of_request_object[new_socket].getRequestTarget() << std::endl;
-					// std::cout << "finish sendiing " << fd_with_response_object[new_socket].get_size_sended() << " of " << fd_with_response_object[new_socket].get_size_of_file() << std::endl;
-
+				if (valread <= 0 && sended == 0){ //? after finish sending all responce
 					close(fd_with_response_object[new_socket].get_fd());
 					unlink(fd_with_response_object[new_socket].get_file_path().c_str());
 
 					fd_with_response_object[new_socket].reset();
-					if (v_of_request_object[new_socket]._isKeepAlive() == false){ //correct this function the default is keep-alive not close
+					if (v_of_request_object[new_socket]._isKeepAlive() == false){
 						FD_CLR(new_socket, &_fd_set_write);
 						close(new_socket);
 						fd_max = fds[0];
@@ -164,7 +176,6 @@ void start_servers(std::vector<Server_block> &all_servers){
 						FD_CLR(new_socket, &_fd_set_write);
 						FD_SET(new_socket, &_fd_set_read);
 					}
-					////////////////
 					v_of_request_object[new_socket].clear();
 					fd_with_response_object[new_socket].get_request().clear();
 				}
