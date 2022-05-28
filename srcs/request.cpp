@@ -1,8 +1,8 @@
 #include "../includes/request.hpp"
 
-Request::Request() : _error(0), _requestMethod(""), _requestTarget(""), _requestEnd(false),
-	_requestQuery(""), _str(""), _hasBody(false), _keepAlive(true), _headersEnd(false),
-	_bodySize(0), _contentLength(0), _isCL(false), _isTE(false), _serverFound(false) {
+Request::Request() : _error(0), _requestMethod(""), _requestTarget(""), _requestQuery(""),
+	 _str(""), _hasBody(false), _keepAlive(true), _headersEnd(false), _requestEnd(false),
+	_isCL(false), _isTE(false), _serverFound(false), _bodySize(0), _contentLength(0) {
 		_allowedMethods.push_back("GET");
 		_allowedMethods.push_back("POST");
 		_allowedMethods.push_back("DELETE");
@@ -89,7 +89,6 @@ void Request::Parse(std::string &req)
 		}
 	}
 	catch (const char * message) {
-		std::cout << "catch _request is end in parse" << message << std::endl;
 
 		errorHandler();
 		/** WARNING 
@@ -194,7 +193,6 @@ void	Request::parseBody(std::string &req) {
 		// _requestEnd = true;
 		// return ;
 	// }
-	std::cout << "parse body\n";
 	if (_bodyName.empty()) {
 		_bodyName = _bodyToFile();
 		_bodyFile.open(_bodyName.c_str(), std::ofstream::out | std::ofstream::trunc);
@@ -231,12 +229,10 @@ void 		Request::toChuncked(std::string &req) {
 		*/
 	}
 	size_t end = 0;
-	// std::cout << "request is to_chunked" << std::endl;
 
 	# define CHUNK_SIZE 0
 	# define CHUNK_BODY 1
 	int status = CHUNK_SIZE;
-	std::cout << "chunked request\n";
 	size_t size = 0;
 
 	all_string_req += req;
@@ -285,9 +281,6 @@ void		Request::printData( void ) {
 			<< "Error :: [" << _error << "]\n"
 			<< "Port :: [" << _port << "]\n";
 	std::cout << "=================================\n";
-	// for (t_headers::iterator it = _headers.begin(); it != _headers.end(); ++it) {
-		//std:: cout << "[" << (it)->first << "] :: [" << (it)->second << "]\n";
-	// }
 }
 
 std::string	Request::_bodyToFile() {
