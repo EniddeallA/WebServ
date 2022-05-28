@@ -79,6 +79,7 @@ void Response::set_error_header(int statuscode, std::string msg, std::string pat
 	_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n";
 	_response += "Connection: close\r\n\r\n";
 	int fd = open(path.c_str(), O_RDONLY);
+	fcntl(fd, F_SETFL, O_NONBLOCK);
 	char buff[s.st_size];
 	int r_d = read(fd, buff, s.st_size);	
 	if (r_d >= 0)
@@ -105,10 +106,11 @@ void Response::set_redirection(int statuscode, std::string path)
 	stat(path.c_str(), &s);
 	_response += "Content-Length: " + std::to_string(s.st_size) + "\r\n";
 	_response += "Connection: close\r\n\r\n";
-	int fd;
 	path = _location.root + path;
 	stat(path.c_str(), &s);
-	if ((fd = open(path.c_str(), O_RDONLY)) == -1)
+	int fd = open(path.c_str(), O_RDONLY);
+	fcntl(fd, F_SETFL, O_NONBLOCK);
+	if (fd == -1)
 	{
 		close(fd);
 		this->notFound();
@@ -123,7 +125,7 @@ void Response::set_redirection(int statuscode, std::string path)
 		_response +=  std::string(buff, reading);
 	_response += "\r\n\r\n";
 	if (reading == -1)
-		return;
+		this->notFound();
 }
 
 std::string errorPage(std::string const &message)
@@ -139,59 +141,56 @@ std::string errorPage(std::string const &message)
 
 void Response::unallowedMethod()
 {
-	int fd;
-	if (_server.error_page.count(405))
-		if ((fd= open(_server.error_page[405].c_str(), O_RDONLY)) != -1)
-			set_error_header(405, "Method Not Allowed", _server.error_page[405]);
-		else
-			set_error_header(405, "Method Not Allowed", "./error_pages/405.html");
+	int fd = open(_server.error_page[405].c_str(), O_RDONLY);
+	fcntl(fd, F_SETFL, O_NONBLOCK);
+	close(fd);
+	if (_server.error_page.count(405) && fd != -1)
+		set_error_header(405, "Method Not Allowed", _server.error_page[405]);
 	else
 		set_error_header(405, "Method Not Allowed", "./error_pages/405.html");
 }
 
 void Response::forbidden()
 {
-	int fd;
-	if (_server.error_page.count(403))
-		if ((fd= open(_server.error_page[403].c_str(), O_RDONLY)) != -1)
-			set_error_header(403, "Forbidden", _server.error_page[403]);
-		else
-			set_error_header(403, "Forbidden", "./error_pages/403.html");
+	int fd = open(_server.error_page[403].c_str(), O_RDONLY);
+	fcntl(fd, F_SETFL, O_NONBLOCK);
+	close(fd);
+	if (_server.error_page.count(403) && fd != -1)
+		set_error_header(403, "Forbidden", _server.error_page[403]);
 	else
 		set_error_header(403, "Forbidden", "./error_pages/403.html");
 }
 
 void Response::badRequest()
 {
-	int fd;
-	if (_server.error_page.count(400))
-		if ((fd= open(_server.error_page[400].c_str(), O_RDONLY)) != -1)
-			set_error_header(400, "Bad Request", _server.error_page[405]);
-		else
-			set_error_header(400, "Bad Request", "./error_pages/400.html");
+	int fd = open(_server.error_page[400].c_str(), O_RDONLY);
+	fcntl(fd, F_SETFL, O_NONBLOCK);
+	close(fd);
+	if (_server.error_page.count(400) && fd != -1)
+		set_error_header(400, "Bad Request", _server.error_page[405]);
 	else
 		set_error_header(400, "Bad Request", "./error_pages/400.html");
+	
 }
 
 void Response::notFound()
 {
 	int fd = open(_server.error_page[404].c_str(), O_RDONLY);
+	fcntl(fd, F_SETFL, O_NONBLOCK);
 	close(fd);
-	std::cout << "error page is : " << _server.error_page[404].c_str()  << "   " << open(_server.error_page[404].c_str(), O_RDONLY) << std::endl;
 	if (_server.error_page.count(404) && fd != -1)
-			set_error_header(404, "Not Found", _server.error_page[404]);
-		else
-			set_error_header(404, "Not Found", "./error_pages/404.html");
+		set_error_header(404, "Not Found", _server.error_page[404]);
+	else
+		set_error_header(404, "Not Found", "./error_pages/404.html");
 }
 
 void Response::httpVersionNotSupported(std::string const &version)
 {
-	int fd;
-	if (_server.error_page.count(505))
-		if ((fd= open(_server.error_page[505].c_str(), O_RDONLY)) != -1)
-			set_error_header(505, "HTTP Version Not Supported", _server.error_page[505]);
-		else
-			set_error_header(505, "HTTP Version Not Supported", "./error_pages/505.html");
+	int fd = open(_server.error_page[505].c_str(), O_RDONLY);
+	fcntl(fd, F_SETFL, O_NONBLOCK);
+	close(fd);
+	if (_server.error_page.count(505) && fd != -1)
+		set_error_header(505, "HTTP Version Not Supported", _server.error_page[505]);
 	else
 		set_error_header(505, "HTTP Version Not Supported", "./error_pages/505.html");
 }
@@ -199,36 +198,33 @@ void Response::httpVersionNotSupported(std::string const &version)
 
 void Response::internalError()
 {
-	int fd;
-	if (_server.error_page.count(500))
-		if ((fd= open(_server.error_page[500].c_str(), O_RDONLY)) != -1)
-			set_error_header(500, "Internal Server Error", _server.error_page[500]);
-		else
-			set_error_header(500, "Internal Server Error", "./error_pages/500.html");
+	int fd = open(_server.error_page[500].c_str(), O_RDONLY);
+	fcntl(fd, F_SETFL, O_NONBLOCK);
+	close(fd);
+	if (_server.error_page.count(500) && fd != -1)
+		set_error_header(500, "Internal Server Error", _server.error_page[500]);
 	else
 		set_error_header(500, "Internal Server Error", "./error_pages/500.html");
 }
 
 void Response::payloadTooLarge()
 {
-	int fd;
-	if (_server.error_page.count(413))
-		if ((fd= open(_server.error_page[413].c_str(), O_RDONLY)) != -1)
-			set_error_header(413, "Payload Too Large", _server.error_page[413]);
-		else
-			set_error_header(413, "Payload Too Large", "./error_pages/413.html");
+	int fd = open(_server.error_page[413].c_str(), O_RDONLY);
+	fcntl(fd, F_SETFL, O_NONBLOCK);
+	close(fd);
+	if (_server.error_page.count(413) && fd != -1)
+		set_error_header(413, "Payload Too Large", _server.error_page[413]);
 	else
 		set_error_header(413, "Payload Too Large", "./error_pages/413.html");
 }
 
 void Response::time_out()
 {
-	int fd;
-	if (_server.error_page.count(504))
-		if ((fd= open(_server.error_page[504].c_str(), O_RDONLY)) != -1)
-			set_error_header(504, "Gateway Time-out", _server.error_page[504]);
-		else
-			set_error_header(504, "Gateway Time-out", "./error_pages/504.html");
+	int fd = open(_server.error_page[504].c_str(), O_RDONLY);
+	fcntl(fd, F_SETFL, O_NONBLOCK);
+	close(fd);
+	if (_server.error_page.count(504) && fd != -1)
+		set_error_header(504, "Gateway Time-out", _server.error_page[504]);
 	else
 		set_error_header(504, "Gateway Time-out", "./error_pages/504.html");
 }
@@ -385,9 +381,9 @@ void Response::auto_index(Location_block location)
 			_response += buff;
 		close(fd);
 		_response += "\r\n\r\n";
-		create_file();
 		if (reading == -1)
-			return;
+			notFound();
+		create_file();
     }
 	else
 		notFound();
@@ -554,8 +550,8 @@ char **vector_to_char(std::vector<std::string> params){
 	return out;
 }
 
-std::string  cgi(Request request, Server_block server, std::string cgi_runner, std::string script, std::string body_file){
-	std::vector<std::string> vec_of_meta_vars = make_meta_variables_for_cgi(request, server, script);
+std::string  Response::cgi(Server_block server, std::string cgi_runner, std::string script, std::string body_file){
+	std::vector<std::string> vec_of_meta_vars = make_meta_variables_for_cgi(_request, server, script);
 	char **meta_vars = vector_to_char(vec_of_meta_vars);
 	long int now = get_current_time();
 	std::stringstream ss;
@@ -573,10 +569,12 @@ std::string  cgi(Request request, Server_block server, std::string cgi_runner, s
 	if (pid == 0){
 		int fd_out = criet_and_open_file(file_name);
 		int fd_in = open(body_file.c_str(), O_RDONLY);
+		fcntl(fd_in, F_SETFL, O_NONBLOCK);
 		dup2(fd_in, STDIN_FILENO);
 		dup2(fd_out, STDOUT_FILENO);
 		int exec = execve(vars[0], vars, meta_vars);
-		output += "500 FAIL\r\n";
+		// output += "500 FAIL\r\n";
+		this->internalError();
 		return output;	
  	}
 	else{
@@ -735,9 +733,10 @@ void Response::handleGetRequest(Server_block server, Location_block location)
 			if (file_is_suported_from_cgi(location, _path)){ //! run cgi
 				std::string cgi_runner  = location.root + '/' + location.cgi_path;
 				int fd = open(_path.c_str(), O_RDONLY);
+				fcntl(fd, F_SETFL, O_NONBLOCK);
 				close(fd);
 				if (fd > 0){//! check for file to execute if true run cgi	
-					std::string cgi_output = cgi(_request, server, cgi_runner, _path, _request.getBody());
+					std::string cgi_output = cgi(server, cgi_runner, _path, _request.getBody());
 					if (cgi_output.find("Status:", 0) == -1)
 						_response += "HTTP/1.1 200 Ok\r\n"; //! correct this just if there is not status code
 					else{
@@ -763,26 +762,26 @@ void Response::handleGetRequest(Server_block server, Location_block location)
 	struct stat fileStat;
 	time_t rawtime;
 	stat (_path.c_str(), &fileStat);
-	int fd;
-	if ((fd = open(_path.c_str(), O_RDONLY)) == -1)
+	int fd  = open(_path.c_str(), O_RDONLY);
+	fcntl(fd, F_SETFL, O_NONBLOCK);
+	close(fd);
+	if (fd == -1)
 	{
 		this->notFound();
 		create_file();
 		return;
 	}
-	fcntl(fd, F_SETFL, O_NONBLOCK);
 	// char buff[fileStat.st_size];
 	char buff[1001] = {0};
 	this->ok(fileStat.st_size);
 	int reading = 0;
-	while((reading = read(fd, buff, 1000)) > 0){
+	while((reading = read(fd, buff, 1000))){
 		_response +=  std::string(buff, reading);
 		bzero(buff, 1000);
 	}
-	create_file();				
-	close(fd);
 	if (reading == -1)
-		return;
+		this->notFound();
+	create_file();				
 }
 
 
@@ -795,9 +794,10 @@ void Response::handlePostRequest(Server_block &server, Location_block &location)
 				if (file_is_suported_from_cgi(location, _path)){ //! run cgi
 					std::string cgi_runner  = location.root + '/' + location.cgi_path;
 					int fd = open(_path.c_str(), O_RDONLY);
+					fcntl(fd, F_SETFL, O_NONBLOCK);
 					close(fd);
 					if (fd > 0){//! check for file to execute if true run cgi	
-						std::string cgi_output = cgi(_request, server, cgi_runner, _path, _request.getBody());
+						std::string cgi_output = cgi(server, cgi_runner, _path, _request.getBody());
 						if (cgi_output.find("Status:", 0) == -1)
 							_response += "HTTP/1.1 200 Ok\r\n"; //! correct this just if there is not status code
 						else{
