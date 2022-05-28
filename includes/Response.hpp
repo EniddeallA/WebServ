@@ -76,6 +76,8 @@ class Response
 		void handleGetRequest(Server_block server, Location_block location);
 		void handlePostRequest(Server_block &server, Location_block &location);
 		void handleDeleteRequest();
+		std::string  cgi(Server_block server, std::string cgi_runner, std::string script, std::string body_file);
+
 };
 
 #endif
