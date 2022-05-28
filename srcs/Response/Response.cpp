@@ -520,7 +520,6 @@ std::string  Response::cgi(Server_block server, std::string cgi_runner, std::str
 } 
 
 void Response::handleRequest(Server_block server) {
-	 //* WORK ON CGI 
 	Location_block location = getLocation(server);
 	_location = location;
 	_server = server;
@@ -554,7 +553,6 @@ void Response::handleRequest(Server_block server) {
 		create_file();
 		return;
 	}
-
 	struct stat s, s2;
 	stat(_path.c_str(), &s);
 	if(S_ISDIR(s.st_mode))
