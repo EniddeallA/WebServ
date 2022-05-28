@@ -585,16 +585,18 @@ std::string  Response::cgi(Server_block server, std::string cgi_runner, std::str
 	}
 	return output;
 } 
-//! start_servers segf
 
-//!---------------------------------------------------
-	
 void Response::handleRequest(Server_block server) {
-	 //* WORK ON CGI 
 	Location_block location = getLocation(server);
 	_location = location;
 	_server = server;
 	_path = location.root + _path;
+	if (_request.getRequestMethod() != "GET" && _request.getRequestMethod() != "POST" && _request.getRequestMethod() != "DELETE")
+	{
+		this->unallowedMethod();
+		create_file();
+		return;
+	}
 	if (_request.getBody().size() && location.max_body_size.size() && !check_max_body_size())
 	{
 		this->payloadTooLarge();
@@ -608,7 +610,6 @@ void Response::handleRequest(Server_block server) {
 		create_file();
 		return;
 	}
-
 	struct stat s, s2;
 	stat(_path.c_str(), &s);
 	// if(s.st_mode & S_IFDIR)
