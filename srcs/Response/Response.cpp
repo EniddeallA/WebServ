@@ -520,7 +520,13 @@ std::string  Response::cgi(Server_block server, std::string cgi_runner, std::str
 } 
 
 void Response::handleRequest(Server_block server) {
-	 //* WORK ON CGI 
+	 //? check time_out
+	if (_request.check_time_out() == -1){
+		this->time_out();
+		create_file();
+		return;
+	}
+
 	Location_block location = getLocation(server);
 	_location = location;
 	_server = server;

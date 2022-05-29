@@ -1,8 +1,9 @@
 #include "../includes/request.hpp"
 
-Request::Request() : _error(0), _requestMethod(""), _requestTarget(""), _requestQuery(""),
+Request::Request() :_time_out(0), _error(0), _requestMethod(""), _requestTarget(""), _requestQuery(""),
+
 	 _str(""), _hasBody(false), _keepAlive(true), _headersEnd(false), _requestEnd(false),
-	_isCL(false), _isTE(false), _serverFound(false), _bodySize(0), _contentLength(0) {
+	_isCL(false), _isTE(false), _serverFound(false), _bodySize(0), _contentLength(0){
 		_allowedMethods.push_back("GET");
 		_allowedMethods.push_back("POST");
 		_allowedMethods.push_back("DELETE");
@@ -24,7 +25,7 @@ Request::Request(Request const &src) {
 	_isCL = src._isCL;
 	_isTE = src._isTE;
 	_headers = src._headers;
-	//_bodyFile = src._bodyFile;
+	_time_out = src._time_out;
 	_port = src._port;
 
 	_bodySize = src._bodySize;
@@ -46,7 +47,7 @@ Request& Request::operator=(Request const &src){
 	_isCL = src._isCL;
 	_isTE = src._isTE;
 	_headers = src._headers;
-	//_bodyFile = src._bodyFile;
+	_time_out = src._time_out;
 	_bodySize = src._bodySize;
 	_port = src._port;
 	_contentLength = src._contentLength;

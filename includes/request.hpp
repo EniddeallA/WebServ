@@ -18,6 +18,7 @@
 # define METHOD_NOT_ALLOWED 405
 # define CL     "content-length"
 # define TE     "transfer-encoding"
+# define TIME_OUT    -1
 
 typedef std::map<std::string, std::string> t_headers;
 
@@ -67,6 +68,9 @@ class Request{
 		Server_block 	setServer( std::vector<Server_block > const &serv_confs );
 		bool			is_chunked(){return _isTE;}
 		bool			get_has_body(){return  _hasBody;}
+		void			set_as_finish(){_requestEnd = true;}
+		int				check_time_out(){return _time_out;}
+		void			set_time_out(){_time_out = TIME_OUT;}
 
 
 	private:
@@ -80,6 +84,7 @@ class Request{
 		
 		
 	private:
+		int							_time_out;
 		int                         _error , first_head;
 		std::string                 _requestMethod, _requestTarget, _requestQuery;
 		std::string                 _host, _bodyName, _str, _port;
