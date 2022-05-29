@@ -1,0 +1,5 @@
+.vscode/
+.DS_Store
+*.out
+*.DSYM
+ft_server
