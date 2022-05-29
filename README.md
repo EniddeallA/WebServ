@@ -12,4 +12,4 @@ Feel free to use it to undestand the project, never use it for cheating!
 
 Final mark :
 
-![alt text](https://github.com/EniddeallA/WebServ/blob/master/success.png)
+![alt text](https://github.com/EniddeallA/WebServ/blob/main/success.png)
