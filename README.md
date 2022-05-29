@@ -1,3 +1,0 @@
-# WebServ
-
-upcoming project ...
