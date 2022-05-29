@@ -560,7 +560,6 @@ void Response::handleRequest(Server_block server) {
 		create_file();
 		return;
 	}
-
 	struct stat s, s2;
 	stat(_path.c_str(), &s);
 	if(S_ISDIR(s.st_mode))
