@@ -1,6 +1,6 @@
 # WebServ
 
-My version of the minishell project at 42 school.
+My version of the WebServ project at 42 school.
 This project is about writing your own HTTP server.
 You will be able to test it with an actual browser.
 HTTP is one of the most used protocols on the internet.
